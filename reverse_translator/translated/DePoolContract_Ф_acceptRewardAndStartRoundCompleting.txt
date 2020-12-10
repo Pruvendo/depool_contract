@@ -1,0 +1,94 @@
+Definition DePoolContract_Ф_acceptRewardAndStartRoundCompleting ( Л_round2 : RoundsBase_ι_Round ) 
+                                ( Л_value : XInteger64 ) : 
+                                 LedgerT RoundsBase_ι_Round := 
+ 
+declareLocal Л_effectiveStake :>: XInteger64 := $ (Л_round2 ->> RoundsBase_ι_Round_ι_stake) !- 
+                      $ (Л_round2 ->> RoundsBase_ι_Round_ι_unused) ; 
+ 
+declareLocal Л_reward :>: XInteger64  := $ Л_value !- $ Л_effectiveStake ; 
+        
+U0! Л_round2 ^^ RoundsBase_ι_Round_ι_grossReward := $ Л_reward ; 
+ 
+U0! Л_reward !-= ( math->min2 (! $ Л_reward , 
+               ( ( $ DePool_ι_RET_OR_REINV_FEE ) !+ 
+                 $ ( Л_round2 ->> RoundsBase_ι_Round_ι_participantQty ) !* 
+                ( $ DePool_ι_RET_OR_REINV_FEE ) ) !) ) ; 
+ 
+U0! Л_round2 ^^ RoundsBase_ι_Round_ι_rewards := math->muldiv (! $ Л_reward, 
+                        ↑12 D2! DePoolContract_ι_m_participantRewardFraction , 
+                         $ xInt100 !) ; 
+ 
+declareLocal Л_validatorReward  :>: XInteger64 := ( math->muldiv (! $ Л_reward, 
+                     ↑12 D2! DePoolContract_ι_m_validatorRewardFraction , 
+                     $ xInt100 !) ) ; 
+           
+( (↑2 D2! ValidatorBase_ι_m_validatorWallet) ->transfer (! $ Л_validatorReward , 
+                             $ xBoolFalse , 
+                             $ xInt1 !) ) >> 
+
+ 
+U0! Л_round2 := DePoolContract_Ф_startRoundCompleting (! $Л_round2 , 
+                    ξ$ RoundsBase_ι_CompletionReasonP_ι_RewardIsReceived !); 
+ 
+return! Л_round2.
+===== TRANSLATED =====
+function acceptRewardAndStartRoundCompleting(Round round2,
+    uint64 value) returns(Round) {
+    uint64 effectiveStake = round2.stake - round2.unused;
+    uint64 reward = value - effectiveStake;
+    round2.grossReward = reward;
+    reward -= (math.min(reward,
+        (RET_OR_REINV_FEE + round2.participantQty * RET_OR_REINV_FEE)));
+    round2.rewards = math.muldiv(reward,
+        m_participantRewardFraction,
+        100);
+    uint64 validatorReward = (math.muldiv(reward,
+        m_validatorRewardFraction,
+        100));
+    (m_validatorWallet.transfer(validatorReward,
+        false,
+        1));
+    round2 = startRoundCompleting(round2,
+        CompletionReason.RewardIsReceived);
+    return round2;
+}
+===== REFERENCE =====
+  
+function acceptRewardAndStartRoundCompleting(Round round2, uint64 value) private returns (Round) { 
+    uint64 effectiveStake = round2.stake - round2.unused; 
+    uint64 reward = value - effectiveStake; 
+    round2.grossReward = reward; 
+
+    reward -= math.min ( reward , RET_OR_REINV_FEE + round2.participantQty * RET_OR_REINV_FEE ) ; 
+
+    round2.rewards = math.muldiv(reward, m_participantRewardFraction, 100); 
+        round2.rewards -= math.min(round2.rewards, round2.participantQty * RET_OR_REINV_FEE); 
+
+    uint64 validatorReward = math.muldiv(reward, m_validatorRewardFraction, 100); 
+    
+    m_validatorWallet.transfer(validatorReward, false, 1); 
+
+    round2 = startRoundCompleting(round2, CompletionReason.RewardIsReceived); 
+    return round2; 
+  } 
+===== DIFF =====
+- function acceptRewardAndStartRoundCompleting(Round round2, uint64 value) returns(Round) {
++ function acceptRewardAndStartRoundCompleting(Round round2, uint64 value) private returns(Round) {
+?                                                                         ++++++++
+  uint64 effectiveStake = round2.stake - round2.unused;
+  uint64 reward = value - effectiveStake;
+  round2.grossReward = reward;
+- reward -= (math.min(reward, (RET_OR_REINV_FEE + round2.participantQty * RET_OR_REINV_FEE)));
+?           -                 -                                                            --
++ reward -= math.min(reward, RET_OR_REINV_FEE + round2.participantQty * RET_OR_REINV_FEE);
+  round2.rewards = math.muldiv(reward, m_participantRewardFraction, 100);
++ round2.rewards -= math.min(round2.rewards, round2.participantQty * RET_OR_REINV_FEE);
+- uint64 validatorReward = (math.muldiv(reward, m_validatorRewardFraction, 100));
+?                          -                                                   -
++ uint64 validatorReward = math.muldiv(reward, m_validatorRewardFraction, 100);
+- (m_validatorWallet.transfer(validatorReward, false, 1));
+? -                                                    -
++ m_validatorWallet.transfer(validatorReward, false, 1);
+  round2 = startRoundCompleting(round2, CompletionReason.RewardIsReceived);
+  return round2;
+  }

@@ -1,0 +1,86 @@
+Definition DePoolContract_Ф_onStakeAccept ( Л_queryId : XInteger64 ) 
+                     ( Л_comment : XInteger32 ) 
+                     ( Л_elector : XAddress ) 
+                     : LedgerT ( XErrorValue True XInteger ) := 
+           	 
+declareLocal Л_optRound :>: ( XMaybe RoundsBase_ι_Round ) := RoundsBase_Ф_fetchRound (! $ Л_queryId !) ; 
+ 
+Require2 {{$ Л_optRound ->hasValue , ξ$ InternalErrors_ι_ERROR513 }} ; 
+ 
+declareLocal Л_round :>: RoundsBase_ι_Round := ( $ Л_optRound) ->get ; 
+ 
+Require2 {{ msg_sender () ?== $ Л_round ->> RoundsBase_ι_Round_ι_proxy , ξ$ Errors_ι_IS_NOT_PROXY }} ; 
+ 
+Require2 {{$ Л_elector ?== $ Л_round ->> RoundsBase_ι_Round_ι_elector , ξ$ Errors_ι_IS_NOT_ELECTOR }} ; 
+ 
+Require2 {{$ Л_round ->> RoundsBase_ι_Round_ι_id ?== $ Л_queryId ,  ξ$ Errors_ι_INVALID_QUERY_ID }} ; 
+ 
+Require {{$ Л_round ->> RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfStakeAccepted , 
+                         ξ$ Errors_ι_INVALID_ROUND_STEP }} ; 
+ 
+tvm_accept() >> 
+ 
+U0! Л_round ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidationStart ; 
+ 
+U0! Л_round ^^ RoundsBase_ι_Round_ι_completionReason := ξ$ RoundsBase_ι_CompletionReasonP_ι_Undefined ; 
+             
+RoundsBase_Ф_setRound (! $ Л_queryId , $Л_round !) >> 
+ 
+->emit roundStakeIsAccepted (!! $ (Л_round ->> RoundsBase_ι_Round_ι_validatorRequest) ->> DePoolLib_ι_Request_ι_queryId , 
+								 $ Л_comment !!).
+===== TRANSLATED =====
+function onStakeAccept(uint64 queryId,
+    uint32 comment,
+    address elector) {
+    optional(Round) optRound = fetchRound(queryId);
+    require(optRound.hasValue(), InternalErrors.ERROR513);
+    Round round = optRound.get();
+    require(msg.sender == round.proxy, Errors.IS_NOT_PROXY);
+    require(elector == round.elector, Errors.IS_NOT_ELECTOR);
+    require(round.id == queryId, Errors.INVALID_QUERY_ID);
+    require(round.step == RoundStep.WaitingIfStakeAccepted,
+        Errors.INVALID_ROUND_STEP);
+    tvm.accept();
+    round.step = RoundStep.WaitingValidationStart;
+    round.completionReason = CompletionReason.Undefined;
+    setRound(queryId, round);
+    emit RoundStakeIsAccepted(round.validatorRequest.queryId,
+        comment);
+}
+===== REFERENCE =====
+    // Called by Elector in process_new_stake function if our stake is accepted in elections
+    function onStakeAccept(uint64 queryId, uint32 comment, address elector) public override {
+        optional(Round) optRound = fetchRound(queryId);
+        require(optRound.hasValue(), InternalErrors.ERROR513);
+        Round round = optRound.get();
+        require(msg.sender == round.proxy, Errors.IS_NOT_PROXY);
+        require(elector == round.elector, Errors.IS_NOT_ELECTOR);
+        require(round.id == queryId, Errors.INVALID_QUERY_ID);
+        require(round.step == RoundStep.WaitingIfStakeAccepted, Errors.INVALID_ROUND_STEP);
+
+        tvm.accept();
+        round.step = RoundStep.WaitingValidationStart;
+        round.completionReason = CompletionReason.Undefined;
+        setRound(queryId, round);
+
+        emit RoundStakeIsAccepted(round.validatorRequest.queryId, comment);
+    }
+ 
+===== DIFF =====
++ // Called by Elector in process_new_stake function if our stake is accepted in elections
+- function onStakeAccept(uint64 queryId, uint32 comment, address elector) {
++ function onStakeAccept(uint64 queryId, uint32 comment, address elector) public override {
+?                                                                         ++++++++++++++++
+  optional(Round) optRound = fetchRound(queryId);
+  require(optRound.hasValue(), InternalErrors.ERROR513);
+  Round round = optRound.get();
+  require(msg.sender == round.proxy, Errors.IS_NOT_PROXY);
+  require(elector == round.elector, Errors.IS_NOT_ELECTOR);
+  require(round.id == queryId, Errors.INVALID_QUERY_ID);
+  require(round.step == RoundStep.WaitingIfStakeAccepted, Errors.INVALID_ROUND_STEP);
+  tvm.accept();
+  round.step = RoundStep.WaitingValidationStart;
+  round.completionReason = CompletionReason.Undefined;
+  setRound(queryId, round);
+  emit RoundStakeIsAccepted(round.validatorRequest.queryId, comment);
+  }

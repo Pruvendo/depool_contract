@@ -1,0 +1,206 @@
+Definition DePoolContract_Ф_completeRound ( Л_roundId : XInteger64 ) 
+                                          ( Л_participantQty : XInteger32 ) 
+                                          : LedgerT ( XErrorValue True XInteger ) := 
+ 
+Require2 {{ msg_sender () ?== tvm_address (),  ξ$ Errors_ι_IS_NOT_DEPOOL }} ; 
+ 
+tvm_accept () >> 
+ 
+Require2 {{ RoundsBase_Ф_isRound2 (! $ Л_roundId !) !| ↑12 D2! DePoolContract_ι_m_poolClosed , 
+                          ξ$ InternalErrors_ι_ERROR522 }} ; 
+ 
+declareLocal Л_optRound :>: (XMaybe RoundsBase_ι_Round ) := RoundsBase_Ф_fetchRound (! $ Л_roundId !) ; 
+ 
+Require2 {{ ( $ Л_optRound) ->hasValue, ξ$ InternalErrors_ι_ERROR519 }} ; 
+ 
+declareLocal Л_round :>: RoundsBase_ι_Round := ( $ Л_optRound ) ->get ; 
+ 
+Require {{ ( ( $ Л_round ->> RoundsBase_ι_Round_ι_step ) ?== ( ξ$ RoundsBase_ι_RoundStepP_ι_Completing ) ) , 
+                      ξ$ InternalErrors_ι_ERROR518 }} ; 
+
+( this->sendMessage ( DePoolContract_Ф_completeRoundWithChunkF (!! $ Л_roundId , $ xInt1 !!) )
+                with {|| messageBounce ::= $xBoolFalse , messageFlag ::= $xInt1 ||} )  >> 
+     					 
+tvm_commit () >> 
+     
+declareLocal Л_outActionQty :>: XInteger := ( ( $ Л_participantQty !+ ( $ DePool_ι_MAX_MSGS_PER_TR ) !- $ xInt1 ) !/ 
+               ( $ DePool_ι_MAX_MSGS_PER_TR ) ) ; 
+
+     
+( If ( $ Л_outActionQty ?> ( $ DePool_ι_MAX_QTY_OF_OUT_ACTIONS ) ) then { 
+	    
+	declareLocal Л_maxQty :>: XInteger32 := ( $ DePool_ι_MAX_QTY_OF_OUT_ACTIONS ) !* ( $ DePool_ι_MAX_MSGS_PER_TR ) ; 
+	    
+	( declareGlobal LocalState_ι_completeRound_Л_restParticipant :>: XInteger32 := $ Л_participantQty) >> 
+
+      
+		( ↑17 U1! LocalState_ι_completeRound_Л_msgQty := $ xInt0 ) >> 
+	( While ( ↑17 D2! LocalState_ι_completeRound_Л_restParticipant ?> $ xInt0 ) do ( 
+			declareLocal Л_curGroup :>: XInteger32 := ( ( ↑17 D2! LocalState_ι_completeRound_Л_restParticipant ) ?< ( $ Л_maxQty ) !| 
+			          ( ( (↑17 D2! LocalState_ι_completeRound_Л_msgQty) !+ $ xInt1 ) ?== 
+                 $ DePool_ι_MAX_QTY_OF_OUT_ACTIONS ) ) ? 
+           ( ↑17 D2! LocalState_ι_completeRound_Л_restParticipant ) ::: 
+             ( $ Л_maxQty ) ;		 
+			 
+( this->sendMessage ( DePoolContract_Ф_completeRoundF (!! $Л_roundId , $ Л_curGroup !!) )
+                with {|| messageBounce ::= $xBoolFalse , messageFlag ::= $xInt1 ||} ) >>
+			 
+			( ↑17 U1! LocalState_ι_completeRound_Л_restParticipant !-= $ Л_curGroup ) >> 
+			continue! I 
+		) ) >> $ I 
+} else { 
+      
+			( ↑17 U1! LocalState_ι_completeRound_Л_i := $ xInt0 ) >> 
+		( While ( ↑17 D2! LocalState_ι_completeRound_Л_i ?< $ Л_participantQty ) do ( 
+
+( this->sendMessage ( DePoolContract_Ф_completeRoundWithChunkF (!! $Л_roundId , $ DePool_ι_MAX_MSGS_PER_TR !!) )
+                with {|| messageBounce ::= $xBoolFalse , messageFlag ::= $xInt1 ||} ) >>
+				continue! I		 
+			) ) >>  $I		 
+	} ) .
+===== TRANSLATED =====
+function completeRound(uint64 roundId,
+    uint32 participantQty) {
+    require(msg.sender == address(this), Errors.IS_NOT_DEPOOL);
+    tvm.accept();
+    require(isRound2(roundId) || m_poolClosed,
+        InternalErrors.ERROR522);
+    optional(Round) optRound = fetchRound(roundId);
+    require(optRound.hasValue(), InternalErrors.ERROR519);
+    Round round = optRound.get();
+    require((round.step == RoundStep.Completing),
+        InternalErrors.ERROR518);
+    (this.completeRoundWithChunk {
+        bounce: false,
+        flag: 1
+    }(roundId, 1));
+    tvm.commit();
+    uint outActionQty = ((participantQty + MAX_MSGS_PER_TR - 1) / MAX_MSGS_PER_TR);
+    if (outActionQty > MAX_QTY_OF_OUT_ACTIONS) {
+        uint32 maxQty = MAX_QTY_OF_OUT_ACTIONS * MAX_MSGS_PER_TR;
+        uint32 restParticipant = participantQty;
+        (msgQty = 0);
+        while (restParticipant > 0) {
+            uint32 curGroup = (restParticipant < maxQty ||
+                ((msgQty + 1) ==
+                    MAX_QTY_OF_OUT_ACTIONS)) ? restParticipant : maxQty;
+            (this.completeRound {
+                bounce: false,
+                flag: 1
+            }(roundId, curGroup));
+            (restParticipant -= curGroup);
+        }
+    } else {
+        (i = 0);
+        while (i < participantQty) {
+            (this.completeRoundWithChunk {
+                bounce: false,
+                flag: 1
+            }(roundId, MAX_MSGS_PER_TR));
+        }
+    }
+}
+===== REFERENCE =====
+    function completeRound(uint64 roundId, uint32 participantQty) public selfCall {
+        tvm.accept();
+        require(isRound2(roundId) || m_poolClosed, InternalErrors.ERROR522);
+        optional(Round) optRound = fetchRound(roundId);
+        require(optRound.hasValue(), InternalErrors.ERROR519);
+        Round round = optRound.get();
+        require(round.step == RoundStep.Completing, InternalErrors.ERROR518);
+
+        this.completeRoundWithChunk{flag: 1, bounce: false}(roundId, 1);
+
+        tvm.commit();
+
+        // Count of messages which will be created in "else" branch. See below
+        uint outActionQty = (participantQty + MAX_MSGS_PER_TR - 1) / MAX_MSGS_PER_TR;
+        if (outActionQty > MAX_QTY_OF_OUT_ACTIONS) {
+            // Max count of participant that can be handled at once in function completeRound
+            uint32 maxQty = uint32(MAX_QTY_OF_OUT_ACTIONS) * MAX_MSGS_PER_TR;
+            uint32 restParticipant = participantQty;
+            // Each 'completeRound' call can handle only MAX_QTY_OF_OUT_ACTIONS*MAX_MSGS_PER_TR participants.
+            // But we can call 'completeRound' only  MAX_QTY_OF_OUT_ACTIONS times.
+            // So we use two limit variables for the loop.
+            for (int msgQty = 0; restParticipant > 0; ++msgQty) {
+                uint32 curGroup =
+                    (restParticipant < maxQty || msgQty + 1 == MAX_QTY_OF_OUT_ACTIONS) ?
+                    restParticipant :
+                    maxQty;
+                this.completeRound{flag: 1, bounce: false}(roundId, curGroup);
+                restParticipant -= curGroup;
+            }
+        } else {
+            for (uint i = 0; i < participantQty; i += MAX_MSGS_PER_TR) {
+                this.completeRoundWithChunk{flag: 1, bounce: false}(roundId, MAX_MSGS_PER_TR);
+            }
+        }
+    }
+
+===== DIFF =====
+- function completeRound(uint64 roundId, uint32 participantQty) {
++ function completeRound(uint64 roundId, uint32 participantQty) public selfCall {
+?                                                               ++++++++++++++++
+- require(msg.sender == address(this), Errors.IS_NOT_DEPOOL);
+  tvm.accept();
+  require(isRound2(roundId) || m_poolClosed, InternalErrors.ERROR522);
+  optional(Round) optRound = fetchRound(roundId);
+  require(optRound.hasValue(), InternalErrors.ERROR519);
+  Round round = optRound.get();
+- require((round.step == RoundStep.Completing), InternalErrors.ERROR518);
+?        -                                   -
++ require(round.step == RoundStep.Completing, InternalErrors.ERROR518);
+- (this.completeRoundWithChunk {
+? -
++ this.completeRoundWithChunk {
+- bounce: false, flag: 1
++ flag: 1, bounce: false
+- }(roundId, 1));
+?             -
++ }(roundId, 1);
+  tvm.commit();
++ // Count of messages which will be created in "else" branch.See below
+- uint outActionQty = ((participantQty + MAX_MSGS_PER_TR - 1) / MAX_MSGS_PER_TR);
+?                     -                                                        -
++ uint outActionQty = (participantQty + MAX_MSGS_PER_TR - 1) / MAX_MSGS_PER_TR;
+  if (outActionQty > MAX_QTY_OF_OUT_ACTIONS) {
++ // Max count of participant that can be handled at once in function completeRound
+- uint32 maxQty = MAX_QTY_OF_OUT_ACTIONS * MAX_MSGS_PER_TR;
++ uint32 maxQty = uint32(MAX_QTY_OF_OUT_ACTIONS) * MAX_MSGS_PER_TR;
+?                 +++++++                      +
+  uint32 restParticipant = participantQty;
++ // Each 'completeRound' call can handle only MAX_QTY_OF_OUT_ACTIONS*MAX_MSGS_PER_TR participants.// But we can call 'completeRound' only  MAX_QTY_OF_OUT_ACTIONS times.// So we use two limit variables for the loop.for (int msgQty = 0; restParticipant > 0; ++msgQty) {
+- (msgQty = 0);
+- while (restParticipant > 0) {
+- uint32 curGroup = (restParticipant < maxQty || ((msgQty + 1) == MAX_QTY_OF_OUT_ACTIONS)) ? restParticipant : maxQty;
+?                                                --          -                           -  --------------------------
++ uint32 curGroup = (restParticipant < maxQty || msgQty + 1 == MAX_QTY_OF_OUT_ACTIONS) ?
++ restParticipant :
++ maxQty;
+- (this.completeRound {
+? -
++ this.completeRound {
+- bounce: false, flag: 1
++ flag: 1, bounce: false
+- }(roundId, curGroup));
+?                     -
++ }(roundId, curGroup);
+- (restParticipant -= curGroup);
+? -                           -
++ restParticipant -= curGroup;
+  }
+  } else {
++ for (uint i = 0; i < participantQty; i += MAX_MSGS_PER_TR) {
+- (i = 0);
+- while (i < participantQty) {
+- (this.completeRoundWithChunk {
+? -
++ this.completeRoundWithChunk {
+- bounce: false, flag: 1
++ flag: 1, bounce: false
+- }(roundId, MAX_MSGS_PER_TR));
+?                            -
++ }(roundId, MAX_MSGS_PER_TR);
+  }
+  }
+  }

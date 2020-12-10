@@ -1,0 +1,26 @@
+Definition DePoolContract_Ф_addVestingStake ( Л_stake : XInteger64 ) 
+                                            (Л_beneficiary: XAddress) 
+											                      (Л_withdrawalPeriod: XInteger32) 
+											                      (Л_totalPeriod: XInteger32) 
+                                              : LedgerT True := 
+DePoolContract_Ф_addVestingOrLock (! $ Л_stake , $ Л_beneficiary , $ Л_withdrawalPeriod , $ Л_totalPeriod , $ xBoolTrue !).
+===== TRANSLATED =====
+function addVestingStake(uint64 stake,
+    address beneficiary,
+    uint32 withdrawalPeriod,
+    uint32 totalPeriod) {
+    addVestingOrLock(stake, beneficiary, withdrawalPeriod, totalPeriod, true);
+}
+===== REFERENCE =====
+unction addVestingStake(uint64 stake, address beneficiary, uint32 withdrawalPeriod, uint32 totalPeriod) public { 
+    addVestingOrLock(beneficiary, withdrawalPeriod, totalPeriod, true); 
+  } 
+===== DIFF =====
+- function addVestingStake(uint64 stake, address beneficiary, uint32 withdrawalPeriod, uint32 totalPeriod) {
+? -
++ unction addVestingStake(uint64 stake, address beneficiary, uint32 withdrawalPeriod, uint32 totalPeriod) public {
+?                                                                                                         +++++++
+- addVestingOrLock(stake, beneficiary, withdrawalPeriod, totalPeriod, true);
+?                  -------
++ addVestingOrLock(beneficiary, withdrawalPeriod, totalPeriod, true);
+  }

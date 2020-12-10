@@ -1,0 +1,14 @@
+Definition RoundsBase_Ф_setRound0 ( Л_r: RoundsBase_ι_Round): LedgerT True := 
+  RoundsBase_Ф_setRound (! (↑11 D2! RoundsBase_ι_m_roundQty) !- $ xInt2 , $Л_r !).
+===== TRANSLATED =====
+function setRound0(Round r) {
+    setRound(m_roundQty - 2, r);
+}
+===== REFERENCE =====
+function setRound0(Round r)  internal inline { setRound(m_roundQty - 2, r); } 
+===== DIFF =====
+- function setRound0(Round r) {
++ function setRound0(Round r) internal inline {
+?                             ++++++++++++++++
+  setRound(m_roundQty - 2, r);
+  }

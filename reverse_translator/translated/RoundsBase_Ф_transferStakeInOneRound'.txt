@@ -1,0 +1,257 @@
+Definition RoundsBase_Ф_transferStakeInOneRound' ( Л_round : RoundsBase_ι_Round ) (Л_sourceParticipant: ξ DePoolLib_ι_Participant) (Л_destinationParticipant: ξ DePoolLib_ι_Participant) (Л_source : XAddress) (Л_destination: XAddress) (Л_amount: XInteger64) (Л_minStake : XInteger64) : LedgerT ( XValueValue ( RoundsBase_ι_Round # XInteger64 # XInteger64 # ( ξ DePoolLib_ι_Participant ) # ξ DePoolLib_ι_Participant) ) := 
+   
+  ( declareInit LocalState_ι_transferStakeInOneRound_Л_round := ( $ Л_round) ) >> 
+  ( declareInit LocalState_ι_transferStakeInOneRound_Л_sourceParticipant := ( $ Л_sourceParticipant) ) >> 
+  ( declareInit LocalState_ι_transferStakeInOneRound_Л_destinationParticipant := ( $ Л_destinationParticipant) ) >> 
+   
+  declareLocal Л_optSourceStake :>: ( XMaybe RoundsBase_ι_StakeValue ) := D1! (D0! Л_round ^^ RoundsBase_ι_Round_ι_stakes) ->fetch ( $ Л_source) ; 
+   
+  If!! ( !¬ ( $ Л_optSourceStake ->hasValue) ) then { 
+      return! (xError ( [( Л_round, xInt0, xInt0, Л_sourceParticipant, Л_destinationParticipant )] ) ) 
+  } ; 				  
+   
+  ( declareGlobal LocalState_ι_transferStakeInOneRound_Л_sourceStake :>: RoundsBase_ι_StakeValue := ( $ Л_optSourceStake ->get) ) >> 
+   
+  declareLocal Л_prevSourceStake :>: XInteger64 := (D1! (D1! (D0! Л_round ^^ RoundsBase_ι_Round_ι_stakes) [[ $ Л_source ]] ) ^^ RoundsBase_ι_StakeValue_ι_ordinary ) ; 
+   
+   
+  
+    
+  declareGlobal LocalState_ι_transferStakeInOneRound_Л_newSourceStake :>: XInteger64 ;
+  declareGlobal LocalState_ι_transferStakeInOneRound_Л_deltaDestinationStake :>: XInteger64 ;
+  
+  (If ( ↑17 D2! LocalState_ι_transferStakeInOneRound_Л_sourceStake ^^ RoundsBase_ι_StakeValue_ι_ordinary ?>= $ Л_amount) then { 
+
+    (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_newSourceStake := (D2! LocalState_ι_transferStakeInOneRound_Л_sourceStake ^^ RoundsBase_ι_StakeValue_ι_ordinary) !- ( $ Л_amount)) >> 
+    (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_deltaDestinationStake := ( $ Л_amount)) 
+    
+  } else { 
+    
+  (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_newSourceStake := $ xInt0 ) >> 
+  (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_deltaDestinationStake := D2! LocalState_ι_transferStakeInOneRound_Л_sourceStake ^^ RoundsBase_ι_StakeValue_ι_ordinary) 
+
+  }) >> 
+   
+  declareLocal Л_newDestStake :>: XInteger64 := (D1! (D1! ( ↑17 D2! LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes) [[ $ Л_destination ]] ) ^^ RoundsBase_ι_StakeValue_ι_ordinary) 
+              !+ ( ↑ε17 LocalState_ι_transferStakeInOneRound_Л_deltaDestinationStake ); 
+
+
+   
+  If! ((( $ xInt0 ?< (↑ε17 LocalState_ι_transferStakeInOneRound_Л_newSourceStake))!& 
+    ((↑ε17 LocalState_ι_transferStakeInOneRound_Л_newSourceStake) ?< $ Л_minStake)) !| 
+      (( $ xInt0 ?< $ Л_newDestStake) !& ( $ Л_newDestStake ?< $ Л_minStake) )) then { 
+    return! (xError ( [( Л_round, xInt0, Л_prevSourceStake, Л_sourceParticipant, Л_destinationParticipant )] )) 
+  }; 
+
+   
+  (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_sourceStake ^^ RoundsBase_ι_StakeValue_ι_ordinary := ε LocalState_ι_transferStakeInOneRound_Л_newSourceStake) >> 
+  
+   
+  
+  ( If (RoundsBase_Ф_stakeSum (! ↑ε17 LocalState_ι_transferStakeInOneRound_Л_sourceStake !) ?== $ xInt0) then 
+  { 
+    (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_participantQty !--)  >> 
+    ( ↑17 U1! delete LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes [[ $ Л_source ]] ) >> 
+    (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_sourceParticipant ^^ DePoolLib_ι_Participant_ι_roundQty !--) 
+    } else { 
+      (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes [[ $ Л_source ]] := ε LocalState_ι_transferStakeInOneRound_Л_sourceStake) 
+  } ) >> 
+
+   
+
+  (If ( !¬ (D1! (↑17 D2! LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes) ->exists $ Л_destination ) ) then { 
+    (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_participantQty !++) >> 
+    (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_destinationParticipant ^^ DePoolLib_ι_Participant_ι_roundQty !++) 
+  } ) >> 
+  
+   
+  (↑17 U1! LocalState_ι_transferStakeInOneRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes [[ $ Л_destination ]] ^^ RoundsBase_ι_StakeValue_ι_ordinary !+= ε LocalState_ι_transferStakeInOneRound_Л_deltaDestinationStake) >> 
+  
+   
+  return# (↑ε17 LocalState_ι_transferStakeInOneRound_Л_round , 
+        ↑ε17 LocalState_ι_transferStakeInOneRound_Л_deltaDestinationStake, 
+         $ Л_prevSourceStake, 
+        ↑ε17 LocalState_ι_transferStakeInOneRound_Л_sourceParticipant, 
+        ↑ε17 LocalState_ι_transferStakeInOneRound_Л_destinationParticipant ).
+===== TRANSLATED =====
+function transferStakeInOneRound(Round round, DePoolLib.Participant sourceParticipant, DePoolLib.Participant destinationParticipant, address source, address destination, uint64 amount, uint64 minStake) returns(Round, uint64, uint64, DePoolLib.Participant, DePoolLib.Participant) {
+    optional(StakeValue) optSourceStake = round.stakes.fetch(source);
+    if (!(optSourceStake.hasValue())) {
+        return (((round, 0, 0, sourceParticipant, destinationParticipant)));
+    }
+    StakeValue sourceStake = (optSourceStake.get());
+    uint64 prevSourceStake = ((round.stakes[source]).ordinary);
+    uint64 newSourceStake;
+    uint64 deltaDestinationStake;
+    if (sourceStake.ordinary >= amount) {
+        (newSourceStake = sourceStake.ordinary - amount);
+        (deltaDestinationStake = amount)
+        ;
+    } else {
+        (newSourceStake = 0);
+        (deltaDestinationStake = sourceStake.ordinary)
+        ;
+    }
+    uint64 newDestStake = ((round.stakes[destination]).ordinary) +
+        deltaDestinationStake;
+    if (((0 < newSourceStake) &&
+            (newSourceStake < minStake)) ||
+        ((0 < newDestStake) && (newDestStake < minStake))) {
+        return (((round, 0, prevSourceStake, sourceParticipant, destinationParticipant)));
+    }
+    (sourceStake.ordinary = newSourceStake);
+    if (stakeSum(sourceStake) == 0) {
+        (round.participantQty--);
+        delete round.stakes[source];
+        (sourceParticipant.roundQty--);
+    } else {
+        (round.stakes[source] = sourceStake);
+    }
+    if (!(round.stakes.exists(destination))) {
+        (round.participantQty++);
+        (destinationParticipant.roundQty++);
+    }
+    (round.stakes[destination].ordinary += deltaDestinationStake);
+    return (round,
+        deltaDestinationStake,
+        prevSourceStake,
+        sourceParticipant,
+        destinationParticipant);
+}
+===== REFERENCE =====
+
+function transferStakeInOneRound( 
+    Round round, 
+    DePoolLib.Participant sourceParticipant, 
+    DePoolLib.Participant destinationParticipant, 
+    address source, 
+    address destination, 
+    uint64 amount, 
+    uint64 minStake 
+  ) 
+    internal inline 
+    returns ( 
+      Round,       uint64,       uint64,       DePoolLib.Participant,       DePoolLib.Participant     ) 
+  { 
+    optional(StakeValue) optSourceStake = round.stakes.fetch(source); 
+    if (!optSourceStake.hasValue()) 
+      return (round, 0, 0, sourceParticipant, destinationParticipant); 
+    StakeValue sourceStake = optSourceStake.get(); 
+    uint64 prevSourceStake = round.stakes[source].ordinary; 
+    uint64 newSourceStake; 
+    uint64 deltaDestinationStake; 
+    if (sourceStake.ordinary >= amount) { 
+      newSourceStake = sourceStake.ordinary - amount; 
+      deltaDestinationStake = amount; 
+    } else { 
+      newSourceStake = 0; 
+      deltaDestinationStake = sourceStake.ordinary; 
+    } 
+
+
+    uint64 newDestStake = round.stakes[destination].ordinary + deltaDestinationStake; 
+    if ((0 < newSourceStake && newSourceStake < minStake) || 
+      (0 < newDestStake && newDestStake < minStake)) { 
+      return (round, 0, prevSourceStake, sourceParticipant, destinationParticipant); 
+    } 
+
+    sourceStake.ordinary = newSourceStake; 
+    if (stakeSum(sourceStake) == 0) { 
+      --round.participantQty; 
+      delete round.stakes[source]; 
+      --sourceParticipant.roundQty; 
+    } else { 
+      round.stakes[source] = sourceStake; 
+    } 
+
+    if (!round.stakes.exists(destination)) { 
+      ++round.participantQty; 
+      ++destinationParticipant.roundQty; 
+    } 
+    round.stakes[destination].ordinary += deltaDestinationStake; 
+
+    return (round, deltaDestinationStake, prevSourceStake, sourceParticipant, destinationParticipant); 
+  } 
+
+===== DIFF =====
+- function transferStakeInOneRound(Round round, DePoolLib.Participant sourceParticipant, DePoolLib.Participant destinationParticipant, address source, address destination, uint64 amount, uint64 minStake) returns(Round, uint64, uint64, DePoolLib.Participant, DePoolLib.Participant) {
+?                                                                                                                                                                                                          -------------------------------------------------------------------------------
++ function transferStakeInOneRound(Round round, DePoolLib.Participant sourceParticipant, DePoolLib.Participant destinationParticipant, address source, address destination, uint64 amount, uint64 minStake)
++ internal inline
++ returns(Round, uint64, uint64, DePoolLib.Participant, DePoolLib.Participant) {
+  optional(StakeValue) optSourceStake = round.stakes.fetch(source);
+- if (!(optSourceStake.hasValue())) {
+?      -                          ---
++ if (!optSourceStake.hasValue())
+- return (((round, 0, 0, sourceParticipant, destinationParticipant)));
+?        --                                                        --
++ return (round, 0, 0, sourceParticipant, destinationParticipant);
+- }
+- StakeValue sourceStake = (optSourceStake.get());
+?                          -                    -
++ StakeValue sourceStake = optSourceStake.get();
+- uint64 prevSourceStake = ((round.stakes[source]).ordinary);
+?                          --                    -         -
++ uint64 prevSourceStake = round.stakes[source].ordinary;
+  uint64 newSourceStake;
+  uint64 deltaDestinationStake;
+  if (sourceStake.ordinary >= amount) {
+- (newSourceStake = sourceStake.ordinary - amount);
+? -                                              -
++ newSourceStake = sourceStake.ordinary - amount;
+- (deltaDestinationStake = amount);
+? -                              -
++ deltaDestinationStake = amount;
+  } else {
+- (newSourceStake = 0);
+? -                  -
++ newSourceStake = 0;
+- (deltaDestinationStake = sourceStake.ordinary);
+? -                                            -
++ deltaDestinationStake = sourceStake.ordinary;
+  }
+- uint64 newDestStake = ((round.stakes[destination]).ordinary) + deltaDestinationStake;
+?                       --                         -         -
++ uint64 newDestStake = round.stakes[destination].ordinary + deltaDestinationStake;
+- if (((0 < newSourceStake) && (newSourceStake < minStake)) || ((0 < newDestStake) && (newDestStake < minStake))) {
+?    -                    -    -                          -    -                 -    -                         -
++ if ((0 < newSourceStake && newSourceStake < minStake) || (0 < newDestStake && newDestStake < minStake)) {
+- return (((round, 0, prevSourceStake, sourceParticipant, destinationParticipant)));
+?        --                                                                      --
++ return (round, 0, prevSourceStake, sourceParticipant, destinationParticipant);
+  }
+- (sourceStake.ordinary = newSourceStake);
+? -                                     -
++ sourceStake.ordinary = newSourceStake;
+  if (stakeSum(sourceStake) == 0) {
+- (round.participantQty--);
+? ^                    ---
++ --round.participantQty;
+? ^^
+  delete round.stakes[source];
+- (sourceParticipant.roundQty--);
+? ^                          ---
++ --sourceParticipant.roundQty;
+? ^^
+  } else {
+- (round.stakes[source] = sourceStake);
+? -                                  -
++ round.stakes[source] = sourceStake;
+  }
+- if (!(round.stakes.exists(destination))) {
+?      -                                 -
++ if (!round.stakes.exists(destination)) {
+- (round.participantQty++);
+? ^                    ---
++ ++round.participantQty;
+? ^^
+- (destinationParticipant.roundQty++);
+? ^                               ---
++ ++destinationParticipant.roundQty;
+? ^^
+  }
+- (round.stakes[destination].ordinary += deltaDestinationStake);
+? -                                                           -
++ round.stakes[destination].ordinary += deltaDestinationStake;
+  return (round, deltaDestinationStake, prevSourceStake, sourceParticipant, destinationParticipant);
+  }

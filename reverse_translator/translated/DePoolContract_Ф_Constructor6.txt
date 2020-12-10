@@ -1,0 +1,329 @@
+Definition DePoolContract_Ф_Constructor6 ( Л_minStake : XInteger64 ) ( Л_validatorAssurance : XInteger64 ) ( Л_proxyCode : TvmCell ) ( Л_validatorWallet : XAddress ) ( Л_participantRewardFraction : XInteger8 ) : LedgerT ( XErrorValue True XInteger ) := 
+    
+   New ValidatorBase_Ф_Constructor2 (! $ Л_validatorWallet !) >> 
+
+  initial ( ↑11 U1! RoundsBase_ι_m_roundQty := $ xInt0 ) >>
+   
+  Require2 {{ tvm_address ->wid ?== $ xInt0, ξ$ Errors_ι_NOT_WORKCHAIN0 }} ; 
+   
+  Require2 {{ msg_pubkey () ?== tvm_pubkey () ,  ξ$ Errors_ι_IS_NOT_OWNER }} ; 
+
+   
+  Require2 {{ tvm_pubkey () ?!= $ xInt0 , ξ$ Errors_ι_CONSTRUCTOR_NO_PUBKEY }} ; 
+
+   
+  Require2 {{$ Л_minStake ?>= $ x1_ton , ξ$ Errors_ι_BAD_STAKES }} ; 
+
+   
+  Require2 {{$ Л_minStake ?<= $ Л_validatorAssurance , ξ$ Errors_ι_BAD_STAKES }} ; 
+   
+   
+  Require2 {{ tvm_hash (!! $ Л_proxyCode !!) ?== ξ$ DePool_ι_PROXY_CODE_HASH , 
+                          $ Errors_ι_BAD_PROXY_CODE }} ; 
+
+   
+  Require2 {{ ( $ Л_validatorWallet) ->isStdAddrWithoutAnyCast() , ξ$ Errors_ι_VALIDATOR_IS_NOT_STD }} ; 
+
+   
+  Require2 {{ ( ( $ Л_participantRewardFraction ) ?> $ xInt0 ) !& 
+        ( ( $ Л_participantRewardFraction ) ?< $ xInt100 ) , ξ$ Errors_ι_BAD_PART_REWARD }} ; 
+  declareLocal Л_validatorRewardFraction :>: XInteger8 := $ xInt100 !- $ Л_participantRewardFraction ; 
+   
+   
+  Require2 {{ tvm_balance () ?> ( $ DePool_ι_CRITICAL_THRESHOLD !+ 
+                 ( ξ$ DePoolLib_ι_DEPOOL_CONSTRUCTOR_FEE ) !+ 
+                  $ xInt2 !* ( ξ$ DePoolLib_ι_MIN_PROXY_BALANCE !+ 
+             ξ$ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE ) ) , ξ$ Errors_ι_BAD_ACCOUNT_BALANCE }} ; 
+   
+  tvm_accept () >> 
+   
+
+  do _ ← ( ForIndexedE (xListCons xInt0 (xListCons xInt1 xListNil)) do ( fun (i: XInteger) => 
+  declareLocal Л_b :>: TvmBuilder ; 
+  U0! Л_b ->store tvm_address $ i; 
+  declareLocal Л_publicKey :>: XInteger256 := tvm_hash (!! ( $ Л_b ) ->toCell !!); 
+  declareLocal Л_data :>: TvmCell := tvm_buildEmptyData (!! $ Л_publicKey !!); 
+  declareLocal Л_stateInit :>: TvmCell := tvm_buildStateInit (!!  $ Л_proxyCode ,  $ Л_data !!); 
+
+  declareGlobal LocalState_ι_constructor6_Л_proxy :>: XAddress ; 
+
+address LocalState_ι_constructor6_Л_proxy = new DePoolProxyContract { wid : $ xInt0 !- $ xInt1 , value : ξ$ DePoolLib_ι_MIN_PROXY_BALANCE !+ 
+                     ξ$ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE , stateInit : $ Л_stateInit
+
+  ) >>= fun r => return! (xProdSnd r) ) ??; 
+
+ 
+(↑12 U1! DePoolContract_ι_m_poolClosed := $ xBoolFalse) >> 
+
+ 
+(↑12 U1! DePoolContract_ι_m_minStake := $ Л_minStake) >> 
+
+ 
+(↑12 U1! DePoolContract_ι_m_validatorAssurance := $ Л_validatorAssurance) >> 
+
+ 
+(↑12 U1! DePoolContract_ι_m_participantRewardFraction := $ Л_participantRewardFraction) >> 
+
+ 
+(↑12 U1! DePoolContract_ι_m_validatorRewardFraction := $ Л_validatorRewardFraction) >> 
+
+  
+ 
+
+ 
+declareLocal {( _ :>: _ , Л_electionsStartBefore :>: XInteger32 , _ :>: _ , _ :>: _ )} ??:= ConfigParamsBase_Ф_roundTimeParams () ; 
+
+ 
+declareLocal {( Л_curValidatorHash :>: XInteger256, _ :>: _ , Л_validationEnd :>: XInteger32 )} ??:= ConfigParamsBase_Ф_getCurValidatorData () ; 
+
+ 
+declareLocal Л_prevValidatorHash :>: XInteger256 ?:= ConfigParamsBase_Ф_getPrevValidatorHash () ; 
+
+ 
+declareLocal Л_areElectionsStarted :>: XBool := tvm_now () ?>= $ Л_validationEnd !- $ Л_electionsStartBefore ; 
+
+ 	 
+declareLocal Л_r2 :>: RoundsBase_ι_Round := DePoolContract_Ф_generateRound () ; 
+ 
+declareLocal Л_r1 :>: RoundsBase_ι_Round := DePoolContract_Ф_generateRound () ; 
+ 
+declareLocal Л_r0  :>: RoundsBase_ι_Round := DePoolContract_Ф_generateRound () ; 
+ 
+U0! Л_r0 ^^ RoundsBase_ι_Round_ι_step := $ RoundsBase_ι_RoundStepP_ι_Pooling ; 
+ 
+declareLocal Л_preR0  :>: RoundsBase_ι_Round := DePoolContract_Ф_generateRound () ; 
+
+
+ 
+U0! {( Л_r2 ^^ RoundsBase_ι_Round_ι_step , Л_r2 ^^ RoundsBase_ι_Round_ι_completionReason , Л_r2 ^^ RoundsBase_ι_Round_ι_unfreeze )} := 
+   $ [( RoundsBase_ι_RoundStepP_ι_Completed, RoundsBase_ι_CompletionReasonP_ι_FakeRound, xInt0 )] ; 
+ 
+U0! {( Л_r1 ^^ RoundsBase_ι_Round_ι_step , Л_r1 ^^ RoundsBase_ι_Round_ι_completionReason , Л_r1 ^^ RoundsBase_ι_Round_ι_unfreeze )} := 
+   $ [( RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze, RoundsBase_ι_CompletionReasonP_ι_FakeRound, xInt0 )] ; 
+ 
+U0! Л_r1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase := $ Л_areElectionsStarted ? $ Л_curValidatorHash ::: $ Л_prevValidatorHash; 
+
+ 
+RoundsBase_Ф_setRound (! $ (Л_preR0 ->> RoundsBase_ι_Round_ι_id) ,  $Л_preR0 !) >> 
+ 
+RoundsBase_Ф_setRound (! $ (Л_r0 ->> RoundsBase_ι_Round_ι_id) ,  $Л_r0 !) >> 
+ 
+RoundsBase_Ф_setRound (! $ (Л_r1 ->> RoundsBase_ι_Round_ι_id) ,  $Л_r1 !) >> 
+ 
+RoundsBase_Ф_setRound (! $ (Л_r2 ->> RoundsBase_ι_Round_ι_id) ,  $Л_r2 !) .
+===== TRANSLATED =====
+constructor(uint64 minStake, uint64 validatorAssurance, TvmCell proxyCode, address validatorWallet, uint8 participantRewardFraction) ValidatorBase(validatorWallet) {
+        require(tvm.address.wid == 0, Errors.NOT_WORKCHAIN0);
+        require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);
+        require(tvm.pubkey() != 0, Errors.CONSTRUCTOR_NO_PUBKEY);
+        require(minStake >= x1_ton, Errors.BAD_STAKES);
+        require(minStake <= validatorAssurance, Errors.BAD_STAKES);
+        require(tvm.hash(proxyCode) == DePool.PROXY_CODE_HASH,
+            BAD_PROXY_CODE);
+        require(validatorWallet.isStdAddrWithoutAnyCast(), Errors.VALIDATOR_IS_NOT_STD);
+        require((participantRewardFraction > 0) &&
+            (participantRewardFraction < 100), Errors.BAD_PART_REWARD);
+        uint8 validatorRewardFraction = 100 - participantRewardFraction;
+        require(address(this).balance > (CRITICAL_THRESHOLD +
+            DePoolLib.DEPOOL_CONSTRUCTOR_FEE +
+            2 * (DePoolLib.MIN_PROXY_BALANCE +
+                DePoolLib.PROXY_CONSTRUCTOR_FEE)), Errors.BAD_ACCOUNT_BALANCE);
+        tvm.accept();
+        for (uint i = 0; i < 2; ++i) {
+            TvmBuilder b;
+            b.store(tvm.address, i);
+            uint256 publicKey = tvm.hash(b.toCell());
+            TvmCell data = tvm.buildEmptyData(publicKey);
+            TvmCell stateInit = tvm.buildStateInit(proxyCode, data);
+            address proxy;
+            address proxy = new DePoolProxyContract {
+                wid: -1,
+                value: DePoolLib.MIN_PROXY_BALANCE +
+                    DePoolLib.PROXY_CONSTRUCTOR_FEE,
+                stateInit: stateInit
+                ;
+            };
+            (m_poolClosed = false);
+            (m_minStake = minStake);
+            (m_validatorAssurance = validatorAssurance);
+            (m_participantRewardFraction = participantRewardFraction);
+            (m_validatorRewardFraction = validatorRewardFraction);
+            (, uint32 electionsStartBefore, , ) = roundTimeParams();
+            (uint256 curValidatorHash, , uint32 validationEnd) = getCurValidatorData();
+            uint256 prevValidatorHash = getPrevValidatorHash();
+            bool areElectionsStarted = now >= validationEnd - electionsStartBefore;
+            Round r2 = generateRound();
+            Round r1 = generateRound();
+            Round r0 = generateRound();
+            r0.step = Pooling;
+            Round preR0 = generateRound();
+            (r2.step, r2.completionReason, r2.unfreeze) =
+            (Completed, FakeRound, 0);
+            (r1.step, r1.completionReason, r1.unfreeze) =
+            (WaitingUnfreeze, FakeRound, 0);
+            r1.vsetHashInElectionPhase = areElectionsStarted ? curValidatorHash : prevValidatorHash;
+            setRound(preR0.id, preR0);
+            setRound(r0.id, r0);
+            setRound(r1.id, r1);
+            setRound(r2.id, r2);
+        }
+===== REFERENCE =====
+    constructor(
+        uint64 minStake,
+        uint64 validatorAssurance,
+        TvmCell proxyCode,
+        address validatorWallet,
+        uint8 participantRewardFraction
+    )
+        ValidatorBase(validatorWallet)
+        public
+    {
+        require(address(this).wid == 0, Errors.NOT_WORKCHAIN0);
+        require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);
+        require(tvm.pubkey() != 0, Errors.CONSTRUCTOR_NO_PUBKEY);
+        require(minStake >= 1 ton, Errors.BAD_STAKES);
+        require(minStake <= validatorAssurance, Errors.BAD_STAKES);
+        require(tvm.hash(proxyCode) == PROXY_CODE_HASH, Errors.BAD_PROXY_CODE);
+        require(validatorWallet.isStdAddrWithoutAnyCast(), Errors.VALIDATOR_IS_NOT_STD);
+        require(participantRewardFraction > 0 && participantRewardFraction < 100, Errors.BAD_PART_REWARD);
+        uint8 validatorRewardFraction = 100 -  participantRewardFraction;
+
+        require(address(this).balance >
+                    CRITICAL_THRESHOLD +
+                    DePoolLib.DEPOOL_CONSTRUCTOR_FEE +
+                    2 * (DePoolLib.MIN_PROXY_BALANCE + DePoolLib.PROXY_CONSTRUCTOR_FEE),
+                Errors.BAD_ACCOUNT_BALANCE);
+
+        tvm.accept();
+
+
+        for (uint8 i = 0; i < 2; ++i) {
+            TvmBuilder b;
+            b.store(address(this), i);
+            uint256 publicKey = tvm.hash(b.toCell());
+            TvmCell data = tvm.buildEmptyData(publicKey);
+            TvmCell stateInit = tvm.buildStateInit(proxyCode, data);
+            address proxy =
+                new DePoolProxyContract{
+                    wid: -1,
+                    value: DePoolLib.MIN_PROXY_BALANCE + DePoolLib.PROXY_CONSTRUCTOR_FEE,
+                    stateInit: stateInit
+                }();
+            m_proxies.push(proxy);
+        }
+
+        m_poolClosed = false;
+        m_minStake = minStake;
+        m_validatorAssurance = validatorAssurance;
+        m_participantRewardFraction = participantRewardFraction;
+        m_validatorRewardFraction = validatorRewardFraction;
+
+        (, uint32 electionsStartBefore, ,) = roundTimeParams();
+        (uint256 curValidatorHash, , uint32 validationEnd) = getCurValidatorData();
+        uint256 prevValidatorHash = getPrevValidatorHash();
+        bool areElectionsStarted = now >= validationEnd - electionsStartBefore;
+
+        Round r2 = generateRound();
+        Round r1 = generateRound();
+        Round r0 = generateRound();
+        r0.step = RoundStep.Pooling;
+        Round preR0 = generateRound();
+        (r2.step, r2.completionReason, r2.unfreeze) = (RoundStep.Completed, CompletionReason.FakeRound, 0);
+        (r1.step, r1.completionReason, r1.unfreeze) = (RoundStep.WaitingUnfreeze, CompletionReason.FakeRound, 0);
+        r1.vsetHashInElectionPhase = areElectionsStarted? curValidatorHash : prevValidatorHash;
+        setRound(preR0.id, preR0);
+        setRound(r0.id, r0);
+        setRound(r1.id, r1);
+        setRound(r2.id, r2);
+    }
+
+===== DIFF =====
+- constructor(uint64 minStake, uint64 validatorAssurance, TvmCell proxyCode, address validatorWallet, uint8 participantRewardFraction) ValidatorBase(validatorWallet) {
+?                                                                                                                                     ---------------------------------
++ constructor(uint64 minStake, uint64 validatorAssurance, TvmCell proxyCode, address validatorWallet, uint8 participantRewardFraction)
++ ValidatorBase(validatorWallet)
++ public {
+- require(tvm.address.wid == 0, Errors.NOT_WORKCHAIN0);
+?         ----
++ require(address(this).wid == 0, Errors.NOT_WORKCHAIN0);
+?                ++++++
+  require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);
+  require(tvm.pubkey() != 0, Errors.CONSTRUCTOR_NO_PUBKEY);
+- require(minStake >= x1_ton, Errors.BAD_STAKES);
+?                     - ^
++ require(minStake >= 1 ton, Errors.BAD_STAKES);
+?                      ^
+  require(minStake <= validatorAssurance, Errors.BAD_STAKES);
+- require(tvm.hash(proxyCode) == DePool.PROXY_CODE_HASH, BAD_PROXY_CODE);
+?                                -------
++ require(tvm.hash(proxyCode) == PROXY_CODE_HASH, Errors.BAD_PROXY_CODE);
+?                                                 +++++++
+  require(validatorWallet.isStdAddrWithoutAnyCast(), Errors.VALIDATOR_IS_NOT_STD);
+- require((participantRewardFraction > 0) && (participantRewardFraction < 100), Errors.BAD_PART_REWARD);
+?        -                              -    -                               -
++ require(participantRewardFraction > 0 && participantRewardFraction < 100, Errors.BAD_PART_REWARD);
+  uint8 validatorRewardFraction = 100 - participantRewardFraction;
++ require(address(this).balance >
+- require(address(this).balance > (CRITICAL_THRESHOLD + DePoolLib.DEPOOL_CONSTRUCTOR_FEE + 2 * (DePoolLib.MIN_PROXY_BALANCE + DePoolLib.PROXY_CONSTRUCTOR_FEE)), Errors.BAD_ACCOUNT_BALANCE);
+? ---------------------------------                                                                                                                           -
++ CRITICAL_THRESHOLD + DePoolLib.DEPOOL_CONSTRUCTOR_FEE + 2 * (DePoolLib.MIN_PROXY_BALANCE + DePoolLib.PROXY_CONSTRUCTOR_FEE), Errors.BAD_ACCOUNT_BALANCE);
+  tvm.accept();
+- for (uint i = 0; i < 2; ++i) {
++ for (uint8 i = 0; i < 2; ++i) {
+?          +
+  TvmBuilder b;
+- b.store(tvm.address, i);
+?         ----
++ b.store(address(this), i);
+?                ++++++
+  uint256 publicKey = tvm.hash(b.toCell());
+  TvmCell data = tvm.buildEmptyData(publicKey);
+  TvmCell stateInit = tvm.buildStateInit(proxyCode, data);
+- address proxy;
+  address proxy = new DePoolProxyContract {
+- wid: -1, value: DePoolLib.MIN_PROXY_BALANCE + DePoolLib.PROXY_CONSTRUCTOR_FEE, stateInit: stateInit;
+?                                                                                                    -
++ wid: -1, value: DePoolLib.MIN_PROXY_BALANCE + DePoolLib.PROXY_CONSTRUCTOR_FEE, stateInit: stateInit
++ }();
++ m_proxies.push(proxy);
+- };
+?  -
++ }
+- (m_poolClosed = false);
+? -                    -
++ m_poolClosed = false;
+- (m_minStake = minStake);
+? -                     -
++ m_minStake = minStake;
+- (m_validatorAssurance = validatorAssurance);
+? -                                         -
++ m_validatorAssurance = validatorAssurance;
+- (m_participantRewardFraction = participantRewardFraction);
+? -                                                       -
++ m_participantRewardFraction = participantRewardFraction;
+- (m_validatorRewardFraction = validatorRewardFraction);
+? -                                                   -
++ m_validatorRewardFraction = validatorRewardFraction;
+  (, uint32 electionsStartBefore, ,) = roundTimeParams();
+  (uint256 curValidatorHash, , uint32 validationEnd) = getCurValidatorData();
+  uint256 prevValidatorHash = getPrevValidatorHash();
+  bool areElectionsStarted = now >= validationEnd - electionsStartBefore;
+  Round r2 = generateRound();
+  Round r1 = generateRound();
+  Round r0 = generateRound();
+- r0.step = Pooling;
++ r0.step = RoundStep.Pooling;
+?           ++++++++++
+  Round preR0 = generateRound();
+- (r2.step, r2.completionReason, r2.unfreeze) = (Completed, FakeRound, 0);
++ (r2.step, r2.completionReason, r2.unfreeze) = (RoundStep.Completed, CompletionReason.FakeRound, 0);
+?                                                ++++++++++           +++++++++++++++++
+- (r1.step, r1.completionReason, r1.unfreeze) = (WaitingUnfreeze, FakeRound, 0);
++ (r1.step, r1.completionReason, r1.unfreeze) = (RoundStep.WaitingUnfreeze, CompletionReason.FakeRound, 0);
+?                                                ++++++++++                 +++++++++++++++++
+  r1.vsetHashInElectionPhase = areElectionsStarted ? curValidatorHash : prevValidatorHash;
+  setRound(preR0.id, preR0);
+  setRound(r0.id, r0);
+  setRound(r1.id, r1);
+  setRound(r2.id, r2);
+  }

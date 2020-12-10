@@ -1,0 +1,48 @@
+Definition ConfigParamsBase_Ф_getMaxStakeFactor : LedgerT ( XErrorValue XInteger32 XInteger ) := 
+	declareLocal {( Л_cell :>: TvmCell , Л_ok :>: XBool )} := tvm_rawConfigParam_17; 
+ 	Require {{$ Л_ok , ξ$ InternalErrors_ι_ERROR516 }} ; 
+ 	declareLocal Л_s :>: TvmSlice := ( $ Л_cell ) ->toSlice() ; 
+ 	Л_s ->loadTons() ; 
+ 	Л_s ->loadTons() ; 
+  Л_s ->loadTons() ; 
+  U0! Л_decoded := Л_s ->decode(uint32) ; 
+	  return! Л_decoded .
+===== TRANSLATED =====
+function getMaxStakeFactor() returns(uint32) {
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(17);
+    require(ok, InternalErrors.ERROR516);
+    TvmSlice s = cell.toSlice();
+    s.loadTons();
+    s.loadTons();
+    s.loadTons();
+    decoded = s.decode(uint32);
+    return decoded;
+}
+===== REFERENCE =====
+
+function getMaxStakeFactor() virtual pure internal returns (uint32) { 
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(17); 
+    require(ok, InternalErrors.ERROR516); 
+    TvmSlice s = cell.toSlice(); 
+    s.loadTons(); 
+    s.loadTons(); 
+    s.loadTons(); 
+    return s.decode(uint32); 
+  } 
+ 
+===== DIFF =====
+- function getMaxStakeFactor() returns(uint32) {
++ function getMaxStakeFactor() virtual pure internal returns(uint32) {
+?                              ++++++++++++++++++++++
+  (TvmCell cell, bool ok) = tvm.rawConfigParam(17);
+  require(ok, InternalErrors.ERROR516);
+  TvmSlice s = cell.toSlice();
+  s.loadTons();
+  s.loadTons();
+  s.loadTons();
+- decoded = s.decode(uint32);
+? ^ ^^^^^^^
++ return s.decode(uint32);
+? ^ ^^^^
+- return decoded;
+  }

@@ -1,0 +1,765 @@
+Definition DePoolContract_Ф__returnOrReinvestForParticipant ( Л_round2 : RoundsBase_ι_Round ) 
+															               ( Л_round0 : RoundsBase_ι_Round ) 
+															               ( Л_addr : XAddress ) 
+															               ( Л_stakes : RoundsBase_ι_StakeValue ) 
+                              ( Л_isValidator : XBool ) 
+                             ( Л_round1ValidatorsElectedFor : XInteger32 ) 
+                         : LedgerT ( XErrorValue ( RoundsBase_ι_Round # RoundsBase_ι_Round ) XInteger ) := 
+( declareInit LocalState_ι__returnOrReinvestForParticipant_Л_round2 := $ Л_round2) >> 
+( declareInit LocalState_ι__returnOrReinvestForParticipant_Л_round0 := $ Л_round0) >> 
+
+     
+
+
+declareLocal Л_stakeSum :>: XInteger64 := RoundsBase_Ф_stakeSum (! $ Л_stakes !) ; 
+declareLocal Л_stakeIsLost :>: XBool := ( $ (Л_round2 ->> RoundsBase_ι_Round_ι_completionReason) ) ?== ( ξ$ RoundsBase_ι_CompletionReasonP_ι_ValidatorIsPunished) ; 		 
+declareLocal Л_optParticipant :>: ( XMaybe DePoolLib_ι_Participant ) := ParticipantBase_Ф_fetchParticipant (! $ Л_addr !) ; 
+Require {{$ Л_optParticipant ->hasValue , ξ$ InternalErrors_ι_ERROR511 }} ; 
+
+( declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_participant :>: (ξ DePoolLib_ι_Participant) := $ Л_optParticipant ->get) >> 
+(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_participant ^^ DePoolLib_ι_Participant_ι_roundQty !--) >> 
+
+( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds := $ Л_stakeIsLost ? 
+  ( D1! (D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2) ^^ RoundsBase_ι_Round_ι_stake !- 
+   D1! (D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2) ^^ RoundsBase_ι_Round_ι_unused ) !- 
+   D1! (D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2) ^^ RoundsBase_ι_Round_ι_recoveredStake 
+               ::: $ xInt0 ) 
+>> 
+
+                           
+
+declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_newStake :>: XInteger64 ; 
+declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_reward :>: XInteger64 ; 
+( 
+	If ( $ Л_stakeIsLost) then { 
+  ( If ( $ Л_isValidator ) 
+   then { 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake := $ ( Л_stakes ->> RoundsBase_ι_StakeValue_ι_ordinary ) ) >> 
+      declareLocal Л_delta :>: XInteger64 := math->min2 (! ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake , 
+                     ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds !) ; 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake !-= $ Л_delta ) >> 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds !-= $ Л_delta ) >> 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ^^ RoundsBase_ι_Round_ι_validatorRemainingStake 
+            := D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake ) 
+   } 
+   else { 
+      
+		(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake := math->muldiv (! 
+        D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_unused !+ 
+        D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_recoveredStake !- 
+        D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_validatorRemainingStake, 
+				 $ Л_stakes ->> RoundsBase_ι_StakeValue_ι_ordinary , 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_stake !- 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_validatorStake !)) 
+} ) 
+	} else { 
+     
+  (↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_reward := math->muldiv (! $ Л_stakeSum , 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_rewards , 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_stake !) ) >> 
+		(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_participant ^^ DePoolLib_ι_Participant_ι_reward 
+              !+= D2! LocalState_ι__returnOrReinvestForParticipant_Л_reward ) >> 
+		(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake := $ ( Л_stakes ->> RoundsBase_ι_StakeValue_ι_ordinary ) !+ 
+                                      (D2! LocalState_ι__returnOrReinvestForParticipant_Л_reward)) 
+	} 
+) >> 
+         
+( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ^^ RoundsBase_ι_Round_ι_handledStakesAndRewards 
+ !+= D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake ) >> 
+ 
+( declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_newVesting :>: ( XMaybe RoundsBase_ι_InvestParams ) := 
+         $ ( Л_stakes ->> RoundsBase_ι_StakeValue_ι_vesting ) ) >>  
+
+( If ( ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting ) ->hasValue ) 
+then 
+{ 
+ ( declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_params :>: RoundsBase_ι_InvestParams := 
+       ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting ) ->get ) >> 
+ ( If ( $ Л_stakeIsLost) then { 
+ 
+  ( If ( $ Л_isValidator ) 
+   then { 
+      declareLocal Л_delta :>: XInteger64 := math->min2 (! ↑17 D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) ^^ 
+                       RoundsBase_ι_InvestParams_ι_remainingAmount , 
+                     ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds !) ; 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_params ^^ 
+                       RoundsBase_ι_InvestParams_ι_remainingAmount !-= $ Л_delta ) >> 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds !-= $ Л_delta ) >> 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ^^ RoundsBase_ι_Round_ι_validatorRemainingStake 
+            !+= D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) 
+                      ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) 
+   }  
+   else { 
+		( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_params ^^ 
+                       RoundsBase_ι_InvestParams_ι_remainingAmount := math->muldiv (! 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_unused !+ 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_recoveredStake !- 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_validatorRemainingStake 
+       , 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) 
+                      ^^ RoundsBase_ι_InvestParams_ι_remainingAmount , 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_stake !- 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_validatorStake !) ) 
+} ) 
+	} )  >> 
+             
+ ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ^^ RoundsBase_ι_Round_ι_handledStakesAndRewards !+= 
+  D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) 
+>>   
+      
+
+ declareLocal Л_withdrawalVesting :>: XInteger64 ; 
+ declareLocal Л_tonsForOwner :>: XInteger64 ;
+
+             
+ U0! {( Л_newVesting , Л_withdrawalVesting , Л_tonsForOwner )} := DePoolContract_Ф_cutWithdrawalValue (! 
+                ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) , 
+                 $ Л_isValidator !& ( D1! ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) 
+                            ^^ RoundsBase_ι_Round_ι_completionReason ) ?!= 
+                            ξ$ RoundsBase_ι_CompletionReasonP_ι_RewardIsReceived , 
+                           ( $ Л_round1ValidatorsElectedFor !+ 
+                           ( D1! ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ 
+                               RoundsBase_ι_Round_ι_validatorsElectedFor ) ) 
+                           !) ;     
+
+ ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting := $ Л_newVesting ) >> 
+ ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake !+= $ Л_withdrawalVesting ) >> 
+       
+ ( If ( $ Л_tonsForOwner ?> $ xInt0 ) 
+  then { 
+	(D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) ->get) ^^ RoundsBase_ι_InvestParams_ι_owner ) ->transfer 
+      (! $ Л_tonsForOwner , $ xBoolFalse, $ xInt1 !) 
+    } ) 
+} ) 
+>>     
+
+( declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_attachedValue :>: XInteger64 := $ xInt1) >> 
+ 
+declareLocal Л_curPause :>: XInteger64 := math->min2 (! (D1! (↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_participant) ^^ DePoolLib_ι_Participant_ι_withdrawValue) , 
+								(↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake) !) ; 
+ 
+( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_attachedValue !+= $Л_curPause ) >> 
+ 
+( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_participant ^^ DePoolLib_ι_Participant_ι_withdrawValue !-= 
+                 $Л_curPause ) >> 
+ 
+( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake !-= $Л_curPause ) >> 
+ 
+( If ( ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake ) ?< 
+                     (↑12 D2! DePoolContract_ι_m_minStake ) ) then { 
+	( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_attachedValue !+= 
+              D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake ) >> 
+	( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake := $xInt0 ) 
+} ) >>      
+
+(declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_newLock :>: (XMaybe RoundsBase_ι_InvestParams) := 
+         $ ( Л_stakes ->> RoundsBase_ι_StakeValue_ι_lock ) ) >>   
+
+( If ( ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock ) ->hasValue )  
+then 
+{ 
+                   
+ ( declareGlobal LocalState_ι__returnOrReinvestForParticipant_Л_params :>: RoundsBase_ι_InvestParams := 
+       ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock ) ->get )    >>  
+	( If ( $ Л_stakeIsLost ) then { 
+ 
+  ( If ( $ Л_isValidator ) 
+   then { 
+      declareLocal Л_delta :>: XInteger64 := math->min2 (! ↑17 D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) ^^ 
+                             RoundsBase_ι_InvestParams_ι_remainingAmount , 
+                     ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds !) ; 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_params ^^ 
+                       RoundsBase_ι_InvestParams_ι_remainingAmount !-= $ Л_delta ) 
+>> 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_lostFunds !-= $ Л_delta ) >> 
+      ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ^^ RoundsBase_ι_Round_ι_validatorRemainingStake 
+            !+= D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) 
+                      ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) 
+   }  
+   else { 
+		( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_params ^^ 
+                       RoundsBase_ι_InvestParams_ι_remainingAmount := math->muldiv (! 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_unused !+ 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_recoveredStake !- 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_validatorRemainingStake 
+       , 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) 
+                      ^^ RoundsBase_ι_InvestParams_ι_remainingAmount , 
+				D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_stake !- 
+    D1! ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ) ^^ RoundsBase_ι_Round_ι_validatorStake !) ) 
+} ) 
+	} ) >>  
+            
+ ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ^^ RoundsBase_ι_Round_ι_handledStakesAndRewards !+= 
+ ( D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) ) >> 
+   
+
+ declareLocal Л_withdrawalLock :>: XInteger64 ;  
+            
+ U0! {( Л_newLock , Л_withdrawalLock , _ )} := DePoolContract_Ф_cutWithdrawalValue 
+       (! ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) , $ xBoolFalse , $ xInt0 !) ; 
+ ( ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newLock := $ Л_newLock ) >> 
+ (If ( $ Л_withdrawalLock ?!= $xInt0 ) then { 
+            
+  ( D1! ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_params ) ^^ RoundsBase_ι_InvestParams_ι_owner ) ->transfer 
+      (! $ Л_withdrawalLock , $xBoolFalse, $ xInt1 !) 
+   } ) 
+} ) >>  
+
+ 
+
+(If (↑12 D2! DePoolContract_ι_m_poolClosed) then { 
+	(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_attachedValue !+= 
+             D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake) >> 
+	(If ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) ->hasValue) then { 
+	(D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) ->get) ^^ 
+                 RoundsBase_ι_InvestParams_ι_owner ) ->transfer 
+                (! D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) ->get) ^^ 
+                 RoundsBase_ι_InvestParams_ι_remainingAmount , $xBoolFalse, $ xInt1 !) 
+	}) >> 
+	(If ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock) ->hasValue) then { 
+	(D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock) ->get) ^^ RoundsBase_ι_InvestParams_ι_owner ) 
+                                             ->transfer 
+      (! D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock) ->get) ^^ 
+                 RoundsBase_ι_InvestParams_ι_remainingAmount , $xBoolFalse, $ xInt1 !) 
+  }) 
+ } else { 
+	(If ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) ->hasValue) !& 
+		(D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) ->get) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ?== $xInt0) 
+	then { 
+		 ↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting ->reset 
+	}) >> 
+	(If ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock) ->hasValue) !& 
+		(D1! ((↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock) ->get) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ?== $xInt0) 
+	then { 
+		↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newLock ->reset 
+	}) >> 
+	(If ( !¬ (D1! (↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_participant) ^^ DePoolLib_ι_Participant_ι_reinvest)) then { 
+		(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_attachedValue !+= D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake) >> 
+		(↑17 U1! LocalState_ι__returnOrReinvestForParticipant_Л_newStake := $xInt0) 
+	}) >> 
+	(↑↑17 U2! {( LocalState_ι__returnOrReinvestForParticipant_Л_round0, 
+			  LocalState_ι__returnOrReinvestForParticipant_Л_participant )} := RoundsBase_Ф__addStakes (! (↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_round0) , 
+				(↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_participant) , 
+				 $Л_addr , 
+				(↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newStake) , 
+				(↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newVesting) , 
+				(↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_newLock)  !) ) 
+ 
+ }) >> 
+  
+ ParticipantBase_Ф__setOrDeleteParticipant (! $Л_addr , (↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_participant) !) >> 
+ 
+ 
+( IParticipant of ( $ Л_addr ) ->sendMessage ( IParticipant_И_onRoundCompleteF (!! 
+          ( ↑17 D1! (D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2) ^^ RoundsBase_ι_Round_ι_id ) , 
+																	( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_reward ) , 
+																	( $ Л_stakes ->> RoundsBase_ι_StakeValue_ι_ordinary ) , 
+																(	( ( $ Л_stakes ->> RoundsBase_ι_StakeValue_ι_vesting) ->hasValue ) ? 
+																			 ( D1! (( $ Л_stakes ->> RoundsBase_ι_StakeValue_ι_vesting) ->get) ^^ 
+                          RoundsBase_ι_InvestParams_ι_remainingAmount ) ::: $ xInt0 ) , 
+																	( ( ( $ Л_stakes ->> RoundsBase_ι_StakeValue_ι_lock) ->hasValue ) ? 
+																			 (D1! (( $ Л_stakes ->> RoundsBase_ι_StakeValue_ι_lock) ->get) ^^ 
+                          RoundsBase_ι_InvestParams_ι_remainingAmount) ::: $xInt0 ) , 
+																	( D1! (↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_participant) ^^ 
+                                                                    DePoolLib_ι_Participant_ι_reinvest ) , 
+																	  (completionReason2XInteger (!! 
+                       ↑17 D1! (D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2) ^^ 
+                          RoundsBase_ι_Round_ι_completionReason !!) ) !!) )
+                 with {|| messageValue ::= ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_attachedValue ) , 
+			                    messageBounce ::= $ xBoolFalse ||} ) >>
+
+ 
+ return# ( ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_round0 , 
+      ↑17 D2! LocalState_ι__returnOrReinvestForParticipant_Л_round2 ).
+===== TRANSLATED =====
+function _returnOrReinvestForParticipant(Round round2,
+    Round round0,
+    address addr,
+    StakeValue stakes,
+    bool isValidator,
+    uint32 round1ValidatorsElectedFor) returns(Round, Round) {
+    uint64 stakeSum = stakeSum(stakes);
+    bool stakeIsLost = (round2.completionReason) == CompletionReason.ValidatorIsPunished;
+    optional(Participant) optParticipant = fetchParticipant(addr);
+    require(optParticipant.hasValue(), InternalErrors.ERROR511);
+    DePoolLib.Participant participant = optParticipant.get();
+    (participant.roundQty--);
+    (lostFunds = stakeIsLost ?
+        (round2.stake - round2.unused) - round2.recoveredStake :
+        0);
+    uint64 newStake;
+    uint64 reward;
+    if (stakeIsLost) {
+        if (isValidator) {
+            (newStake = stakes.ordinary);
+            uint64 delta = math.min(newStake,
+                lostFunds);
+            (newStake -= delta);
+            (lostFunds -= delta);
+            (round2.validatorRemainingStake = newStake);
+        } else {
+            (newStake = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake,
+                stakes.ordinary, round2.stake - round2.validatorStake));
+        }
+    } else {
+        (reward = math.muldiv(stakeSum, round2.rewards, round2.stake));
+        (participant.reward += reward);
+        (newStake = stakes.ordinary + reward);
+    }
+    (round2.handledStakesAndRewards += newStake);
+    optional(InvestParams) newVesting = stakes.vesting;
+    if (newVesting.hasValue())
+    {
+        InvestParams params = newVesting.get();
+        if (stakeIsLost) {
+            if (isValidator) {
+                uint64 delta = math.min(params.remainingAmount,
+                    lostFunds);
+                (params.remainingAmount -= delta);
+                (lostFunds -= delta);
+                (round2.validatorRemainingStake += params.remainingAmount);
+            } else {
+                (params.remainingAmount = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, params.remainingAmount, round2.stake - round2.validatorStake));
+            }
+        }
+        (round2.handledStakesAndRewards += params.remainingAmount);
+        uint64 withdrawalVesting;
+        uint64 tonsForOwner;
+        (newVesting, withdrawalVesting, tonsForOwner) = cutWithdrawalValue(params,
+            isValidator && (round2.completionReason) !=
+            CompletionReason.RewardIsReceived,
+            (round1ValidatorsElectedFor +
+                (round2.validatorsElectedFor))
+        );
+        (newStake += withdrawalVesting);
+        if (tonsForOwner > 0) {
+            ((newVesting.get()).owner).transfer
+                (tonsForOwner, false, 1);
+        }
+    }
+    uint64 attachedValue = 1;
+    uint64 curPause = math.min((participant.withdrawValue), newStake);
+    (attachedValue += curPause);
+    (participant.withdrawValue -=
+        curPause);
+    (newStake -= curPause);
+    if (newStake < m_minStake) {
+        (attachedValue +=
+            newStake);
+        (newStake = 0);
+    }
+    optional(InvestParams) newLock = stakes.lock;
+    if (newLock.hasValue())
+    {
+        InvestParams params = newLock.get();
+        if (stakeIsLost) {
+            if (isValidator) {
+                uint64 delta = math.min(params.remainingAmount,
+                    lostFunds);
+                (params.remainingAmount -= delta);
+                (lostFunds -= delta);
+                (round2.validatorRemainingStake += params.remainingAmount);
+            } else {
+                (params.remainingAmount = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, params.remainingAmount, round2.stake - round2.validatorStake));
+            }
+        }
+        (round2.handledStakesAndRewards += params.remainingAmount);
+        uint64 withdrawalLock;
+        (newLock, withdrawalLock, ) = cutWithdrawalValue
+            (params, false, 0);
+        if (withdrawalLock != 0) {
+            (params.owner).transfer
+                (withdrawalLock, false, 1);
+        }
+    }
+    if (m_poolClosed) {
+        (attachedValue +=
+            newStake);
+        if (newVesting.hasValue()) {
+            ((newVesting.get()).owner).transfer
+                ((newVesting.get()).remainingAmount, false, 1);
+        }
+        if (newLock.hasValue()) {
+            ((newLock.get()).owner)
+            .transfer
+                ((newLock.get()).remainingAmount, false, 1);
+        }
+    } else {
+        if (newVesting.hasValue()) &&
+            ((newVesting.get()).remainingAmount == 0) {
+                newVesting.reset();
+            }
+        if (newLock.hasValue()) &&
+            ((newLock.get()).remainingAmount == 0) {
+                newLock.reset();
+            }
+        if (!(participant.reinvest)) {
+            (attachedValue += newStake);
+            (newStake = 0);
+        }
+        ((round0,
+            participant) = _addStakes(round0, participant,
+            addr, newStake, newVesting, newLock))
+        ;
+    }
+    _setOrDeleteParticipant(addr, participant);
+    (IParticipant(addr).onRoundComplete {
+        value: attachedValue,
+        bounce: false
+    }(
+        (round2.id), reward, stakes.ordinary,
+        ((stakes.vesting.hasValue()) ?
+            ((stakes.vesting.get()).remainingAmount) : 0),
+        ((stakes.lock.hasValue()) ?
+            ((stakes.lock.get()).remainingAmount) : 0),
+        (participant.reinvest),
+        (uint8(round2.completionReason))));
+    return (round0,
+        round2);
+}
+===== REFERENCE =====
+ 
+function _returnOrReinvestForParticipant( 
+    Round round2, 
+    Round round0, 
+    address addr, 
+    StakeValue stakes, 
+    bool isValidator, 
+    uint32 round1ValidatorsElectedFor 
+  ) private returns (Round, Round) { 
+    uint64 stakeSum = stakeSum(stakes); 
+    bool stakeIsLost = round2.completionReason == CompletionReason.ValidatorIsPunished; 
+    optional(Participant) optParticipant = fetchParticipant(addr); 
+    require(optParticipant.hasValue(), InternalErrors.ERROR511); 
+    Participant participant = optParticipant.get(); 
+    --participant.roundQty; 
+    uint64 lostFunds = stakeIsLost ? (round2.stake - round2.unused) - round2.recoveredStake : 0; 
+
+    uint64 newStake; 
+    uint64 reward; 
+    if (stakeIsLost) { 
+      if (isValidator) { 
+        newStake = stakes.ordinary; 
+        uint64 delta = math.min(newStake, lostFunds); 
+        newStake -= delta; 
+        lostFunds -= delta; 
+        round2.validatorRemainingStake = newStake; 
+      } else { 
+        newStake = math.muldiv( 
+          round2.unused + round2.recoveredStake - round2.validatorRemainingStake, 
+          stakes.ordinary, 
+          round2.stake - round2.validatorStake 
+        ); 
+      } 
+    } else { 
+      reward = math.muldiv(stakeSum, round2.rewards, round2.stake); 
+      participant.reward += reward; 
+      newStake = stakes.ordinary + reward; 
+    } 
+    round2.handledStakesAndRewards += newStake; 
+
+        optional(InvestParams) newVesting = stakes.vesting; 
+    if (newVesting.hasValue()) { 
+      InvestParams params = newVesting.get(); 
+      if (stakeIsLost) { 
+        if (isValidator) { 
+          uint64 delta = math.min(params.remainingAmount, lostFunds); 
+          params.remainingAmount -= delta; 
+          lostFunds -= delta; 
+          round2.validatorRemainingStake += params.remainingAmount; 
+        } else { 
+          params.remainingAmount = math.muldiv( 
+            round2.unused + round2.recoveredStake - round2.validatorRemainingStake, 
+            params.remainingAmount, 
+            round2.stake - round2.validatorStake 
+          ); 
+        } 
+      } 
+      round2.handledStakesAndRewards += params.remainingAmount; 
+      uint64 withdrawalVesting; 
+      uint64 tonsForOwner; 
+      (newVesting, withdrawalVesting, tonsForOwner) = cutWithdrawalValue( 
+        params, 
+        isValidator && round2.completionReason != CompletionReason.RewardIsReceived, 
+        round1ValidatorsElectedFor + round2.validatorsElectedFor 
+      ); 
+      newStake += withdrawalVesting; 
+      if (tonsForOwner > 0) 
+        newVesting.get().owner.transfer(tonsForOwner, false, 1); 
+
+    } 
+
+    uint64 attachedValue = 1; 
+    uint64 curPause = math.min(participant.withdrawValue, newStake); 
+    attachedValue += curPause; 
+    participant.withdrawValue -= curPause; 
+    newStake -= curPause; 
+    if (newStake < m_minStake) {       attachedValue += newStake; 
+      newStake = 0; 
+    } 
+
+         optional(InvestParams) newLock = stakes.lock; 
+    if (newLock.hasValue()) { 
+      InvestParams params = newLock.get(); 
+      if (stakeIsLost) { 
+        if (isValidator) { 
+          uint64 delta = math.min(params.remainingAmount, lostFunds); 
+          params.remainingAmount -= delta; 
+          lostFunds -= delta; 
+          round2.validatorRemainingStake += params.remainingAmount; 
+        } else { 
+          params.remainingAmount = math.muldiv( 
+            round2.unused + round2.recoveredStake - round2.validatorRemainingStake, 
+            params.remainingAmount, 
+            round2.stake - round2.validatorStake 
+          ); 
+        } 
+      } 
+      round2.handledStakesAndRewards += params.remainingAmount; 
+      uint64 withdrawalLock; 
+      (newLock, withdrawalLock, ) = cutWithdrawalValue(params, false, 0); 
+      if (withdrawalLock != 0) { 
+        params.owner.transfer(withdrawalLock, false, 1); 
+      } 
+    } 
+
+    if (m_poolClosed) { 
+      attachedValue += newStake; 
+      if (newVesting.hasValue()) { 
+        newVesting.get().owner.transfer(newVesting.get().remainingAmount, false, 1); 
+      } 
+      if (newLock.hasValue()) { 
+        newLock.get().owner.transfer(newLock.get().remainingAmount, false, 1); 
+      } 
+    } else { 
+      if (newVesting.hasValue() && newVesting.get().remainingAmount == 0) newVesting.reset(); 
+      if (newLock.hasValue() && newLock.get().remainingAmount == 0) newLock.reset(); 
+
+      if (!participant.reinvest) { 
+        attachedValue += newStake; 
+        newStake = 0; 
+      } 
+      (round0, participant) = _addStakes(round0, participant, addr, newStake, newVesting, newLock); 
+    } 
+
+    _setOrDeleteParticipant(addr, participant); 
+    IParticipant(addr).onRoundComplete{value: attachedValue, bounce: false}( 
+      round2.id, 
+      reward, 
+      stakes.ordinary, 
+      stakes.vesting.hasValue() ? stakes.vesting.get().remainingAmount : 0, 
+      stakes.lock.hasValue() ? stakes.lock.get().remainingAmount : 0, 
+      participant.reinvest, 
+      uint8(round2.completionReason) 
+    ); 
+
+    return (round0, round2); 
+  } 
+
+
+===== DIFF =====
+- function _returnOrReinvestForParticipant(Round round2, Round round0, address addr, StakeValue stakes, bool isValidator, uint32 round1ValidatorsElectedFor) returns(Round, Round) {
++ function _returnOrReinvestForParticipant(Round round2, Round round0, address addr, StakeValue stakes, bool isValidator, uint32 round1ValidatorsElectedFor) private returns(Round, Round) {
+?                                                                                                                                                            ++++++++
+  uint64 stakeSum = stakeSum(stakes);
+- bool stakeIsLost = (round2.completionReason) == CompletionReason.ValidatorIsPunished;
+?                    -                       -
++ bool stakeIsLost = round2.completionReason == CompletionReason.ValidatorIsPunished;
+  optional(Participant) optParticipant = fetchParticipant(addr);
+  require(optParticipant.hasValue(), InternalErrors.ERROR511);
+- DePoolLib.Participant participant = optParticipant.get();
+? ----------
++ Participant participant = optParticipant.get();
+- (participant.roundQty--);
+? ^                    ---
++ --participant.roundQty;
+? ^^
+- (lostFunds = stakeIsLost ?
+- (round2.stake - round2.unused) - round2.recoveredStake :
++ uint64 lostFunds = stakeIsLost ? (round2.stake - round2.unused) - round2.recoveredStake : 0;
+? +++++++++++++++++++++++++++++++++                                                        +++
+- 0);
+  uint64 newStake;
+  uint64 reward;
+  if (stakeIsLost) {
+  if (isValidator) {
+- (newStake = stakes.ordinary);
+? -                          -
++ newStake = stakes.ordinary;
+  uint64 delta = math.min(newStake, lostFunds);
+- (newStake -= delta);
+? -                 -
++ newStake -= delta;
+- (lostFunds -= delta);
+? -                  -
++ lostFunds -= delta;
+- (round2.validatorRemainingStake = newStake);
+? -                                         -
++ round2.validatorRemainingStake = newStake;
+  } else {
+- (newStake = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, stakes.ordinary, round2.stake - round2.validatorStake));
+? -                                                                                                                                                     -
++ newStake = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, stakes.ordinary, round2.stake - round2.validatorStake);
+  }
+  } else {
+- (reward = math.muldiv(stakeSum, round2.rewards, round2.stake));
+? -                                                            -
++ reward = math.muldiv(stakeSum, round2.rewards, round2.stake);
+- (participant.reward += reward);
+? -                            -
++ participant.reward += reward;
+- (newStake = stakes.ordinary + reward);
+? -                                   -
++ newStake = stakes.ordinary + reward;
+  }
+- (round2.handledStakesAndRewards += newStake);
+? -                                          -
++ round2.handledStakesAndRewards += newStake;
+  optional(InvestParams) newVesting = stakes.vesting;
+  if (newVesting.hasValue()) {
+  InvestParams params = newVesting.get();
+  if (stakeIsLost) {
+  if (isValidator) {
+  uint64 delta = math.min(params.remainingAmount, lostFunds);
+- (params.remainingAmount -= delta);
+? -                               -
++ params.remainingAmount -= delta;
+- (lostFunds -= delta);
+? -                  -
++ lostFunds -= delta;
+- (round2.validatorRemainingStake += params.remainingAmount);
+? -                                                        -
++ round2.validatorRemainingStake += params.remainingAmount;
+  } else {
+- (params.remainingAmount = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, params.remainingAmount, round2.stake - round2.validatorStake));
+? -                                                                                                                                                                          -
++ params.remainingAmount = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, params.remainingAmount, round2.stake - round2.validatorStake);
+  }
+  }
+- (round2.handledStakesAndRewards += params.remainingAmount);
+? -                                                        -
++ round2.handledStakesAndRewards += params.remainingAmount;
+  uint64 withdrawalVesting;
+  uint64 tonsForOwner;
+- (newVesting, withdrawalVesting, tonsForOwner) = cutWithdrawalValue(params, isValidator && (round2.completionReason) != CompletionReason.RewardIsReceived, (round1ValidatorsElectedFor + (round2.validatorsElectedFor)));
+?                                                                                           -                       -                                       -                             -                            --
++ (newVesting, withdrawalVesting, tonsForOwner) = cutWithdrawalValue(params, isValidator && round2.completionReason != CompletionReason.RewardIsReceived, round1ValidatorsElectedFor + round2.validatorsElectedFor);
+- (newStake += withdrawalVesting);
+? -                             -
++ newStake += withdrawalVesting;
+- if (tonsForOwner > 0) {
+?                      --
++ if (tonsForOwner > 0)
++ newVesting.get().owner.transfer(tonsForOwner, false, 1);
+- ((newVesting.get()).owner).transfer
+- (tonsForOwner, false, 1);
+- }
+  }
+  uint64 attachedValue = 1;
+- uint64 curPause = math.min((participant.withdrawValue), newStake);
+?                           -                          -
++ uint64 curPause = math.min(participant.withdrawValue, newStake);
+- (attachedValue += curPause);
+? -                         -
++ attachedValue += curPause;
+- (participant.withdrawValue -= curPause);
+? -                                     -
++ participant.withdrawValue -= curPause;
+- (newStake -= curPause);
+? -                    -
++ newStake -= curPause;
+  if (newStake < m_minStake) {
+- (attachedValue += newStake);
+? -                         -
++ attachedValue += newStake;
+- (newStake = 0);
+? -            -
++ newStake = 0;
+  }
+  optional(InvestParams) newLock = stakes.lock;
+  if (newLock.hasValue()) {
+  InvestParams params = newLock.get();
+  if (stakeIsLost) {
+  if (isValidator) {
+  uint64 delta = math.min(params.remainingAmount, lostFunds);
+- (params.remainingAmount -= delta);
+? -                               -
++ params.remainingAmount -= delta;
+- (lostFunds -= delta);
+? -                  -
++ lostFunds -= delta;
+- (round2.validatorRemainingStake += params.remainingAmount);
+? -                                                        -
++ round2.validatorRemainingStake += params.remainingAmount;
+  } else {
+- (params.remainingAmount = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, params.remainingAmount, round2.stake - round2.validatorStake));
+? -                                                                                                                                                                          -
++ params.remainingAmount = math.muldiv(round2.unused + round2.recoveredStake - round2.validatorRemainingStake, params.remainingAmount, round2.stake - round2.validatorStake);
+  }
+  }
+- (round2.handledStakesAndRewards += params.remainingAmount);
+? -                                                        -
++ round2.handledStakesAndRewards += params.remainingAmount;
+  uint64 withdrawalLock;
+- (newLock, withdrawalLock,) = cutWithdrawalValue
++ (newLock, withdrawalLock,) = cutWithdrawalValue(params, false, 0);
+?                                                +++++++++++++++++++
+- (params, false, 0);
+  if (withdrawalLock != 0) {
++ params.owner.transfer(withdrawalLock, false, 1);
+- (params.owner).transfer
+- (withdrawalLock, false, 1);
+  }
+  }
+  if (m_poolClosed) {
+- (attachedValue += newStake);
+? -                         -
++ attachedValue += newStake;
+  if (newVesting.hasValue()) {
+- ((newVesting.get()).owner).transfer
+- ((newVesting.get()).remainingAmount, false, 1);
+?                  -
++ newVesting.get().owner.transfer(newVesting.get().remainingAmount, false, 1);
+? ++++++++++++++ ++++++++++++++++
+  }
+  if (newLock.hasValue()) {
+- ((newLock.get()).owner).transfer
+- ((newLock.get()).remainingAmount, false, 1);
+?               -
++ newLock.get().owner.transfer(newLock.get().remainingAmount, false, 1);
+? +++++++++++ ++++++++++++++++
+  }
+  } else {
+- if (newVesting.hasValue()) && ((newVesting.get()).remainingAmount == 0) {
+?                          -    --               -                        ^
++ if (newVesting.hasValue() && newVesting.get().remainingAmount == 0) newVesting.reset();
+?                                                                     ^^^^^^^^^^^^^^^^^^^
+- newVesting.reset();
++ if (newLock.hasValue() && newLock.get().remainingAmount == 0) newLock.reset();
++ if (!participant.reinvest) {
++ attachedValue += newStake;
++ newStake = 0;
+  }
+- if (newLock.hasValue()) && ((newLock.get()).remainingAmount == 0) {
+- newLock.reset();
+- }
+- if (!(participant.reinvest)) {
+- (attachedValue += newStake);
+- (newStake = 0);
+- }
+- ((round0, participant) = _addStakes(round0, participant, addr, newStake, newVesting, newLock));
+? -                                                                                            -
++ (round0, participant) = _addStakes(round0, participant, addr, newStake, newVesting, newLock);
+  }
+  _setOrDeleteParticipant(addr, participant);
+- (IParticipant(addr).onRoundComplete {
+? -
++ IParticipant(addr).onRoundComplete {
+  value: attachedValue, bounce: false
++ }(round2.id, reward, stakes.ordinary, stakes.vesting.hasValue() ? stakes.vesting.get().remainingAmount : 0, stakes.lock.hasValue() ? stakes.lock.get().remainingAmount : 0, participant.reinvest, uint8(round2.completionReason));
+- }((round2.id), reward, stakes.ordinary, ((stakes.vesting.hasValue()) ?
+- ((stakes.vesting.get()).remainingAmount) : 0), ((stakes.lock.hasValue()) ?
+- ((stakes.lock.get()).remainingAmount) : 0), (participant.reinvest), (uint8(round2.completionReason))));
+  return (round0, round2);
+  }

@@ -1,0 +1,41 @@
+Definition DePoolProxyContract_Ф_process_new_stake ( Л_queryId : XInteger64 ) ( Л_validatorKey : XInteger256 ) ( Л_stakeAt : XInteger32 ) ( Л_maxFactor : XInteger32 ) ( Л_adnlAddr : XInteger256 ) ( Л_signature : XList XInteger8 ) ( Л_elector : XAddress ) : LedgerT ( XErrorValue True XInteger ) := 
+ Require2 {{ msg_sender () ?== ↑ε10 DePoolProxyContract_ι_m_dePool , $ DePoolProxyContract_ι_ERROR_IS_NOT_DEPOOL }} ; 
+ declareLocal Л_carry :>: XInteger := msg_value () !- ξ$ DePoolLib_ι_PROXY_FEE ; 
+ Require {{ tvm_balance () ?>=  $Л_carry !+ ( ξ$ DePoolLib_ι_MIN_PROXY_BALANCE ) , $ DePoolProxyContract_ι_ERROR_BAD_BALANCE }} ; 
+ IElector of ( $ Л_elector ) ->sendMessage ( IElector_И_process_new_stakeF (!! $ Л_queryId , $ Л_validatorKey , $ Л_stakeAt , $ Л_maxFactor , $ Л_adnlAddr , $ Л_signature !!) )
+                with {|| messageValue ::= msg_value () !- ξ$ DePoolLib_ι_PROXY_FEE ||} .
+===== TRANSLATED =====
+function process_new_stake(uint64 queryId, uint256 validatorKey, uint32 stakeAt, uint32 maxFactor, uint256 adnlAddr, bytes signature, address elector) {
+    require(msg.sender == m_dePool, ERROR_IS_NOT_DEPOOL);
+    uint carry = msg.value - DePoolLib.PROXY_FEE;
+    require(address(this).balance >= carry + DePoolLib.MIN_PROXY_BALANCE, ERROR_BAD_BALANCE);
+    IElector(elector).process_new_stake {
+        value: msg.value - DePoolLib.PROXY_FEE
+    }(queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature);
+}
+===== REFERENCE =====
+    function process_new_stake(
+        uint64 queryId,
+        uint256 validatorKey,
+        uint32 stakeAt,
+        uint32 maxFactor,
+        uint256 adnlAddr,
+        bytes signature,
+        address elector
+    ) external override onlyDePoolAndCheckBalance {
+        IElector(elector).process_new_stake{value: msg.value - DePoolLib.PROXY_FEE}(
+            queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature
+        );
+    }
+
+===== DIFF =====
+- function process_new_stake(uint64 queryId, uint256 validatorKey, uint32 stakeAt, uint32 maxFactor, uint256 adnlAddr, bytes signature, address elector) {
++ function process_new_stake(uint64 queryId, uint256 validatorKey, uint32 stakeAt, uint32 maxFactor, uint256 adnlAddr, bytes signature, address elector) external override onlyDePoolAndCheckBalance {
+?                                                                                                                                                        ++++++++++++++++++++++++++++++++++++++++++++
+- require(msg.sender == m_dePool, ERROR_IS_NOT_DEPOOL);
+- uint carry = msg.value - DePoolLib.PROXY_FEE;
+- require(address(this).balance >= carry + DePoolLib.MIN_PROXY_BALANCE, ERROR_BAD_BALANCE);
+  IElector(elector).process_new_stake {
+  value: msg.value - DePoolLib.PROXY_FEE
+  }(queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature);
+  }

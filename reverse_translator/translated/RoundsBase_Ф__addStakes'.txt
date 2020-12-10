@@ -1,0 +1,171 @@
+Definition RoundsBase_Ф__addStakes' (Л_round : RoundsBase_ι_Round ) (Л_participant : ξ DePoolLib_ι_Participant ) (Л_participantAddress: XAddress) (Л_stake: XInteger64) (Л_vesting: XMaybe RoundsBase_ι_InvestParams) (Л_lock: XMaybe RoundsBase_ι_InvestParams) : LedgerT (XValueValue ( RoundsBase_ι_Round # ( ξ DePoolLib_ι_Participant ) ) ) := 							  
+  						 
+ ( declareInit LocalState_ι__addStakes_Л_round := $ Л_round ) >> 
+ ( declareInit LocalState_ι__addStakes_Л_participant := $ Л_participant) >> 
+
+  
+ If! ( ( $ Л_stake ?== $ xInt0 ) !& ( !¬ ( $ Л_vesting ->hasValue) ) !& ( !¬ ( $ Л_lock ->hasValue) ) ) then { 
+  return! (xError ( [( Л_round , Л_participant )] )) 
+ } ; 	  
+  
+ ( If ( !¬ (D1! (↑17 D2! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_stakes) ->exists $ Л_participantAddress) ) then { 
+		(↑17 U1! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_participantQty !++) >> 
+		(↑17 U1! LocalState_ι__addStakes_Л_participant ^^ DePoolLib_ι_Participant_ι_roundQty !++) 
+	} ) >> 
+						 
+  			 
+ ( ↑17 U1! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_stake !+= $ Л_stake) >> 			 
+ ( declareGlobal LocalState_ι__addStakes_Л_sv :>: RoundsBase_ι_StakeValue := D1! (D2! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_stakes) [[ $ Л_participantAddress ]] ) >> 
+ ( ↑17 U1! LocalState_ι__addStakes_Л_sv ^^ RoundsBase_ι_StakeValue_ι_ordinary !+= $ Л_stake) >> 
+
+  
+
+ (If ( $ Л_vesting ->hasValue) then { 
+	 
+	(↑17 U1! LocalState_ι__addStakes_Л_participant ^^ DePoolLib_ι_Participant_ι_haveVesting := $ xBoolTrue ) >> 
+
+	  
+		(↑17 U1! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_stake !+= (D1! ( $ Л_vesting ->get) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount)) 
+	  >> 
+
+	 (↑17 U1! LocalState_ι__addStakes_Л_sv ^^ RoundsBase_ι_StakeValue_ι_vesting := $ Л_vesting) 
+ }) >> 
+
+  
+
+ (If ( $ Л_lock ->hasValue) then { 
+	 
+	(↑17 U1! LocalState_ι__addStakes_Л_participant ^^ DePoolLib_ι_Participant_ι_haveLock := $ xBoolTrue ) >> 
+
+	 
+		(↑17 U1! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_stake !+= (D1! ( $ Л_lock ->get) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount)) 
+	  >> 
+
+	 (↑17 U1! LocalState_ι__addStakes_Л_sv ^^ RoundsBase_ι_StakeValue_ι_lock := $ Л_lock) 
+ }) >>		 
+
+  
+ (↑17 U1! LocalState_ι__addStakes_Л_round ^^ RoundsBase_ι_Round_ι_stakes [[ $ Л_participantAddress ]] := D2! LocalState_ι__addStakes_Л_sv ) >> 
+
+ return# ( ↑ε17 LocalState_ι__addStakes_Л_round , ↑ε17 LocalState_ι__addStakes_Л_participant).
+===== TRANSLATED =====
+function _addStakes(Round round, DePoolLib.Participant participant, address participantAddress, uint64 stake, optional(InvestParams) vesting, optional(InvestParams) lock) returns(Round, DePoolLib.Participant) {
+    if ((stake == 0) && (!(vesting.hasValue())) && (!(lock.hasValue()))) {
+        return (((round, participant)));
+    }
+    if (!(round.stakes.exists(participantAddress))) {
+        (round.participantQty++);
+        (participant.roundQty++);
+    }
+    (round.stake += stake);
+    StakeValue sv = round.stakes[participantAddress];
+    (sv.ordinary += stake);
+    if (vesting.hasValue()) {
+        (participant.haveVesting = true);
+        (round.stake += ((vesting.get()).remainingAmount));
+        (sv.vesting = vesting);
+    }
+    if (lock.hasValue()) {
+        (participant.haveLock = true);
+        (round.stake += ((lock.get()).remainingAmount));
+        (sv.lock = lock);
+    }
+    (round.stakes[participantAddress] = sv);
+    return (round, participant);
+}
+===== REFERENCE =====
+    function _addStakes(
+        Round round,
+        Participant participant,
+        address participantAddress,
+        uint64 stake,
+        optional(InvestParams) vesting,
+        optional(InvestParams) lock
+    )
+        internal inline returns (Round, Participant)
+    {
+        if (stake == 0 && !vesting.hasValue() && !lock.hasValue()) {
+            return (round, participant);
+        }
+
+        if (!round.stakes.exists(participantAddress)) {
+            round.participantQty++;
+            participant.roundQty++;
+        }
+
+        round.stake += stake;
+        StakeValue sv = round.stakes[participantAddress];
+        sv.ordinary += stake;
+
+        if (vesting.hasValue()) {
+            participant.haveVesting = true;
+            round.stake += vesting.get().remainingAmount;
+            sv.vesting = vesting;
+        }
+
+        if (lock.hasValue()) {
+            participant.haveLock = true;
+            round.stake += lock.get().remainingAmount;
+            sv.lock = lock;
+        }
+
+        round.stakes[participantAddress] = sv;
+        return (round, participant);
+    }
+
+===== DIFF =====
+- function _addStakes(Round round, DePoolLib.Participant participant, address participantAddress, uint64 stake, optional(InvestParams) vesting, optional(InvestParams) lock) returns(Round, DePoolLib.Participant) {
+?                                  ----------                                                                                                                               ----------------------------------------
++ function _addStakes(Round round, Participant participant, address participantAddress, uint64 stake, optional(InvestParams) vesting, optional(InvestParams) lock)
++ internal inline returns(Round, Participant) {
+- if ((stake == 0) && (!(vesting.hasValue())) && (!(lock.hasValue()))) {
+?    -           -    - -                  --    - -                --
++ if (stake == 0 && !vesting.hasValue() && !lock.hasValue()) {
+- return (((round, participant)));
+?        --                    --
++ return (round, participant);
+  }
+- if (!(round.stakes.exists(participantAddress))) {
+?      -                                        -
++ if (!round.stakes.exists(participantAddress)) {
+- (round.participantQty++);
+? -                      -
++ round.participantQty++;
+- (participant.roundQty++);
+? -                      -
++ participant.roundQty++;
+  }
+- (round.stake += stake);
+? -                    -
++ round.stake += stake;
+  StakeValue sv = round.stakes[participantAddress];
+- (sv.ordinary += stake);
+? -                    -
++ sv.ordinary += stake;
+  if (vesting.hasValue()) {
+- (participant.haveVesting = true);
+? -                              -
++ participant.haveVesting = true;
+- (round.stake += ((vesting.get()).remainingAmount));
+? -               --            -                 --
++ round.stake += vesting.get().remainingAmount;
+- (sv.vesting = vesting);
+? -                    -
++ sv.vesting = vesting;
+  }
+  if (lock.hasValue()) {
+- (participant.haveLock = true);
+? -                           -
++ participant.haveLock = true;
+- (round.stake += ((lock.get()).remainingAmount));
+? -               --         -                 --
++ round.stake += lock.get().remainingAmount;
+- (sv.lock = lock);
+? -              -
++ sv.lock = lock;
+  }
+- (round.stakes[participantAddress] = sv);
+? -                                     -
++ round.stakes[participantAddress] = sv;
+  return (round, participant);
+  }

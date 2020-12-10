@@ -1,0 +1,116 @@
+Definition DePoolContract_Ф_terminator : LedgerT ( XErrorValue True XInteger ) := 
+ 	 
+Require2 {{ msg_pubkey () ?== tvm_pubkey () , ξ$ Errors_ι_IS_NOT_OWNER }} ; 
+ 
+Require {{ !¬ ↑12 D2! DePoolContract_ι_m_poolClosed , ξ$ Errors_ι_DEPOOL_IS_CLOSED }} ; 
+ 
+(↑12 U1! DePoolContract_ι_m_poolClosed := $xBoolTrue) >> 
+ 
+tvm_commit () >> 
+ 
+tvm_accept () >> 
+
+
+ 
+declareLocal Л_roundPre0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRoundPre0 (); 
+ 
+declareLocal Л_round0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 (); 
+ 
+(declareGlobal! LocalState_ι_terminator_Л_round1 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound1 () ) >> 
+
+ 
+U0! Л_roundPre0 := DePoolContract_Ф_startRoundCompleting (! $ Л_roundPre0 , 
+														 ξ$ RoundsBase_ι_CompletionReasonP_ι_PoolClosed !) ; 
+ 
+U0! Л_round0 := DePoolContract_Ф_startRoundCompleting (! $ Л_round0 , 
+														 ξ$ RoundsBase_ι_CompletionReasonP_ι_PoolClosed !) ; 
+ 
+(If (↑17 D2! LocalState_ι_terminator_Л_round1 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest) then { 
+	↑↑17 U2! LocalState_ι_terminator_Л_round1 := DePoolContract_Ф_startRoundCompleting (! ↑17 D2! LocalState_ι_terminator_Л_round1 , 
+																						  ξ$ RoundsBase_ι_CompletionReasonP_ι_PoolClosed !) 
+}) >> 
+ 
+->emit $ DePoolClosed >> 
+ 
+(RoundsBase_Ф_setRoundPre0 (! $ Л_roundPre0 !) ) >> 
+ 
+(RoundsBase_Ф_setRound0 (! $ Л_round0 !) ) >> 
+ 
+(RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_terminator_Л_round1 !) ) .
+===== TRANSLATED =====
+function terminator() {
+    require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);
+    require(!m_poolClosed, Errors.DEPOOL_IS_CLOSED);
+    (m_poolClosed = true);
+    tvm.commit();
+    tvm.accept();
+    Round roundPre0 = getRoundPre0();
+    Round round0 = getRound0();
+    Round round1 = getRound1();
+    roundPre0 = startRoundCompleting(roundPre0,
+        CompletionReason.PoolClosed);
+    round0 = startRoundCompleting(round0,
+        CompletionReason.PoolClosed);
+    if (round1.step == RoundStep.WaitingValidatorRequest) {
+        round1 = startRoundCompleting(round1,
+            CompletionReason.PoolClosed);
+    }
+    emit DePoolClosed();
+    (setRoundPre0(roundPre0));
+    (setRound0(round0));
+    (setRound1(round1));
+}
+===== REFERENCE =====
+
+function terminator() public { 
+require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER); 
+    require(!m_poolClosed, Errors.DEPOOL_IS_CLOSED); 
+    m_poolClosed = true; 
+    tvm.commit(); 
+    tvm.accept(); 
+
+    Round roundPre0 = getRoundPre0(); 
+    Round round0 = getRound0(); 
+    Round round1 = getRound1(); 
+
+    roundPre0 = startRoundCompleting(roundPre0, CompletionReason.PoolClosed); 
+    round0 = startRoundCompleting(round0, CompletionReason.PoolClosed); 
+    if (round1.step == RoundStep.WaitingValidatorRequest) { 
+      round1 = startRoundCompleting(round1, CompletionReason.PoolClosed); 
+    } 
+    emit DePoolClosed(); 
+    setRoundPre0(roundPre0); 
+    setRound0(round0); 
+    setRound1(round1); 
+  } 
+ 
+===== DIFF =====
+- function terminator() {
++ function terminator() public {
+?                       +++++++
+  require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);
+  require(!m_poolClosed, Errors.DEPOOL_IS_CLOSED);
+- (m_poolClosed = true);
+? -                   -
++ m_poolClosed = true;
+  tvm.commit();
+  tvm.accept();
+  Round roundPre0 = getRoundPre0();
+  Round round0 = getRound0();
+  Round round1 = getRound1();
+  roundPre0 = startRoundCompleting(roundPre0, CompletionReason.PoolClosed);
+  round0 = startRoundCompleting(round0, CompletionReason.PoolClosed);
+  if (round1.step == RoundStep.WaitingValidatorRequest) {
+  round1 = startRoundCompleting(round1, CompletionReason.PoolClosed);
+  }
+  emit DePoolClosed();
+- (setRoundPre0(roundPre0));
+? -                       -
++ setRoundPre0(roundPre0);
+- (setRound0(round0));
+? -                 -
++ setRound0(round0);
+- (setRound1(round1));
+? -                 -
++ setRound1(round1);
+  }

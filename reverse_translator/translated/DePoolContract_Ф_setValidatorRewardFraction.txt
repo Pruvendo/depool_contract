@@ -1,0 +1,52 @@
+Definition DePoolContract_Ф_setValidatorRewardFraction ( Л_fraction : XInteger8 ) 
+                                           : LedgerT ( XErrorValue True XInteger ) := 
+Require2 {{ ( msg_pubkey () ) ?== ( tvm_pubkey () ) , ξ$ Errors_ι_IS_NOT_OWNER }} ; 
+Require2 {{ ( $ Л_fraction ) ?< ( ↑12 D2! DePoolContract_ι_m_validatorRewardFraction ) , 
+                    ξ$ Errors_ι_NEW_VALIDATOR_FRACTION_MUST_BE_GREATER_THAN_OLD }} ; 
+Require {{ ( $ Л_fraction ) ?> ( $ xInt0 ) , ξ$ Errors_ι_FRACTION_MUST_NOT_BE_ZERO }} ; 
+tvm_accept () >> 
+( ↑12 U1! DePoolContract_ι_m_validatorRewardFraction := $ Л_fraction ) >> 
+( ↑12 U1! DePoolContract_ι_m_participantRewardFraction := ( ( $ xInt100 ) !- $ Л_fraction ) ) >> 
+( ->emit ( RewardFractionsChanged (!! ( ↑ε12 DePoolContract_ι_m_validatorRewardFraction ) , 
+                  ( ↑ε12 DePoolContract_ι_m_participantRewardFraction ) !!) ) ) .
+===== TRANSLATED =====
+function setValidatorRewardFraction(uint8 fraction) {
+    require((msg.pubkey()) == (tvm.pubkey()), Errors.IS_NOT_OWNER);
+    require(fraction < m_validatorRewardFraction,
+        Errors.NEW_VALIDATOR_FRACTION_MUST_BE_GREATER_THAN_OLD);
+    require(fraction > 0, Errors.FRACTION_MUST_NOT_BE_ZERO);
+    tvm.accept();
+    (m_validatorRewardFraction = fraction);
+    (m_participantRewardFraction = (100 - fraction));
+    emit RewardFractionsChanged(m_validatorRewardFraction, m_participantRewardFraction);
+}
+===== REFERENCE =====
+function setValidatorRewardFraction(uint8 fraction) public { 
+     require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER); 
+     require(fraction < m_validatorRewardFraction, Errors.NEW_VALIDATOR_FRACTION_MUST_BE_GREATER_THAN_OLD); 
+     require(fraction > 0, Errors.FRACTION_MUST_NOT_BE_ZERO); 
+     tvm.accept(); 
+ 
+     m_validatorRewardFraction = fraction; 
+     m_participantRewardFraction = 100 - m_validatorRewardFraction; 
+     emit RewardFractionsChanged(m_validatorRewardFraction, m_participantRewardFraction); 
+  } 
+===== DIFF =====
+- function setValidatorRewardFraction(uint8 fraction) {
++ function setValidatorRewardFraction(uint8 fraction) public {
+?                                                     +++++++
+- require((msg.pubkey()) == (tvm.pubkey()), Errors.IS_NOT_OWNER);
+?        -             -    -            -
++ require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);
+  require(fraction < m_validatorRewardFraction, Errors.NEW_VALIDATOR_FRACTION_MUST_BE_GREATER_THAN_OLD);
+  require(fraction > 0, Errors.FRACTION_MUST_NOT_BE_ZERO);
+  tvm.accept();
+- (m_validatorRewardFraction = fraction);
+? -                                    -
++ m_validatorRewardFraction = fraction;
+- (m_participantRewardFraction = (100 - fraction));
+? -                              -      ^       --
++ m_participantRewardFraction = 100 - m_validatorRewardFraction;
+?                                     ^^^^^^^^^^^^^^^^^^
+  emit RewardFractionsChanged(m_validatorRewardFraction, m_participantRewardFraction);
+  }

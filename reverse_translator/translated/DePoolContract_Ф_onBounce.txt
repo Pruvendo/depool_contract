@@ -1,0 +1,202 @@
+Definition DePoolContract_Ф_onBounce (Л_body: TvmSlice) : LedgerT (XErrorValue True XInteger) := 
+                              
+  declareLocal Л_functionId :::: XInteger32 := Л_body ->decode(uint32) ; 
+                              
+  declareLocal Л_isProcessNewStake :>: XBool := ( $ Л_functionId) ?== $ (tvm_functionId IProxy_И_process_new_stakeF) ; 
+                               
+  declareLocal Л_isRecoverStake  :>: XBool := ( $ Л_functionId) ?== $ (tvm_functionId IProxy_И_recover_stakeF) ; 
+                               
+  If! (( $Л_isProcessNewStake) !| ( $Л_isRecoverStake) ) then { 
+                               
+   declareLocal Л_roundId :::: XInteger64 := Л_body ->decode(uint64) ; 
+                               
+   ( declareGlobal! LocalState_ι_onBounce_Л_optRound :>: ( XMaybe RoundsBase_ι_Round ) := RoundsBase_Ф_fetchRound (! $ Л_roundId !) ) >> 
+                                
+   If!! ( $Л_isProcessNewStake) then { 
+                                
+   ( Require2 {{ RoundsBase_Ф_isRound1 (! $ Л_roundId !) , ξ$ InternalErrors_ι_ERROR524  }} ; 
+                                 
+   Require2 {{ (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->hasValue,  ξ$ InternalErrors_ι_ERROR519 }} ; 
+   declareLocal Л_r1 :>: RoundsBase_ι_Round := (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->get ; 
+                                 
+   Require {{  $(Л_r1 ->> RoundsBase_ι_Round_ι_step) ?==  ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfStakeAccepted , 
+                             ξ$ InternalErrors_ι_ERROR525 }} ; 
+                                    
+   U0! Л_r1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest ; 
+                                 
+   (->emit (ProxyHasRejectedTheStake (!! $((Л_r1 ->> RoundsBase_ι_Round_ι_validatorRequest) ->> DePoolLib_ι_Request_ι_queryId) !!) )) >> 
+                                 
+   (↑17 U1! LocalState_ι_onBounce_Л_optRound ->set $ Л_r1) ) 
+                                 } 
+   else { 
+                                 
+   If! (RoundsBase_Ф_isRound2 (! $ Л_roundId !)) then { 
+                            
+    ( Require2 {{ (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->hasValue , $ InternalErrors_ι_ERROR519 }} ; 
+    declareLocal Л_r2 :>: RoundsBase_ι_Round := (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->get ; 
+                           
+    Require {{  $(Л_r2 ->> RoundsBase_ι_Round_ι_step) ?==  ξ$ RoundsBase_ι_RoundStepP_ι_WaitingReward , 
+                           ξ$ InternalErrors_ι_ERROR526 }} ; 
+                          
+   U0! Л_r2 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze ; 
+                            
+    (↑17 U1! LocalState_ι_onBounce_Л_optRound ->set $ Л_r2) ) 
+                            
+   } else { If! (RoundsBase_Ф_isRound1 (! $ Л_roundId !)) then { 
+                             
+   ( Require2 {{ (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->hasValue ,  ξ$ InternalErrors_ι_ERROR519 }} ; 
+   declareLocal Л_r1 :>: RoundsBase_ι_Round := (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->get ; 
+                           
+   Require {{  $(Л_r1 ->> RoundsBase_ι_Round_ι_step) ?==  ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfValidatorWinElections , 
+                  ξ$ InternalErrors_ι_ERROR527 }} ; 
+                                
+   (↑17 U1! LocalState_ι_onBounce_Л_optRound ->set $ Л_r1) ) } 
+    
+       else { 
+                               
+   tvm_revert (! ξ$ InternalErrors_ι_ERROR528  !) 
+    
+   } ; $I }; 
+                               
+   ->emit ProxyHasRejectedRecoverRequest (!! $ Л_roundId !!) 
+                               
+   } ; 
+                                
+   Require {{ (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->hasValue, ξ$ InternalErrors_ι_ERROR519 }} ; 
+   RoundsBase_Ф_setRound (! $ Л_roundId, (↑17 D2! LocalState_ι_onBounce_Л_optRound) ->get !) 
+  }; $I.
+===== TRANSLATED =====
+function onBounce(TvmSlice body) {
+    uint32 functionId = body.decode(uint32);
+    bool isProcessNewStake = functionId == tvm.functionId(IProxy.process_new_stake);
+    bool isRecoverStake = functionId == tvm.functionId(IProxy.recover_stake);
+    if (isProcessNewStake || isRecoverStake) {
+        uint64 roundId = body.decode(uint64);
+        optional(Round) optRound = fetchRound(roundId);
+        if (isProcessNewStake) {
+            require(isRound1(roundId), InternalErrors.ERROR524);
+            require(optRound.hasValue(), InternalErrors.ERROR519);
+            Round r1 = optRound.get();
+            require(r1.step == RoundStep.WaitingIfStakeAccepted,
+                InternalErrors.ERROR525);
+            r1.step = RoundStep.WaitingValidatorRequest;
+            emit ProxyHasRejectedTheStake((r1.validatorRequest.queryId));
+            (optRound.set(r1));
+        } else {
+            if (isRound2(roundId)) {
+                require(optRound.hasValue(), ERROR519);
+                Round r2 = optRound.get();
+                require(r2.step == RoundStep.WaitingReward,
+                    InternalErrors.ERROR526);
+                r2.step = RoundStep.WaitingUnfreeze;
+                (optRound.set(r2))
+                ;
+            } else {
+                if (isRound1(roundId)) {
+                    require(optRound.hasValue(), InternalErrors.ERROR519);
+                    Round r1 = optRound.get();
+                    require(r1.step == RoundStep.WaitingIfValidatorWinElections,
+                        InternalErrors.ERROR527);
+                    (optRound.set(r1));
+                } else {
+                    revert(InternalErrors.ERROR528)
+                    ;
+                }
+            }
+            emit ProxyHasRejectedRecoverRequest(roundId)
+            ;
+        }
+        require(optRound.hasValue(), InternalErrors.ERROR519);
+        setRound(roundId, optRound.get());
+    }
+}
+===== REFERENCE =====
+    onBounce(TvmSlice body) external {
+        uint32 functionId = body.decode(uint32);
+        bool isProcessNewStake = functionId == tvm.functionId(IProxy.process_new_stake);
+        bool isRecoverStake = functionId == tvm.functionId(IProxy.recover_stake);
+        if (isProcessNewStake || isRecoverStake) {
+            uint64 roundId = body.decode(uint64);
+            optional(Round) optRound = fetchRound(roundId);
+            if (isProcessNewStake) {
+                require(isRound1(roundId), InternalErrors.ERROR524);
+                Round r1 = optRound.get();
+                require(r1.step == RoundStep.WaitingIfStakeAccepted, InternalErrors.ERROR525);
+                r1.step = RoundStep.WaitingValidatorRequest; // roll back step
+                emit ProxyHasRejectedTheStake(r1.validatorRequest.queryId);
+                optRound.set(r1);
+            } else {
+                if (isRound2(roundId)) {
+                    Round r2 = optRound.get();
+                    require(r2.step == RoundStep.WaitingReward, InternalErrors.ERROR526);
+                    r2.step = RoundStep.WaitingUnfreeze; // roll back step
+                    optRound.set(r2);
+                } else if (isRound1(roundId)) {
+                    Round r1 = optRound.get();
+                    require(r1.step == RoundStep.WaitingIfValidatorWinElections, InternalErrors.ERROR527);
+                    r1.step = RoundStep.WaitingValidationStart; // roll back step
+                    optRound.set(r1);
+                } else {
+                    revert(InternalErrors.ERROR528);
+                }
+                emit ProxyHasRejectedRecoverRequest(roundId);
+            }
+            setRound(roundId, optRound.get());
+        }
+    }
+
+===== DIFF =====
+- function onBounce(TvmSlice body) {
++ onBounce(TvmSlice body) external {
+  uint32 functionId = body.decode(uint32);
+  bool isProcessNewStake = functionId == tvm.functionId(IProxy.process_new_stake);
+  bool isRecoverStake = functionId == tvm.functionId(IProxy.recover_stake);
+  if (isProcessNewStake || isRecoverStake) {
+  uint64 roundId = body.decode(uint64);
+  optional(Round) optRound = fetchRound(roundId);
+  if (isProcessNewStake) {
+  require(isRound1(roundId), InternalErrors.ERROR524);
+- require(optRound.hasValue(), InternalErrors.ERROR519);
+  Round r1 = optRound.get();
+  require(r1.step == RoundStep.WaitingIfStakeAccepted, InternalErrors.ERROR525);
+- r1.step = RoundStep.WaitingValidatorRequest;
++ r1.step = RoundStep.WaitingValidatorRequest; // roll back step
+?                                             ++++++++++++++++++
+- emit ProxyHasRejectedTheStake((r1.validatorRequest.queryId));
+?                              -                             -
++ emit ProxyHasRejectedTheStake(r1.validatorRequest.queryId);
+- (optRound.set(r1));
+? -                -
++ optRound.set(r1);
+  } else {
+  if (isRound2(roundId)) {
+- require(optRound.hasValue(), ERROR519);
+  Round r2 = optRound.get();
+  require(r2.step == RoundStep.WaitingReward, InternalErrors.ERROR526);
+- r2.step = RoundStep.WaitingUnfreeze;
++ r2.step = RoundStep.WaitingUnfreeze; // roll back step
+?                                     ++++++++++++++++++
+- (optRound.set(r2));
+? -                -
++ optRound.set(r2);
+- } else {
+- if (isRound1(roundId)) {
++ } else if (isRound1(roundId)) {
+? +++++++
+- require(optRound.hasValue(), InternalErrors.ERROR519);
+  Round r1 = optRound.get();
+  require(r1.step == RoundStep.WaitingIfValidatorWinElections, InternalErrors.ERROR527);
++ r1.step = RoundStep.WaitingValidationStart; // roll back step
+- (optRound.set(r1));
+? -                -
++ optRound.set(r1);
+  } else {
+  revert(InternalErrors.ERROR528);
+  }
+- }
+  emit ProxyHasRejectedRecoverRequest(roundId);
+  }
+- require(optRound.hasValue(), InternalErrors.ERROR519);
+  setRound(roundId, optRound.get());
+  }
+  }

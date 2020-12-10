@@ -1,0 +1,35 @@
+Definition DePool_Ф_getParticipants : LedgerT (XArray XAddress) := $ default.
+===== TRANSLATED =====
+function getParticipants() returns(address[]) {
+    default;
+}
+===== REFERENCE =====
+
+function getParticipants() external view returns (address[] participants) { 
+    mapping(address => bool) used; 
+    optional(address, DePoolLib.Participant) pair = m_participants.min(); 
+    while (pair.hasValue()) { 
+      (address p, ) = pair.get(); 
+      if (!used.exists(p)) { 
+        used[p] = true; 
+        participants.push(p); 
+      } 
+      pair = m_participants.next(p); 
+    } 
+  } 
+===== DIFF =====
+- function getParticipants() returns(address[]) {
++ function getParticipants() external view returns(address[] participants) {
+?                            ++++++++++++++                 +++++++++++++
+- default;
++ mapping(address => bool) used;
++ optional(address, DePoolLib.Participant) pair = m_participants.min();
++ while (pair.hasValue()) {
++ (address p,) = pair.get();
++ if (!used.exists(p)) {
++ used[p] = true;
++ participants.push(p);
++ }
++ pair = m_participants.next(p);
++ }
+  }

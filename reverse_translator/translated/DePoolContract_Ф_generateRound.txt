@@ -1,0 +1,126 @@
+Definition DePoolContract_Ф_generateRound : LedgerT RoundsBase_ι_Round := 
+	declareLocal Л_req :>: DePoolLib_ι_Request ; 
+	declareLocal Л_r :>: RoundsBase_ι_Round := {|| 
+				  
+				 RoundsBase_ι_Round_ι_id ::= ↑11 D2! RoundsBase_ι_m_roundQty , 
+				  
+				 RoundsBase_ι_Round_ι_supposedElectedAt ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_unfreeze ::= ξ$ DePoolLib_ι_MAX_TIME , 
+                    
+         RoundsBase_ι_Round_ι_stakeHeldFor ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_vsetHashInElectionPhase ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_step ::= $ RoundsBase_ι_RoundStepP_ι_PrePooling , 
+				  
+         RoundsBase_ι_Round_ι_completionReason ::= ξ$ RoundsBase_ι_CompletionReasonP_ι_Undefined , 
+				  
+				 RoundsBase_ι_Round_ι_stake ::= $ xInt0 , 
+                  
+         RoundsBase_ι_Round_ι_recoveredStake ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_unused ::= $ xInt0 , 
+          
+         RoundsBase_ι_Round_ι_isValidatorStakeCompleted ::= $ xBoolFalse , 
+          
+         RoundsBase_ι_Round_ι_grossReward ::= $ xInt0 , 
+          
+				 RoundsBase_ι_Round_ι_rewards ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_participantQty ::= $ xInt0 , 
+         RoundsBase_ι_Round_ι_stakes ::= $ default , 
+           
+         RoundsBase_ι_Round_ι_validatorStake ::= $ xInt0 , 
+         RoundsBase_ι_Round_ι_validatorRemainingStake ::= $ xInt0 , 
+         RoundsBase_ι_Round_ι_handledStakesAndRewards ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_validatorRequest ::= $ Л_req , 
+				  
+				 RoundsBase_ι_Round_ι_elector ::= $ xInt0 , 
+				  
+				 RoundsBase_ι_Round_ι_proxy ::= ( ProxyBase_Ф_getProxy (! ↑11 D2! RoundsBase_ι_m_roundQty !) ) , 
+          
+         RoundsBase_ι_Round_ι_validatorsElectedFor ::= $ xInt0 
+	       ||} ; 
+	(↑11 U1! RoundsBase_ι_m_roundQty !++) >> 
+return! Л_r.
+===== TRANSLATED =====
+function generateRound() returns(Round) {
+    Request req;
+    Round r = Round({
+        id: m_roundQty,
+        supposedElectedAt: 0,
+        unfreeze: DePoolLib.MAX_TIME,
+        stakeHeldFor: 0,
+        vsetHashInElectionPhase: 0,
+        step: PrePooling,
+        completionReason: CompletionReason.Undefined,
+        stake: 0,
+        recoveredStake: 0,
+        unused: 0,
+        isValidatorStakeCompleted: false,
+        grossReward: 0,
+        rewards: 0,
+        participantQty: 0,
+        stakes: default,
+        validatorStake: 0,
+        validatorRemainingStake: 0,
+        handledStakesAndRewards: 0,
+        validatorRequest: req,
+        elector: 0,
+        proxy: (getProxy(m_roundQty)),
+        validatorsElectedFor: 0
+    });
+    (m_roundQty++);
+    return r;
+}
+===== REFERENCE =====
+
+function generateRound() internal returns (Round) { 
+    Request req; 
+    Round r = Round({ 
+      id: m_roundQty, 
+      supposedElectedAt: 0,       
+      unfreeze: DePoolLib.MAX_TIME,       
+      stakeHeldFor: 0, 
+      validatorsElectedFor: 0, 
+      vsetHashInElectionPhase: 0,       
+      step: RoundStep.PrePooling, 
+      completionReason: CompletionReason.Undefined, 
+
+      stake: 0, 
+      recoveredStake: 0, 
+      unused: 0, 
+      isValidatorStakeCompleted: false, 
+      grossReward: 0, 
+      rewards: 0, 
+      participantQty : 0, 
+      validatorStake: 0, 
+      validatorRemainingStake: 0, 
+      handledStakesAndRewards: 0, 
+
+      validatorRequest: req, 
+      elector: address(0),       proxy: getProxy(m_roundQty) 
+    }); 
+    ++m_roundQty; 
+    return r; 
+  } 
+
+===== DIFF =====
+- function generateRound() returns(Round) {
++ function generateRound() internal returns(Round) {
+?                          +++++++++
+  Request req;
+  Round r = Round({
+- id: m_roundQty, supposedElectedAt: 0, unfreeze: DePoolLib.MAX_TIME, stakeHeldFor: 0, vsetHashInElectionPhase: 0, step: PrePooling, completionReason: CompletionReason.Undefined, stake: 0, recoveredStake: 0, unused: 0, isValidatorStakeCompleted: false, grossReward: 0, rewards: 0, participantQty: 0, stakes: default, validatorStake: 0, validatorRemainingStake: 0, handledStakesAndRewards: 0, validatorRequest: req, elector: 0, proxy: (getProxy(m_roundQty)), validatorsElectedFor: 0
+?                                                                                                                                                                                                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                                         ^^        -                    --------------------------
++ id: m_roundQty, supposedElectedAt: 0, unfreeze: DePoolLib.MAX_TIME, stakeHeldFor: 0, validatorsElectedFor: 0, vsetHashInElectionPhase: 0, step: RoundStep.PrePooling, completionReason: CompletionReason.Undefined, stake: 0, recoveredStake: 0, unused: 0, isValidatorStakeCompleted: false, grossReward: 0, rewards: 0, participantQty: 0, validatorStake: 0, validatorRemainingStake: 0, handledStakesAndRewards: 0, validatorRequest: req, elector: address(0), proxy: getProxy(m_roundQty)
+?                                                                                     +++++++++++++++++++++++++                                   ++++++++++                                                                                                                                                                                   ^^^^^^^^^^^^^^^^^^                                                                                         ^^^^^^^^^^^
+  });
+- (m_roundQty++);
+? ^          ---
++ ++m_roundQty;
+? ^^
+  return r;
+  }

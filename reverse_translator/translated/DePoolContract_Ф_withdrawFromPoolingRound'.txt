@@ -1,0 +1,96 @@
+Definition DePoolContract_Ф_withdrawFromPoolingRound' ( Л_withdrawValue : XInteger64 ) 
+                 : LedgerT (XErrorValue (XValueValue True) XInteger) := 
+   
+Require {{ msg_sender () ?!= $ xInt0 , ξ$ Errors_ι_IS_EXT_MSG }} ; 
+ 
+If!! ( ↑ε12 DePoolContract_ι_m_poolClosed ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) 
+ } ; 
+ 
+declareLocal Л_optParticipant :>: ( XMaybe (ξ DePoolLib_ι_Participant) ) := ParticipantBase_Ф_fetchParticipant (! msg_sender () !) ; 
+If! ( !¬ ( $ Л_optParticipant ->hasValue ) ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_NO_PARTICIPANT , $ xInt0 !) )													 
+ } ; 
+
+ 
+declareLocal Л_participant :>: ξ DePoolLib_ι_Participant := $ Л_optParticipant ->get ; 
+                
+declareLocal Л_removedPoolingStake :>: XInteger64 ;
+ 
+U0! {( Л_removedPoolingStake , Л_participant )} := RoundsBase_Ф_withdrawStakeInPoolingRound 
+          (! $ Л_participant , msg_sender () , $ Л_withdrawValue , 
+                     (↑12 D2! DePoolContract_ι_m_minStake) !) ; 
+
+ 
+(ParticipantBase_Ф__setOrDeleteParticipant (! msg_sender () , $ Л_participant !)) >> 
+( ( msg_sender () ) ->transfer (! $Л_removedPoolingStake ,  $ xBoolFalse ,  $ xInt64 !) ) .
+===== TRANSLATED =====
+function withdrawFromPoolingRound(uint64 withdrawValue) {
+    require(msg.sender != 0, Errors.IS_EXT_MSG);
+    if (m_poolClosed) {
+        return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+    }
+    optional(DePoolLib.Participant) optParticipant = fetchParticipant(msg.sender);
+    if (!(optParticipant.hasValue())) {
+        return (_sendError(STATUS_NO_PARTICIPANT, 0));
+    }
+    DePoolLib.Participant participant = optParticipant.get();
+    uint64 removedPoolingStake;
+    (removedPoolingStake, participant) = withdrawStakeInPoolingRound
+        (participant, msg.sender, withdrawValue, m_minStake);
+    (_setOrDeleteParticipant(msg.sender, participant));
+    (msg.sender.transfer(removedPoolingStake, false, 64));
+}
+===== REFERENCE =====
+unction withdrawFromPoolingRound(uint64 withdrawValue) public 
+{ 
+require(msg.sender != address(0), Errors.IS_EXT_MSG); 
+    if (m_poolClosed) { 
+      return _sendError(STATUS_DEPOOL_CLOSED, 0); 
+    } 
+
+    optional(DePoolLib.Participant) optParticipant = fetchParticipant(msg.sender); 
+    if (!optParticipant.hasValue()) { 
+      return _sendError(STATUS_NO_PARTICIPANT, 0); 
+    } 
+    DePoolLib.Participant participant = optParticipant.get(); 
+
+    uint64 removedPoolingStake; 
+    (removedPoolingStake, participant) = withdrawStakeInPoolingRound(participant, msg.sender, withdrawValue, m_minStake); 
+    _setOrDeleteParticipant(msg.sender, participant); 
+    msg.sender.transfer(removedPoolingStake, false, 64); }
+===== DIFF =====
+- function withdrawFromPoolingRound(uint64 withdrawValue) {
+? -
++ unction withdrawFromPoolingRound(uint64 withdrawValue) public {
+?                                                        +++++++
+- require(msg.sender != 0, Errors.IS_EXT_MSG);
++ require(msg.sender != address(0), Errors.IS_EXT_MSG);
+?                       ++++++++ +
+  if (m_poolClosed) {
+- return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+?        -                                  -
++ return _sendError(STATUS_DEPOOL_CLOSED, 0);
+  }
+  optional(DePoolLib.Participant) optParticipant = fetchParticipant(msg.sender);
+- if (!(optParticipant.hasValue())) {
+?      -                          -
++ if (!optParticipant.hasValue()) {
+- return (_sendError(STATUS_NO_PARTICIPANT, 0));
+?        -                                   -
++ return _sendError(STATUS_NO_PARTICIPANT, 0);
+  }
+  DePoolLib.Participant participant = optParticipant.get();
+  uint64 removedPoolingStake;
++ (removedPoolingStake, participant) = withdrawStakeInPoolingRound(participant, msg.sender, withdrawValue, m_minStake);
+- (removedPoolingStake, participant) = withdrawStakeInPoolingRound
+- (participant, msg.sender, withdrawValue, m_minStake);
+- (_setOrDeleteParticipant(msg.sender, participant));
+? -                                                -
++ _setOrDeleteParticipant(msg.sender, participant);
+- (msg.sender.transfer(removedPoolingStake, false, 64));
+? -                                                   -
++ msg.sender.transfer(removedPoolingStake, false, 64);
+  }

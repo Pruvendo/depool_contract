@@ -1,0 +1,8 @@
+Definition DePoolContract_Ф_receiveFunds : LedgerT True := $ I .
+===== TRANSLATED =====
+function receiveFunds() {}
+===== REFERENCE =====
+
+function receiveFunds() public pure { } 
+===== DIFF =====
+- function receiveFunds() {}+ function receiveFunds() public pure {}?                         ++++++++++++

@@ -1,0 +1,176 @@
+Definition DePoolContract_Ф_onSuccessToRecoverStake ( Л_queryId : XInteger64 ) ( Л_elector : XAddress ) : 
+                           LedgerT ( XErrorValue True XInteger ) := 
+                	 
+declareLocal Л_optRound :>: ( XMaybe RoundsBase_ι_Round ) := RoundsBase_Ф_fetchRound (! $ Л_queryId !) ; 
+                 
+Require2 {{$ Л_optRound ->hasValue , ξ$ InternalErrors_ι_ERROR513 }} ; 
+                    
+declareLocal Л_round :>: RoundsBase_ι_Round := ( $ Л_optRound) ->get ; 
+                    
+Require2 {{ msg_sender () ?== $ Л_round ->> RoundsBase_ι_Round_ι_proxy , ξ$ Errors_ι_IS_NOT_PROXY }} ; 
+                     
+Require2 {{$ Л_elector ?== $ Л_round ->> RoundsBase_ι_Round_ι_elector , ξ$ Errors_ι_IS_NOT_ELECTOR }} ; 
+
+(tvm_accept ()) >> 
+
+ 
+( declareInit LocalState_ι_onSuccessToRecoverStake_Л_round := $ Л_round) >> 
+ 
+declareLocal Л_value :>: XInteger64 := msg_value () !+ ξ$ DePoolLib_ι_PROXY_FEE ; 
+
+ 
+If! (↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfValidatorWinElections) then { 
+ 
+(If ( $Л_value ?< (↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_stake )) then { 
+ 
+(↑17 U1! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze )	>> 
+(↑17 U1! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_unused := $ Л_value) 
+} else { 
+ 
+(↑17 U1! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze )	>> 
+(↑17 U1! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_completionReason := ξ$ RoundsBase_ι_CompletionReasonP_ι_ElectionsAreLost) 
+}) >> $ (xValue I) 
+} 
+ 		 
+else {   
+If (↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingReward) then { 
+ 
+(↑17 U1! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_recoveredStake := $ Л_value) >> 
+ 	 
+(If ( $ Л_value ?>= (↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_stake) !- (↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round ^^ RoundsBase_ι_Round_ι_unused) ) then { 
+ 
+↑↑17 U2! LocalState_ι_onSuccessToRecoverStake_Л_round := DePoolContract_Ф_acceptRewardAndStartRoundCompleting(! ↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round , 
+                                       $ Л_value !) 
+
+} else { 
+ 
+↑↑17 U2! LocalState_ι_onSuccessToRecoverStake_Л_round := DePoolContract_Ф_startRoundCompleting(! ↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round , 
+                                  ξ$ RoundsBase_ι_CompletionReasonP_ι_ValidatorIsPunished !) 
+}) >> $ (xValue I) 
+} else { 
+ 
+tvm_revert (! ξ$ InternalErrors_ι_ERROR521  !) 
+} } ; 
+
+ 
+(RoundsBase_Ф_setRound (! $Л_queryId , ↑17 D2! LocalState_ι_onSuccessToRecoverStake_Л_round !) ).
+===== TRANSLATED =====
+function onSuccessToRecoverStake(uint64 queryId, address elector) {
+    optional(Round) optRound = fetchRound(queryId);
+    require(optRound.hasValue(), InternalErrors.ERROR513);
+    Round round = optRound.get();
+    require(msg.sender == round.proxy, Errors.IS_NOT_PROXY);
+    require(elector == round.elector, Errors.IS_NOT_ELECTOR);
+    (tvm.accept());
+    uint64 value = msg.value + DePoolLib.PROXY_FEE;
+    if (round.step == RoundStep.WaitingIfValidatorWinElections) {
+        if (value < round.stake) {
+            (round.step = RoundStep.WaitingUnfreeze);
+            (round.unused = value);
+        } else {
+            (round.step = RoundStep.WaitingUnfreeze);
+            (round.completionReason = CompletionReason.ElectionsAreLost);
+        }
+    } else {
+        if (round.step == RoundStep.WaitingReward) {
+            (round.recoveredStake = value);
+            if (value >= round.stake - round.unused) {
+                round = acceptRewardAndStartRoundCompleting(round,
+                    value)
+                ;
+            } else {
+                round = startRoundCompleting(round,
+                    CompletionReason.ValidatorIsPunished);
+            }
+        } else {
+            revert(InternalErrors.ERROR521);
+        }
+    }
+    (setRound(queryId, round));
+}
+===== REFERENCE =====
+function onSuccessToRecoverStake(uint64 queryId, address elector) public override {
+        optional(Round) optRound = fetchRound(queryId);
+        require(optRound.hasValue(), InternalErrors.ERROR513);
+        Round round = optRound.get();
+        require(msg.sender == round.proxy, Errors.IS_NOT_PROXY);
+        require(elector == round.elector, Errors.IS_NOT_ELECTOR);
+        tvm.accept();
+        uint64 value = uint64(msg.value) + DePoolLib.PROXY_FEE;
+        if (round.step == RoundStep.WaitingIfValidatorWinElections) {
+            if (value < round.stake) {
+                // only part of round stake is returned - we won the election,
+                // but round stake is cut-off by elector,
+                // optimize a minimum round stake
+                round.step = RoundStep.WaitingUnfreeze;
+                round.unused = value;
+            } else {
+                // value +/- epsilon == round.stake, so elections are lost
+                round.step = RoundStep.WaitingUnfreeze;
+                round.completionReason = CompletionReason.ElectionsAreLost;
+            }
+        } else if (round.step == RoundStep.WaitingReward) {
+            round.recoveredStake = value;
+            if (value >= round.stake - round.unused) {
+                round = acceptRewardAndStartRoundCompleting(round, value);
+            } else {
+                round = startRoundCompleting(round, CompletionReason.ValidatorIsPunished);
+            }
+        } else {
+            revert(InternalErrors.ERROR521);
+        }
+
+        setRound(queryId, round);  } 
+===== DIFF =====
+- function onSuccessToRecoverStake(uint64 queryId, address elector) {
++ function onSuccessToRecoverStake(uint64 queryId, address elector) public override {
+?                                                                   ++++++++++++++++
+  optional(Round) optRound = fetchRound(queryId);
+  require(optRound.hasValue(), InternalErrors.ERROR513);
+  Round round = optRound.get();
+  require(msg.sender == round.proxy, Errors.IS_NOT_PROXY);
+  require(elector == round.elector, Errors.IS_NOT_ELECTOR);
+- (tvm.accept());
+? -            -
++ tvm.accept();
+- uint64 value = msg.value + DePoolLib.PROXY_FEE;
++ uint64 value = uint64(msg.value) + DePoolLib.PROXY_FEE;
+?                +++++++         +
+  if (round.step == RoundStep.WaitingIfValidatorWinElections) {
+  if (value < round.stake) {
++ // only part of round stake is returned - we won the election, // but round stake is cut-off by elector, // optimize a minimum round stake
+- (round.step = RoundStep.WaitingUnfreeze);
+? -                                      -
++ round.step = RoundStep.WaitingUnfreeze;
+- (round.unused = value);
+? -                    -
++ round.unused = value;
+  } else {
++ // value +/- epsilon == round.stake, so elections are lost
+- (round.step = RoundStep.WaitingUnfreeze);
+? -                                      -
++ round.step = RoundStep.WaitingUnfreeze;
+- (round.completionReason = CompletionReason.ElectionsAreLost);
+? -                                                          -
++ round.completionReason = CompletionReason.ElectionsAreLost;
+  }
+- } else {
+- if (round.step == RoundStep.WaitingReward) {
++ } else if (round.step == RoundStep.WaitingReward) {
+? +++++++
+- (round.recoveredStake = value);
+? -                            -
++ round.recoveredStake = value;
+  if (value >= round.stake - round.unused) {
+  round = acceptRewardAndStartRoundCompleting(round, value);
+  } else {
+  round = startRoundCompleting(round, CompletionReason.ValidatorIsPunished);
+  }
+  } else {
+  revert(InternalErrors.ERROR521);
+  }
+- }
+- (setRound(queryId, round));
+? -                        -
++ setRound(queryId, round);
+  }

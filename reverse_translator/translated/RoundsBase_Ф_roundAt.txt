@@ -1,0 +1,18 @@
+Definition RoundsBase_Ф_roundAt (Л_id: XInteger64) : LedgerT RoundsBase_ι_Round := 
+  return!! (  (D1! (↑11 D2! RoundsBase_ι_m_rounds) ->fetch $ Л_id) ->get ).
+===== TRANSLATED =====
+function roundAt(uint64 id) returns(Round) {
+    return ((m_rounds.fetch(id)).get());
+}
+===== REFERENCE =====
+function roundAt(uint64 id) internal returns (Round) { 
+  return m_rounds.fetch(id).get(); 
+} 
+===== DIFF =====
+- function roundAt(uint64 id) returns(Round) {
++ function roundAt(uint64 id) internal returns(Round) {
+?                            +++++++++
+- return ((m_rounds.fetch(id)).get());
+?        --                  -      -
++ return m_rounds.fetch(id).get();
+  }

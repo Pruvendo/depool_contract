@@ -1,0 +1,388 @@
+Definition DePoolContract_Ф_addVestingOrLock' ( Л_stake : XInteger64 ) 
+                       ( Л_beneficiary : XAddress ) 
+                       ( Л_withdrawalPeriod : XInteger32 ) 
+                       ( Л_totalPeriod : XInteger32 ) 
+                       ( Л_isVesting : XBool ) : 
+                     LedgerT (XValueValue True) := 
+ 
+If!! ( ↑ε12 DePoolContract_ι_m_poolClosed ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) 
+ } ; 
+   
+If!! ( ( !¬ ( ( $ Л_beneficiary ) ->isStdAddrWithoutAnyCast() ) ) !| ( $ Л_beneficiary ?== $ xInt0 ) ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_ADDRESS , $ xInt0 !) ) 
+ } ; 
+
+If!! ( ( msg_sender () ) ?== $ Л_beneficiary ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_BENEFICIARY , $ xInt0 !) ) 
+ } ; 
+   
+declareLocal Л_msgValue :>: XInteger64 := msg_value () ;
+ 
+If!! ( $ Л_msgValue ?< ( $ Л_stake !+ ( $ DePool_ι_STAKE_FEE ) ) ) 
+then 
+{ 
+ return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_FEE_TOO_SMALL , 
+                      $ DePool_ι_STAKE_FEE !) ) 
+} ; 
+                     
+declareLocal Л_fee :>: XInteger64 := $ Л_msgValue !- $ Л_stake ; 
+declareLocal Л_halfStake :>: XInteger64 := $ Л_stake !/ $ xInt2 ; 
+
+If!! ( $ Л_halfStake ?< ↑12 D2! DePoolContract_ι_m_minStake ) 
+then 
+{ 
+return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_STAKE_TOO_SMALL , $ xInt2 !* ( ↑12 D2! DePoolContract_ι_m_minStake ) !) ) 
+} ; 
+
+If!! ( $ Л_withdrawalPeriod ?> $ Л_totalPeriod ) 
+then 
+{ 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD , $ xInt0 !) ) 
+} ; 
+
+If!! ( $ Л_totalPeriod ?>= ( $ xInt18 !* $ xInt365 !* $ x1_day ) ) 
+then 
+{ 
+return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TOTAL_PERIOD_MORE_18YEARS , $ xInt0 !) ) 
+} ; 
+
+If!! ( $ Л_withdrawalPeriod ?== $ xInt0 ) 
+then 
+{ 
+return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_WITHDRAWAL_PERIOD_IS_ZERO , $ xInt0 !) ) 
+} ; 
+
+If!! ( ( $ Л_totalPeriod !% $ Л_withdrawalPeriod ) ?!= $ xInt0 ) 
+then 
+{ 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD , $ xInt0 !) ) 
+} ; 
+                         
+declareLocal Л_participant :>: DePoolLib_ι_Participant := ParticipantBase_Ф_getOrCreateParticipant (! $ Л_beneficiary !) ; 
+If! ( $ Л_isVesting ) 
+then { 
+If! ( $ Л_participant ->> DePoolLib_ι_Participant_ι_haveVesting ) 
+then { 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_VESTING , $ xInt0 !) ) 
+} ; $ I 
+} 
+else 
+{ 
+If! ( $ Л_participant ->> DePoolLib_ι_Participant_ι_haveLock ) 
+then { 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_LOCK , $ xInt0 !) ) 
+} ; $ I 
+} ; 
+                    
+declareLocal Л_withdrawalValue :>: XInteger64 := math->muldiv (! $ Л_halfStake , $ Л_withdrawalPeriod , $ Л_totalPeriod !) ; 
+ 
+     
+
+ 
+( ↑17 U1! LocalState_ι_addVestingOrLock_Л_participant := $ Л_participant ) >> 
+
+( 
+ForIndexed (xListCons xInt0 (xListCons xInt1 xListNil)) do (fun (i: XInteger) => 
+                     
+declareLocal Л_isFirstPart :>: XBool := ( $ i ?== $ xInt0 ) ; 
+declareLocal Л_vestingOrLock :>: RoundsBase_ι_InvestParams := {|| 
+  RoundsBase_ι_InvestParams_ι_remainingAmount ::= $ Л_isFirstPart ? $ Л_halfStake ::: $Л_stake !- $Л_halfStake, 
+  RoundsBase_ι_InvestParams_ι_lastWithdrawalTime ::= tvm_now () , 
+  RoundsBase_ι_InvestParams_ι_withdrawalPeriod ::= $ Л_withdrawalPeriod , 
+  RoundsBase_ι_InvestParams_ι_withdrawalValue ::= $ Л_withdrawalValue , 
+  RoundsBase_ι_InvestParams_ι_owner ::= msg_sender () ||} ; 
+ 
+     
+  declareGlobal LocalState_ι_addVestingOrLock_Л_v :>: ( XMaybe RoundsBase_ι_InvestParams ) ; 
+  declareGlobal LocalState_ι_addVestingOrLock_Л_l  :>: ( XMaybe RoundsBase_ι_InvestParams ) ; 
+If ( $ Л_isVesting ) 
+then 
+{ 
+ ↑17 U1! LocalState_ι_addVestingOrLock_Л_v ->set ( $ Л_vestingOrLock ) 
+} 
+else 
+{ 
+ ↑17 U1! LocalState_ι_addVestingOrLock_Л_l ->set ( $ Л_vestingOrLock ) 
+} >> 
+          
+declareLocal Л_round :>: RoundsBase_ι_Round := $ Л_isFirstPart ? RoundsBase_Ф_getRoundPre0 () ::: RoundsBase_Ф_getRound0 () ; 
+         
+U0! {( Л_round , Л_participant )} := RoundsBase_Ф__addStakes (! ( $ Л_round) , ( $ Л_participant ) , 
+                              ( $ Л_beneficiary ) , 
+                              ( $ xInt0 ) , 
+                              ( ↑17 D2! LocalState_ι_addVestingOrLock_Л_v ), 
+                              ( ↑17 D2! LocalState_ι_addVestingOrLock_Л_l ) !) ; 
+( ↑17 U1! LocalState_ι_addVestingOrLock_Л_participant := $ Л_participant ) >>
+               
+ $ Л_isFirstPart ? RoundsBase_Ф_setRoundPre0 (! $ Л_round !) ::: RoundsBase_Ф_setRound0 (! $ Л_round !) 
+) ) >> 
+         
+ParticipantBase_Ф__setOrDeleteParticipant (! ( $ Л_beneficiary) , ↑17 D2! LocalState_ι_addVestingOrLock_Л_participant !) >> 
+DePoolContract_Ф_sendAcceptAndReturnChange128 (! $ Л_fee !) .
+===== TRANSLATED =====
+function addVestingOrLock(uint64 stake,
+    address beneficiary,
+    uint32 withdrawalPeriod,
+    uint32 totalPeriod,
+    bool isVesting) {
+    if (m_poolClosed) {
+        return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+    }
+    if ((!(beneficiary.isStdAddrWithoutAnyCast())) || (beneficiary == 0)) {
+        return (_sendError(STATUS_INVALID_ADDRESS, 0));
+    }
+    if (msg.sender == beneficiary) {
+        return (_sendError(STATUS_INVALID_BENEFICIARY, 0));
+    }
+    uint64 msgValue = msg.value;
+    if (msgValue < (stake + STAKE_FEE))
+    {
+        return (_sendError(STATUS_FEE_TOO_SMALL,
+            STAKE_FEE));
+    }
+    uint64 fee = msgValue - stake;
+    uint64 halfStake = stake / 2;
+    if (halfStake < m_minStake)
+    {
+        return (_sendError(STATUS_STAKE_TOO_SMALL, 2 * m_minStake));
+    }
+    if (withdrawalPeriod > totalPeriod)
+    {
+        return (_sendError(STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD, 0));
+    }
+    if (totalPeriod >= (18 * (365 days)))
+    {
+        return (_sendError(STATUS_TOTAL_PERIOD_MORE_18YEARS, 0));
+    }
+    if (withdrawalPeriod == 0)
+    {
+        return (_sendError(STATUS_WITHDRAWAL_PERIOD_IS_ZERO, 0));
+    }
+    if ((totalPeriod % withdrawalPeriod) != 0)
+    {
+        return (_sendError(STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD, 0));
+    }
+    Participant participant = getOrCreateParticipant(beneficiary);
+    if (isVesting) {
+        if (participant.haveVesting) {
+            return (_sendError(STATUS_PARTICIPANT_ALREADY_HAS_VESTING, 0));
+        }
+    } else {
+        if (participant.haveLock) {
+            return (_sendError(STATUS_PARTICIPANT_ALREADY_HAS_LOCK, 0));
+        }
+    }
+    uint64 withdrawalValue = math.muldiv(halfStake, withdrawalPeriod, totalPeriod);
+    for (uint i = 0; i < 2; ++i) {
+        bool isFirstPart = (i == 0);
+        InvestParams vestingOrLock = InvestParams({
+            remainingAmount: isFirstPart ? halfStake : stake - halfStake,
+            lastWithdrawalTime: now,
+            withdrawalPeriod: withdrawalPeriod,
+            withdrawalValue: withdrawalValue,
+            owner: msg.sender
+        });
+        optional(InvestParams) v;
+        optional(InvestParams) l;
+        if (isVesting)
+        {
+            v.set(vestingOrLock);
+        } else {
+            l.set(vestingOrLock);
+        }
+        Round round = isFirstPart ? getRoundPre0() : getRound0();
+        (round, participant) = _addStakes(round, participant, beneficiary, 0, v, l);
+        isFirstPart ? setRoundPre0(round) : setRound0(round);
+    }
+    _setOrDeleteParticipant(beneficiary, participant);
+    sendAcceptAndReturnChange128(fee);
+}
+===== REFERENCE =====
+    function addVestingOrLock(uint64 stake, address beneficiary, uint32 withdrawalPeriod, uint32 totalPeriod, bool isVesting) private {
+        if (m_poolClosed) {
+            return _sendError(STATUS_DEPOOL_CLOSED, 0);
+        }
+
+        if (!beneficiary.isStdAddrWithoutAnyCast() || beneficiary == address(0))
+            return _sendError(STATUS_INVALID_ADDRESS, 0);
+
+        if (msg.sender == beneficiary)
+            return _sendError(STATUS_INVALID_BENEFICIARY, 0);
+
+
+        uint64 msgValue = uint64(msg.value);
+        if (msgValue < uint(stake) + STAKE_FEE) {
+            return _sendError(STATUS_FEE_TOO_SMALL, STAKE_FEE);
+        }
+        uint64 fee = msgValue - stake;
+
+        uint64 halfStake = stake / 2;
+        if (halfStake < m_minStake) {
+            return _sendError(STATUS_STAKE_TOO_SMALL, 2 * m_minStake);
+        }
+
+        if (withdrawalPeriod > totalPeriod) {
+            return _sendError(STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD, 0);
+        }
+
+        if (totalPeriod >= 18 * (365 days)) { // ~18 years
+            return _sendError(STATUS_TOTAL_PERIOD_MORE_18YEARS, 0);
+        }
+
+        if (withdrawalPeriod == 0) {
+            return _sendError(STATUS_WITHDRAWAL_PERIOD_IS_ZERO, 0);
+        }
+
+        if (totalPeriod % withdrawalPeriod != 0) {
+            return _sendError(STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD, 0);
+        }
+
+        Participant participant = getOrCreateParticipant(beneficiary);
+        if (isVesting) {
+            if (participant.haveVesting) {
+                return _sendError(STATUS_PARTICIPANT_ALREADY_HAS_VESTING, 0);
+            }
+        } else {
+            if (participant.haveLock) {
+                return _sendError(STATUS_PARTICIPANT_ALREADY_HAS_LOCK, 0);
+            }
+        }
+
+        uint64 withdrawalValue = math.muldiv(halfStake, withdrawalPeriod, totalPeriod);
+
+        for (uint i = 0; i < 2; ++i) {
+            bool isFirstPart = i == 0;
+            InvestParams vestingOrLock = InvestParams({
+                remainingAmount: isFirstPart? halfStake : stake - halfStake,
+                lastWithdrawalTime: uint64(now),
+                withdrawalPeriod: withdrawalPeriod,
+                withdrawalValue: withdrawalValue,
+                owner: msg.sender
+            });
+
+            optional(InvestParams) v;
+            optional(InvestParams) l;
+            if (isVesting) {
+                v.set(vestingOrLock);
+            } else {
+                l.set(vestingOrLock);
+            }
+
+            Round round = isFirstPart? getRoundPre0() : getRound0();
+            (round, participant) = _addStakes(round, participant, beneficiary, 0, v, l);
+            isFirstPart? setRoundPre0(round) : setRound0(round);
+        }
+
+        _setOrDeleteParticipant(beneficiary, participant);
+        sendAcceptAndReturnChange128(fee);
+    }
+
+===== DIFF =====
+- function addVestingOrLock(uint64 stake, address beneficiary, uint32 withdrawalPeriod, uint32 totalPeriod, bool isVesting) {
++ function addVestingOrLock(uint64 stake, address beneficiary, uint32 withdrawalPeriod, uint32 totalPeriod, bool isVesting) private {
+?                                                                                                                           ++++++++
+  if (m_poolClosed) {
+- return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+?        -                                  -
++ return _sendError(STATUS_DEPOOL_CLOSED, 0);
+  }
+- if ((!(beneficiary.isStdAddrWithoutAnyCast())) || (beneficiary == 0)) {
+?    -  -                                     --    -                  --
++ if (!beneficiary.isStdAddrWithoutAnyCast() || beneficiary == address(0))
+?                                                              ++++++++
+- return (_sendError(STATUS_INVALID_ADDRESS, 0));
+?        -                                    -
++ return _sendError(STATUS_INVALID_ADDRESS, 0);
+- }
+- if (msg.sender == beneficiary) {
+?                               --
++ if (msg.sender == beneficiary)
+- return (_sendError(STATUS_INVALID_BENEFICIARY, 0));
+?        -                                        -
++ return _sendError(STATUS_INVALID_BENEFICIARY, 0);
+- }
+- uint64 msgValue = msg.value;
++ uint64 msgValue = uint64(msg.value);
+?                   +++++++         +
+- if (msgValue < (stake + STAKE_FEE)) {
+?                                   -
++ if (msgValue < uint(stake) + STAKE_FEE) {
+?                ++++      +
+- return (_sendError(STATUS_FEE_TOO_SMALL, STAKE_FEE));
+?        -                                           -
++ return _sendError(STATUS_FEE_TOO_SMALL, STAKE_FEE);
+  }
+  uint64 fee = msgValue - stake;
+  uint64 halfStake = stake / 2;
+  if (halfStake < m_minStake) {
+- return (_sendError(STATUS_STAKE_TOO_SMALL, 2 * m_minStake));
+?        -                                                  -
++ return _sendError(STATUS_STAKE_TOO_SMALL, 2 * m_minStake);
+  }
+  if (withdrawalPeriod > totalPeriod) {
+- return (_sendError(STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD, 0));
+?        -                                                           -
++ return _sendError(STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD, 0);
+  }
+- if (totalPeriod >= (18 * (365 days))) {
+?                    -                -
++ if (totalPeriod >= 18 * (365 days)) { // ~18 years
+?                                      +++++++++++++
+- return (_sendError(STATUS_TOTAL_PERIOD_MORE_18YEARS, 0));
+?        -                                              -
++ return _sendError(STATUS_TOTAL_PERIOD_MORE_18YEARS, 0);
+  }
+  if (withdrawalPeriod == 0) {
+- return (_sendError(STATUS_WITHDRAWAL_PERIOD_IS_ZERO, 0));
+?        -                                              -
++ return _sendError(STATUS_WITHDRAWAL_PERIOD_IS_ZERO, 0);
+  }
+- if ((totalPeriod % withdrawalPeriod) != 0) {
+?    -                               -
++ if (totalPeriod % withdrawalPeriod != 0) {
+- return (_sendError(STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD, 0));
+?        -                                                                       -
++ return _sendError(STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD, 0);
+  }
+  Participant participant = getOrCreateParticipant(beneficiary);
+  if (isVesting) {
+  if (participant.haveVesting) {
+- return (_sendError(STATUS_PARTICIPANT_ALREADY_HAS_VESTING, 0));
+?        -                                                    -
++ return _sendError(STATUS_PARTICIPANT_ALREADY_HAS_VESTING, 0);
+  }
+  } else {
+  if (participant.haveLock) {
+- return (_sendError(STATUS_PARTICIPANT_ALREADY_HAS_LOCK, 0));
+?        -                                                 -
++ return _sendError(STATUS_PARTICIPANT_ALREADY_HAS_LOCK, 0);
+  }
+  }
+  uint64 withdrawalValue = math.muldiv(halfStake, withdrawalPeriod, totalPeriod);
+  for (uint i = 0; i < 2; ++i) {
+- bool isFirstPart = (i == 0);
+?                    -      -
++ bool isFirstPart = i == 0;
+  InvestParams vestingOrLock = InvestParams({
+- remainingAmount: isFirstPart ? halfStake : stake - halfStake, lastWithdrawalTime: now, withdrawalPeriod: withdrawalPeriod, withdrawalValue: withdrawalValue, owner: msg.sender
++ remainingAmount: isFirstPart ? halfStake : stake - halfStake, lastWithdrawalTime: uint64(now), withdrawalPeriod: withdrawalPeriod, withdrawalValue: withdrawalValue, owner: msg.sender
+?                                                                                   +++++++   +
+  });
+  optional(InvestParams) v;
+  optional(InvestParams) l;
+  if (isVesting) {
+  v.set(vestingOrLock);
+  } else {
+  l.set(vestingOrLock);
+  }
+  Round round = isFirstPart ? getRoundPre0() : getRound0();
+  (round, participant) = _addStakes(round, participant, beneficiary, 0, v, l);
+  isFirstPart ? setRoundPre0(round) : setRound0(round);
+  }
+  _setOrDeleteParticipant(beneficiary, participant);
+  sendAcceptAndReturnChange128(fee);
+  }

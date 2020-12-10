@@ -1,0 +1,76 @@
+Definition DePoolContract_Ф_setLastRoundInfo ( Л_round : RoundsBase_ι_Round ) : LedgerT True := 
+declareLocal Л_info :>: DePool_ι_LastRoundInfo := {|| 
+   DePool_ι_LastRoundInfo_ι_supposedElectedAt ::=     $ Л_round ->> RoundsBase_ι_Round_ι_supposedElectedAt , 
+   DePool_ι_LastRoundInfo_ι_participantRewardFraction ::= ( ↑12 D2! DePoolContract_ι_m_participantRewardFraction ) , 
+   DePool_ι_LastRoundInfo_ι_validatorRewardFraction ::=  ( ↑12 D2! DePoolContract_ι_m_validatorRewardFraction ) , 
+   DePool_ι_LastRoundInfo_ι_participantQty ::=       $ Л_round ->> RoundsBase_ι_Round_ι_participantQty , 
+   DePool_ι_LastRoundInfo_ι_roundStake ::=         $ Л_round ->> RoundsBase_ι_Round_ι_stake , 
+   DePool_ι_LastRoundInfo_ι_validatorWallet ::=      ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) , 
+   DePool_ι_LastRoundInfo_ι_validatorPubkey ::=      tvm_pubkey () , 
+   DePool_ι_LastRoundInfo_ι_validatorAssurance ::=    ( ↑12 D2! DePoolContract_ι_m_validatorAssurance ) , 
+   DePool_ι_LastRoundInfo_ι_reward ::=           $ Л_round ->> RoundsBase_ι_Round_ι_grossReward , 
+   DePool_ι_LastRoundInfo_ι_reason ::=           $ Л_round ->> RoundsBase_ι_Round_ι_completionReason , 
+   DePool_ι_LastRoundInfo_ι_isDePoolClosed ::=      ( ↑12 D2! DePoolContract_ι_m_poolClosed ) 
+||} ; 
+↑11 U1! RoundsBase_ι_lastRoundInfo [[ $ xBoolFalse ]] := $ Л_info .
+===== TRANSLATED =====
+function setLastRoundInfo(Round round) {
+    LastRoundInfo info = LastRoundInfo({
+        supposedElectedAt: round.supposedElectedAt,
+        participantRewardFraction: m_participantRewardFraction,
+        validatorRewardFraction: m_validatorRewardFraction,
+        participantQty: round.participantQty,
+        roundStake: round.stake,
+        validatorWallet: m_validatorWallet,
+        validatorPubkey: tvm.pubkey(),
+        validatorAssurance: m_validatorAssurance,
+        reward: round.grossReward,
+        reason: round.completionReason,
+        isDePoolClosed: m_poolClosed
+    });
+    lastRoundInfo[false] = info;
+}
+===== REFERENCE =====
+
+function setLastRoundInfo(Round round) internal { 
+>     LastRoundInfo info = LastRoundInfo({ 
+>       supposedElectedAt: round.supposedElectedAt, 
+>       participantRewardFraction: m_participantRewardFraction, 
+>       validatorRewardFraction: m_validatorRewardFraction, 
+>       participantQty: round.participantQty, 
+>       roundStake: round.stake, 
+>       validatorWallet: m_validatorWallet, 
+>       validatorPubkey: tvm.pubkey(), 
+>       validatorAssurance: m_validatorAssurance, 
+>       reward: round.grossReward, 
+>       reason: uint8(round.completionReason), 
+>       isDePoolClosed: m_poolClosed 
+>     }); 
+>     lastRoundInfo[false] = info; 
+>   } 
+===== DIFF =====
+- function setLastRoundInfo(Round round) {
++ function setLastRoundInfo(Round round) internal {
+?                                        +++++++++
++ >
+  LastRoundInfo info = LastRoundInfo({
+- supposedElectedAt: round.supposedElectedAt, participantRewardFraction: m_participantRewardFraction, validatorRewardFraction: m_validatorRewardFraction, participantQty: round.participantQty, roundStake: round.stake, validatorWallet: m_validatorWallet, validatorPubkey: tvm.pubkey(), validatorAssurance: m_validatorAssurance, reward: round.grossReward, reason: round.completionReason, isDePoolClosed: m_poolClosed
++ >
++ supposedElectedAt: round.supposedElectedAt, >
++ participantRewardFraction: m_participantRewardFraction, >
++ validatorRewardFraction: m_validatorRewardFraction, >
++ participantQty: round.participantQty, >
++ roundStake: round.stake, >
++ validatorWallet: m_validatorWallet, >
++ validatorPubkey: tvm.pubkey(), >
++ validatorAssurance: m_validatorAssurance, >
++ reward: round.grossReward, >
++ reason: uint8(round.completionReason), >
++ isDePoolClosed: m_poolClosed >
+- });
++ }); >
+?    ++
+- lastRoundInfo[false] = info;
++ lastRoundInfo[false] = info; >
+?                             ++
+  }

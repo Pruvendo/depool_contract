@@ -1,0 +1,342 @@
+Definition DePoolContract_Ф_transferStake' (Л_dest : XAddress ) (Л_amount : XInteger64 ) : 
+                      LedgerT ( XErrorValue (XValueValue True) XInteger ) := 
+                       
+ Require {{ msg_sender () ?!= $xInt0 ,  $ Errors_ι_IS_EXT_MSG  }} ; 										  
+  
+ (↑17 U1! LocalState_ι_transferStake_Л_amount := $ Л_amount)	>>	 
+ 
+  
+If!! ( ↑ε12 DePoolContract_ι_m_poolClosed ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) 
+ } ; 
+ 
+  
+If!! ( ( !¬ ( ( $ Л_dest ) ->isStdAddrWithoutAnyCast() ) ) !| ( ( $ Л_dest ) ->isStdZero() ) ) 
+ then { 
+   return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_ADDRESS , $ xInt0 !) ) 
+   } ; 
+  
+ declareLocal Л_src :>: XAddress := msg_sender ()	 ; 
+
+ 
+ If!! ( $ Л_src ?== $ Л_dest ) then { 
+	return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TRANSFER_SELF , $xInt0 !) ) 
+ } ; 
+
+ 
+
+If!! (( $Л_src ?== ↑ε2 ValidatorBase_ι_m_validatorWallet ) !| ( $Л_dest ?== ↑ε2 ValidatorBase_ι_m_validatorWallet)) then { 
+	return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TRANSFER_TO_OR_FROM_VALIDATOR , $xInt0 !)) 
+ } ; 
+  
+ declareLocal Л_optSrcParticipant :>: (XMaybe (ξ DePoolLib_ι_Participant) ) := ParticipantBase_Ф_fetchParticipant (! $Л_src !); 
+  
+ If!! ( !¬ $Л_optSrcParticipant ->hasValue )then { 
+	return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_NO_PARTICIPANT , $xInt0 !)) 
+ }	; 
+  
+ ( declareGlobal LocalState_ι_transferStake_Л_srcParticipant :>: ξ DePoolLib_ι_Participant := $Л_optSrcParticipant ->get) >> 
+
+ 
+ (If (↑17 D2! LocalState_ι_transferStake_Л_amount ?== $xInt0) then { 
+	↑↑17 U2! LocalState_ι_transferStake_Л_amount := $ DePoolLib_ι_MAX_UINT64 
+    }) >> 
+  	 
+ ( declareGlobal! LocalState_ι_transferStake_Л_destParticipant :>: ξ DePoolLib_ι_Participant := ParticipantBase_Ф_getOrCreateParticipant (! $Л_dest !)) >> 
+  
+ declareGlobal LocalState_ι_transferStake_Л_totalSrcStake :>: XInteger64 ; 
+  
+ declareGlobal LocalState_ι_transferStake_Л_transferred :>: XInteger64 ; 
+  
+ ( declareGlobal! LocalState_ι_transferStake_Л_rounds :>: ( XHMap XInteger64 RoundsBase_ι_Round ) := ↑11 D2! RoundsBase_ι_m_rounds) >> 
+  
+ ( declareGlobal LocalState_ι_transferStake_Л_pair :>: ( XMaybe ( XInteger64 # RoundsBase_ι_Round ) ) := D1! (D2! LocalState_ι_transferStake_Л_rounds) ->min) >> 
+  
+	 ((While ( ((↑17 D2! LocalState_ι_transferStake_Л_pair) ->hasValue)  !& 
+		   ((↑17 D2! LocalState_ι_transferStake_Л_transferred) ?< (↑17 D2! LocalState_ι_transferStake_Л_amount)) ) do 
+		  (
+                                 
+ 			  declareLocal {( Л_roundId :>: XInteger64 , Л_round :>: RoundsBase_ι_Round )} := (↑17 D2! LocalState_ι_transferStake_Л_pair) ->get ; 
+			  declareLocal Л_currentTransferred :>: XInteger64 ; 
+			  declareLocal Л_srcStake :>: XInteger64 ; 
+
+			  U0! {( Л_rounds_roundId , Л_currentTransferred , Л_srcStake, Л_srcParticipant, Л_destParticipant )} := 
+			  RoundsBase_Ф_transferStakeInOneRound (! $ Л_round , 
+													  ↑17 D2! LocalState_ι_transferStake_Л_srcParticipant, 
+													  ↑17 D2! LocalState_ι_transferStake_Л_destParticipant, 
+													  $ Л_src, 
+													  $ Л_dest, 
+													  (↑17 D2! LocalState_ι_transferStake_Л_amount) !- (↑17 D2! LocalState_ι_transferStake_Л_transferred), 
+													  (↑12 D2! DePoolContract_ι_m_minStake) 
+													 !) ; 
+			  (↑17 U1! LocalState_ι_transferStake_Л_rounds [[ $ Л_roundId ]] := $ Л_rounds_roundId)	>> 
+			  (↑17 U1! LocalState_ι_transferStake_Л_srcParticipant := $ Л_srcParticipant) >> 
+			  (↑17 U1! LocalState_ι_transferStake_Л_destParticipant := $ Л_destParticipant) >> 
+			  (↑17 U1! LocalState_ι_transferStake_Л_transferred !+= $Л_currentTransferred) >> 
+			  (↑17 U1! LocalState_ι_transferStake_Л_totalSrcStake !+= $Л_srcStake) >> 
+			  (↑17 U1! LocalState_ι_transferStake_Л_pair := D1! (D2! LocalState_ι_transferStake_Л_rounds) ->next $ Л_roundId) >> 
+ 			  continue! I 
+		  )))  >> 
+
+     
+		 
+		If! ((↑17 D2! LocalState_ι_transferStake_Л_amount) ?!= ( ξ$ DePoolLib_ι_MAX_UINT64 )) then { 
+			If!! ((↑17 D2! LocalState_ι_transferStake_Л_totalSrcStake) ?< (↑17 D2! LocalState_ι_transferStake_Л_amount)) then 
+			{ 
+				return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TRANSFER_AMOUNT_IS_TOO_BIG , $ xInt0 !)) 
+			} ; 
+			If! ((↑17 D2! LocalState_ι_transferStake_Л_transferred) ?< (↑17 D2! LocalState_ι_transferStake_Л_amount)) then 
+			{ 
+				return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_REMAINING_STAKE_LESS_THAN_MINIMAL , $ xInt0 !)) 
+			} ; $ I 
+    } ; 
+
+		 
+		(↑↑11 U2! RoundsBase_ι_m_rounds := ↑17 D2! LocalState_ι_transferStake_Л_rounds) >> 
+
+		 
+		ParticipantBase_Ф__setOrDeleteParticipant (! $ Л_src , (↑17 D2! LocalState_ι_transferStake_Л_srcParticipant) !) >> 
+     
+		ParticipantBase_Ф__setOrDeleteParticipant (! $ Л_dest , (↑17 D2! LocalState_ι_transferStake_Л_destParticipant) !) >> 
+		 
+
+   ( IParticipant of ( $ Л_dest ) ->sendMessage ( IParticipant_И_onTransferF (!! $ Л_src , ↑17 D2! LocalState_ι_transferStake_Л_amount !!) )
+                     with {|| messageBounce ::= $ xBoolFalse ||} ) >>
+
+		 
+		DePoolContract_Ф_sendAcceptAndReturnChange () .
+===== TRANSLATED =====
+function transferStake(address dest, uint64 amount) {
+    require(msg.sender != 0, IS_EXT_MSG);
+    if (m_poolClosed) {
+        return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+    }
+    if ((!(dest.isStdAddrWithoutAnyCast())) || (dest.isStdZero())) {
+        return (_sendError(STATUS_INVALID_ADDRESS, 0));
+    }
+    address src = msg.sender;
+    if (src == dest) {
+        return (_sendError(STATUS_TRANSFER_SELF, 0));
+    }
+    if ((src == m_validatorWallet) || (dest == m_validatorWallet)) {
+        return (_sendError(STATUS_TRANSFER_TO_OR_FROM_VALIDATOR, 0));
+    }
+    optional(DePoolLib.Participant) optSrcParticipant = fetchParticipant(src);
+    if (!optSrcParticipant.hasValue()) {
+        return (_sendError(STATUS_NO_PARTICIPANT, 0));
+    }
+    DePoolLib.Participant srcParticipant = optSrcParticipant.get();
+    if (amount == 0) {
+        amount = MAX_UINT64;
+    }
+    DePoolLib.Participant destParticipant = getOrCreateParticipant(dest);
+    uint64 totalSrcStake;
+    uint64 transferred;
+    mapping(uint64 => Round) rounds = m_rounds;
+    optional(uint64, Round) pair = rounds.min();
+    while ((pair.hasValue()) &&
+        (transferred < amount)) {
+        (uint64 roundId, Round round) = pair.get();
+        uint64 currentTransferred;
+        uint64 srcStake;
+        (rounds_roundId, currentTransferred, srcStake, srcParticipant, destParticipant) =
+        transferStakeInOneRound(round,
+            srcParticipant,
+            destParticipant,
+            src,
+            dest, amount - transferred, m_minStake);
+        (rounds[roundId] = rounds_roundId);
+        (transferred += currentTransferred);
+        (totalSrcStake += srcStake);
+        (pair = rounds.next(roundId));
+    }
+    if (amount != DePoolLib.MAX_UINT64) {
+        if (totalSrcStake < amount) {
+            return (_sendError(STATUS_TRANSFER_AMOUNT_IS_TOO_BIG, 0));
+        }
+        if (transferred < amount) {
+            return (_sendError(STATUS_REMAINING_STAKE_LESS_THAN_MINIMAL, 0));
+        }
+    }
+    (m_rounds = rounds);
+    _setOrDeleteParticipant(src, srcParticipant);
+    _setOrDeleteParticipant(dest, destParticipant);
+    (IParticipant(dest).onTransfer {
+        bounce: false
+    }(src, amount));
+    sendAcceptAndReturnChange();
+}
+===== REFERENCE =====
+    function transferStake(address dest, uint64 amount) public onlyInternalMessage {
+        if (m_poolClosed) {
+            return _sendError(STATUS_DEPOOL_CLOSED, 0);
+        }
+
+        // target address should be set.
+        if (!dest.isStdAddrWithoutAnyCast() || dest.isStdZero())
+            return _sendError(STATUS_INVALID_ADDRESS, 0);
+
+        // check self transfer
+        address src = msg.sender;
+        if (src == dest)  {
+            return _sendError(STATUS_TRANSFER_SELF, 0);
+        }
+
+        if (src == m_validatorWallet || dest == m_validatorWallet) {
+            return _sendError(STATUS_TRANSFER_TO_OR_FROM_VALIDATOR, 0);
+        }
+
+        optional(Participant) optSrcParticipant = fetchParticipant(src);
+        if (!optSrcParticipant.hasValue()) {
+            return _sendError(STATUS_NO_PARTICIPANT, 0);
+        }
+        Participant srcParticipant = optSrcParticipant.get();
+
+        if (amount == 0) {
+            amount = DePoolLib.MAX_UINT64;
+        }
+
+        Participant destParticipant = getOrCreateParticipant(dest);
+
+        uint64 totalSrcStake;
+        uint64 transferred;
+        mapping(uint64 => Round) rounds = m_rounds;
+        optional(uint64, Round) pair = rounds.min();
+        while (pair.hasValue() && transferred < amount) {
+            (uint64 roundId, Round round) = pair.get();
+            uint64 currentTransferred;
+            uint64 srcStake;
+            (rounds[roundId], currentTransferred, srcStake, srcParticipant, destParticipant)
+                = transferStakeInOneRound(
+                    round,
+                    srcParticipant,
+                    destParticipant,
+                    src,
+                    dest,
+                    amount - transferred,
+                    m_minStake
+                );
+            transferred += currentTransferred;
+            totalSrcStake += srcStake;
+            pair = rounds.next(roundId);
+        }
+
+        if (amount != DePoolLib.MAX_UINT64) {
+            if (totalSrcStake < amount) {
+                return _sendError(STATUS_TRANSFER_AMOUNT_IS_TOO_BIG, 0);
+            }
+
+            if (transferred < amount) {
+                return _sendError(STATUS_REMAINING_STAKE_LESS_THAN_MINIMAL, 0);
+            }
+        }
+
+        m_rounds = rounds;
+
+        _setOrDeleteParticipant(src, srcParticipant);
+        _setOrDeleteParticipant(dest, destParticipant);
+
+        IParticipant(dest).onTransfer{bounce: false}(src, amount);
+        sendAcceptAndReturnChange();
+    }
+ 
+===== DIFF =====
+- function transferStake(address dest, uint64 amount) {
++ function transferStake(address dest, uint64 amount) public onlyInternalMessage {
+?                                                     +++++++++++++++++++++++++++
+- require(msg.sender != 0, IS_EXT_MSG);
+  if (m_poolClosed) {
+- return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+?        -                                  -
++ return _sendError(STATUS_DEPOOL_CLOSED, 0);
+  }
+- if ((!(dest.isStdAddrWithoutAnyCast())) || (dest.isStdZero())) {
++ // target address should be set.if (!dest.isStdAddrWithoutAnyCast() || dest.isStdZero())
+- return (_sendError(STATUS_INVALID_ADDRESS, 0));
+?        -                                    -
++ return _sendError(STATUS_INVALID_ADDRESS, 0);
+- }
++ // check self transfer
+  address src = msg.sender;
+  if (src == dest) {
+- return (_sendError(STATUS_TRANSFER_SELF, 0));
+?        -                                  -
++ return _sendError(STATUS_TRANSFER_SELF, 0);
+  }
+- if ((src == m_validatorWallet) || (dest == m_validatorWallet)) {
++ if (src == m_validatorWallet || dest == m_validatorWallet) {
+- return (_sendError(STATUS_TRANSFER_TO_OR_FROM_VALIDATOR, 0));
+?        -                                                  -
++ return _sendError(STATUS_TRANSFER_TO_OR_FROM_VALIDATOR, 0);
+  }
+- optional(DePoolLib.Participant) optSrcParticipant = fetchParticipant(src);
+?          ----------
++ optional(Participant) optSrcParticipant = fetchParticipant(src);
+  if (!optSrcParticipant.hasValue()) {
+- return (_sendError(STATUS_NO_PARTICIPANT, 0));
+?        -                                   -
++ return _sendError(STATUS_NO_PARTICIPANT, 0);
+  }
+- DePoolLib.Participant srcParticipant = optSrcParticipant.get();
+? ----------
++ Participant srcParticipant = optSrcParticipant.get();
+  if (amount == 0) {
+- amount = MAX_UINT64;
++ amount = DePoolLib.MAX_UINT64;
+?          ++++++++++
+  }
+- DePoolLib.Participant destParticipant = getOrCreateParticipant(dest);
+? ----------
++ Participant destParticipant = getOrCreateParticipant(dest);
+  uint64 totalSrcStake;
+  uint64 transferred;
+  mapping(uint64 => Round) rounds = m_rounds;
+  optional(uint64, Round) pair = rounds.min();
+- while ((pair.hasValue()) && (transferred < amount)) {
+?       -                -    -                     -
++ while (pair.hasValue() && transferred < amount) {
+  (uint64 roundId, Round round) = pair.get();
+  uint64 currentTransferred;
+  uint64 srcStake;
+- (rounds_roundId, currentTransferred, srcStake, srcParticipant, destParticipant) = transferStakeInOneRound(round, srcParticipant, destParticipant, src, dest, amount - transferred, m_minStake);
+?        ^
++ (rounds[roundId], currentTransferred, srcStake, srcParticipant, destParticipant) = transferStakeInOneRound(round, srcParticipant, destParticipant, src, dest, amount - transferred, m_minStake);
+?        ^       +
+- (rounds[roundId] = rounds_roundId);
+- (transferred += currentTransferred);
+? -                                 -
++ transferred += currentTransferred;
+- (totalSrcStake += srcStake);
+? -                         -
++ totalSrcStake += srcStake;
+- (pair = rounds.next(roundId));
+? -                           -
++ pair = rounds.next(roundId);
+  }
+  if (amount != DePoolLib.MAX_UINT64) {
+  if (totalSrcStake < amount) {
+- return (_sendError(STATUS_TRANSFER_AMOUNT_IS_TOO_BIG, 0));
+?        -                                               -
++ return _sendError(STATUS_TRANSFER_AMOUNT_IS_TOO_BIG, 0);
+  }
+  if (transferred < amount) {
+- return (_sendError(STATUS_REMAINING_STAKE_LESS_THAN_MINIMAL, 0));
+?        -                                                      -
++ return _sendError(STATUS_REMAINING_STAKE_LESS_THAN_MINIMAL, 0);
+  }
+  }
+- (m_rounds = rounds);
+? -                 -
++ m_rounds = rounds;
+  _setOrDeleteParticipant(src, srcParticipant);
+  _setOrDeleteParticipant(dest, destParticipant);
+- (IParticipant(dest).onTransfer {
+? -
++ IParticipant(dest).onTransfer {
+  bounce: false
+- }(src, amount));
+?               -
++ }(src, amount);
+  sendAcceptAndReturnChange();
+  }

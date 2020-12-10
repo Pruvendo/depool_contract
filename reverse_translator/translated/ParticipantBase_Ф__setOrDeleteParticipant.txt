@@ -1,0 +1,38 @@
+Definition ParticipantBase_Ф__setOrDeleteParticipant ( Л_addr : XAddress ) ( Л_participant : ξ DePoolLib_ι_Participant ) : LedgerT True := 
+ If ( $ (Л_participant ->> DePoolLib_ι_Participant_ι_roundQty) ?== $xInt0 ) then 
+ { 
+	↑5 U1! delete ParticipantBase_ι_m_participants [[ $ Л_addr ]] 
+ } else 
+ { 
+	↑5 U1! ParticipantBase_ι_m_participants [[ $ Л_addr ]] := $ Л_participant 
+ }.
+===== TRANSLATED =====
+function _setOrDeleteParticipant(address addr, DePoolLib.Participant participant) {
+    if (participant.roundQty == 0) {
+        delete m_participants[addr];
+    } else {
+        m_participants[addr] = participant;
+    }
+}
+===== REFERENCE =====
+
+function _setOrDeleteParticipant(address addr, DePoolLib.Participant participant) internal { 
+    if (participant.roundQty == 0) 
+      delete m_participants[addr]; 
+    else 
+      m_participants[addr] = participant; 
+  } 
+ 
+===== DIFF =====
+- function _setOrDeleteParticipant(address addr, DePoolLib.Participant participant) {
++ function _setOrDeleteParticipant(address addr, DePoolLib.Participant participant) internal {
+?                                                                                   +++++++++
+- if (participant.roundQty == 0) {
+?                               --
++ if (participant.roundQty == 0)
+  delete m_participants[addr];
+- } else {
++ else
+  m_participants[addr] = participant;
+- }
+  }

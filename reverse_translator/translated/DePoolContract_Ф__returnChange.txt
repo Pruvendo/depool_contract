@@ -1,0 +1,18 @@
+Definition DePoolContract_Ф__returnChange : LedgerT True := 
+  ( ( msg_sender () ) ->transfer (! $ xInt0 ,  $ xBoolFalse ,  $ xInt64 !) ) .
+===== TRANSLATED =====
+function _returnChange() {
+    (msg.sender.transfer(0, false, 64));
+}
+===== REFERENCE =====
+    function _returnChange() private pure {
+        msg.sender.transfer(0, false, 64);
+    }
+===== DIFF =====
+- function _returnChange() {
++ function _returnChange() private pure {
+?                          +++++++++++++
+- (msg.sender.transfer(0, false, 64));
+? -                                 -
++ msg.sender.transfer(0, false, 64);
+  }

@@ -1,0 +1,17 @@
+Definition RoundsBase_Ф_setRound (Л_id: XInteger) ( Л_round: RoundsBase_ι_Round) : LedgerT True := 
+   ↑11 U1! RoundsBase_ι_m_rounds [[ $Л_id ]] := $Л_round.
+===== TRANSLATED =====
+function setRound(uint id, Round round) {
+    m_rounds[id] = round;
+}
+===== REFERENCE =====
+    function setRound(uint64 id, Round round) internal {
+        m_rounds[id] = round;
+    }
+
+===== DIFF =====
+- function setRound(uint id, Round round) {
++ function setRound(uint64 id, Round round) internal {
+?                       ++                  +++++++++
+  m_rounds[id] = round;
+  }

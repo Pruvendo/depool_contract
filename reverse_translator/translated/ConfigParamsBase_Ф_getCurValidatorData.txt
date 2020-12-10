@@ -1,0 +1,43 @@
+Definition ConfigParamsBase_Ф_getCurValidatorData : LedgerT ( XErrorValue ( XInteger256 # XInteger32 # XInteger32 ) XInteger ) := 
+returns ( Л_hash :>: XInteger256 , Л_utime_since :>: XInteger32 , Л_utime_until :>: XInteger32 ) >> 
+	declareLocal {( Л_cell :>: TvmCell , Л_ok :>: XBool )} := tvm_rawConfigParam_34 () ; 
+ 	Require {{$ Л_ok , ξ$ InternalErrors_ι_ERROR508 }} ; 
+ 	U0! Л_hash := tvm_hash (!! $ Л_cell !!) ; 
+  U0! Л_s := ( $ Л_cell) ->toSlice() ;  
+  U0! Л_decoded := Л_s ->decode(uint8,uint32,uint32) ;
+	U0! {( _ , Л_utime_since , Л_utime_until )} := $ Л_decoded ;
+  ς return# ( $ Л_hash, $ Л_utime_since , $ Л_utime_until ).
+===== TRANSLATED =====
+function getCurValidatorData() returns(uint256 hash, uint32 utime_since, uint32 utime_until) {
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(34);
+    require(ok, InternalErrors.ERROR508);
+    hash = tvm.hash(cell);
+    s = cell.toSlice();
+    decoded = s.decode(uint8, uint32, uint32);
+    (, utime_since, utime_until) = decoded;
+}
+===== REFERENCE =====
+    function getCurValidatorData() virtual pure internal returns (uint256 hash, uint32 utime_since, uint32 utime_until) {
+        (TvmCell cell, bool ok) = tvm.rawConfigParam(34);
+        require(ok, InternalErrors.ERROR508);
+        hash = tvm.hash(cell);
+        TvmSlice s = cell.toSlice();
+        (, utime_since, utime_until) = s.decode(uint8, uint32, uint32);
+    }
+ 
+===== DIFF =====
+- function getCurValidatorData() returns(uint256 hash, uint32 utime_since, uint32 utime_until) {
++ function getCurValidatorData() virtual pure internal returns(uint256 hash, uint32 utime_since, uint32 utime_until) {
+?                                ++++++++++++++++++++++
+  (TvmCell cell, bool ok) = tvm.rawConfigParam(34);
+  require(ok, InternalErrors.ERROR508);
+  hash = tvm.hash(cell);
+- s = cell.toSlice();
++ TvmSlice s = cell.toSlice();
+? +++++++++
+- decoded = s.decode(uint8, uint32, uint32);
+- (, utime_since, utime_until) = decoded;
+?                                      ^
++ (, utime_since, utime_until) = s.decode(uint8, uint32, uint32);
+?                                ++      ^^^^^^^^^^^^^^^^^^^^^^^
+  }

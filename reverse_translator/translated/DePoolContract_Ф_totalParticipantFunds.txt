@@ -1,0 +1,163 @@
+Definition DePoolContract_Ф_totalParticipantFunds (Л_ingoreRoundId : XInteger64) : LedgerT XInteger64 := 
+                      
+  ( declareGlobal LocalState_ι_totalParticipantFunds_Л_stakes :>: XInteger64 := $ xInt0) >> 
+                      
+  ( declareGlobal! LocalState_ι_totalParticipantFunds_Л_pair :>: ( XMaybe (XInteger64 # RoundsBase_ι_Round) ) := RoundsBase_Ф_minRound ()) >> 
+                      
+  (While ((↑17 D2! LocalState_ι_totalParticipantFunds_Л_pair) ->hasValue) do ( 
+                      
+  declareLocal {( Л_id :>: XInteger64 , Л_round :>: RoundsBase_ι_Round )} := (↑17 D2! LocalState_ι_totalParticipantFunds_Л_pair) ->get ; 
+                      
+  declareLocal Л_step :>: RoundsBase_ι_RoundStep := $ (Л_round ->> RoundsBase_ι_Round_ι_step) ; 
+                      
+  (If (( $Л_id ?!= $Л_ingoreRoundId) !& ( $Л_step ?!= ξ$ RoundsBase_ι_RoundStepP_ι_Completed )) then { 
+                       
+  If ( $Л_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_Completing) then { 
+                        
+  If ( $ (Л_round ->> RoundsBase_ι_Round_ι_completionReason) ?== ξ$ RoundsBase_ι_CompletionReasonP_ι_ValidatorIsPunished) then { 
+   
+    (↑17 U1! LocalState_ι_totalParticipantFunds_Л_stakes !+= ( $ (Л_round ->> RoundsBase_ι_Round_ι_unused) !+ 
+                                  $ (Л_round ->> RoundsBase_ι_Round_ι_recoveredStake)) !- 
+                                  $ (Л_round ->> RoundsBase_ι_Round_ι_handledStakesAndRewards)) 
+  } 
+   
+  else { 
+   
+    (↑17 U1! LocalState_ι_totalParticipantFunds_Л_stakes !+= ( $ (Л_round ->> RoundsBase_ι_Round_ι_stake) !+ 
+       $ (Л_round ->> RoundsBase_ι_Round_ι_rewards)) !- $ (Л_round ->> RoundsBase_ι_Round_ι_handledStakesAndRewards)) 
+   
+  } 
+   
+   
+   
+   
+   
+   
+  } else { If ( $Л_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_PrePooling) !| 
+        ( $Л_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_Pooling) !| 
+        ( $Л_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest) !| 
+        (( $Л_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze) !& 
+        ( $ (Л_round ->> RoundsBase_ι_Round_ι_completionReason) ?== ξ$ RoundsBase_ι_CompletionReasonP_ι_Undefined)) then { 
+   
+    (↑17 U1! LocalState_ι_totalParticipantFunds_Л_stakes !+= $ (Л_round ->> RoundsBase_ι_Round_ι_stake)) 
+   
+  } else { 
+   
+    (↑17 U1! LocalState_ι_totalParticipantFunds_Л_stakes !+= $ (Л_round ->> RoundsBase_ι_Round_ι_unused)) 
+   
+  } 
+   
+  } 
+  }) >> 
+   
+  (↑↑17 U2! LocalState_ι_totalParticipantFunds_Л_pair := RoundsBase_Ф_nextRound (! $Л_id !)) >> 
+   
+  continue! I) ) >> 
+   
+ return!! (↑17 D2! LocalState_ι_totalParticipantFunds_Л_stakes).
+===== TRANSLATED =====
+function totalParticipantFunds(uint64 ingoreRoundId) returns(uint64) {
+    uint64 stakes = 0;
+    optional(uint64, Round) pair = minRound();
+    while (pair.hasValue()) {
+        (uint64 id, Round round) = pair.get();
+        RoundStep step = round.step;
+        if ((id != ingoreRoundId) && (step != RoundStep.Completed)) {
+            if (step == RoundStep.Completing) {
+                if (round.completionReason == CompletionReason.ValidatorIsPunished) {
+                    (stakes += (round.unused + round.recoveredStake) - round.handledStakesAndRewards);
+                } else {
+                    (stakes += (round.stake + round.rewards) - round.handledStakesAndRewards)
+                    ;
+                }
+            } else {
+                if (step == RoundStep.PrePooling) ||
+                    (step == RoundStep.Pooling) ||
+                    (step == RoundStep.WaitingValidatorRequest) ||
+                    ((step == RoundStep.WaitingUnfreeze) &&
+                        (round.completionReason == CompletionReason.Undefined)) {
+                        (stakes += round.stake)
+                        ;
+                    } else {
+                        (stakes += round.unused)
+                        ;
+                    }
+            }
+        }
+        (pair = nextRound(id));
+    }
+    return (stakes);
+}
+===== REFERENCE =====
+function totalParticipantFunds(uint64 ingoreRoundId) private view returns (uint64) { 
+    uint64 stakes = 0; 
+    optional(uint64, Round) pair = minRound(); 
+    while (pair.hasValue()) { 
+      (uint64 id, Round round) = pair.get(); 
+      RoundStep step = round.step; 
+      if (id != ingoreRoundId && step != RoundStep.Completed) { 
+        if (step == RoundStep.Completing) { 
+          if (round.completionReason == CompletionReason.ValidatorIsPunished) 
+            stakes += (round.unused + round.recoveredStake) - round.handledStakesAndRewards; 
+          else { 
+            stakes += (round.stake + round.rewards) - round.handledStakesAndRewards; 
+          } 
+        } else if ( 
+          step == RoundStep.PrePooling || 
+          step == RoundStep.Pooling || 
+          step == RoundStep.WaitingValidatorRequest || 
+          step == RoundStep.WaitingUnfreeze && round.completionReason != CompletionReason.Undefined 
+        ) { 
+          stakes += round.stake; 
+        } else { 
+          stakes += round.unused; 
+        } 
+      } 
+      pair = nextRound(id); 
+    } 
+    return stakes; 
+  } 
+===== DIFF =====
+- function totalParticipantFunds(uint64 ingoreRoundId) returns(uint64) {
++ function totalParticipantFunds(uint64 ingoreRoundId) private view returns(uint64) {
+?                                                     +++++++++++++
+  uint64 stakes = 0;
+  optional(uint64, Round) pair = minRound();
+  while (pair.hasValue()) {
+  (uint64 id, Round round) = pair.get();
+  RoundStep step = round.step;
+- if ((id != ingoreRoundId) && (step != RoundStep.Completed)) {
+?    -                    -    -                            -
++ if (id != ingoreRoundId && step != RoundStep.Completed) {
+  if (step == RoundStep.Completing) {
+- if (round.completionReason == CompletionReason.ValidatorIsPunished) {
+?                                                                    --
++ if (round.completionReason == CompletionReason.ValidatorIsPunished)
+- (stakes += (round.unused + round.recoveredStake) - round.handledStakesAndRewards);
+? -                                                                               -
++ stakes += (round.unused + round.recoveredStake) - round.handledStakesAndRewards;
++ else {
++ stakes += (round.stake + round.rewards) - round.handledStakesAndRewards;
++ }
++ } else if (step == RoundStep.PrePooling || step == RoundStep.Pooling || step == RoundStep.WaitingValidatorRequest || step == RoundStep.WaitingUnfreeze && round.completionReason != CompletionReason.Undefined) {
++ stakes += round.stake;
+  } else {
+- (stakes += (round.stake + round.rewards) - round.handledStakesAndRewards);
+- }
+- } else {
+- if (step == RoundStep.PrePooling) || (step == RoundStep.Pooling) || (step == RoundStep.WaitingValidatorRequest) || ((step == RoundStep.WaitingUnfreeze) && (round.completionReason == CompletionReason.Undefined)) {
+- (stakes += round.stake);
+- } else {
+- (stakes += round.unused);
+? -                      -
++ stakes += round.unused;
+  }
+  }
++ pair = nextRound(id);
+  }
+- (pair = nextRound(id));
+- }
+- return (stakes);
+?        -      -
++ return stakes;
+  }

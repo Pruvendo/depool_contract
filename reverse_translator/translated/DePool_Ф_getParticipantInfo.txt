@@ -1,0 +1,85 @@
+Definition DePool_Ф_getParticipantInfo ( Л_addr : XAddress ) 
+		  : LedgerT (XErrorValue ( XInteger64 # XInteger64 # XBool # XInteger64 # (XHMap XInteger64 XInteger64) # (XHMap XInteger64 RoundsBase_ι_InvestParams) # (XHMap XInteger64 RoundsBase_ι_InvestParams) ) XInteger) 
+		  := return! (xValue default).
+===== TRANSLATED =====
+function getParticipantInfo(address addr) returns(uint64, uint64, bool, uint64, (mapping(uint64 => uint64), (mapping(uint64 => InvestParams)), (mapping(uint64 => InvestParams)))) {
+    return (xValue
+        default);
+}
+===== REFERENCE =====
+    function getParticipantInfo(address addr) public view
+        returns (
+            uint64 total,
+            uint64 withdrawValue,
+            bool reinvest,
+            uint64 reward,
+            mapping (uint64 => uint64) stakes,
+            mapping (uint64 => InvestParams) vestings,
+            mapping (uint64 => InvestParams) locks
+        )
+    {
+        optional(Participant) optParticipant = fetchParticipant(addr);
+        require(optParticipant.hasValue(), Errors.NO_SUCH_PARTICIPANT);
+        Participant participant = optParticipant.get();
+
+        reinvest = participant.reinvest;
+        reward = participant.reward;
+        withdrawValue = participant.withdrawValue;
+
+        optional(uint64, Round) pair = minRound();
+        while (pair.hasValue()) {
+            (uint64 id, Round round) = pair.get();
+            optional(StakeValue) optSv = round.stakes.fetch(addr);
+            if (optSv.hasValue()) {
+                StakeValue sv = optSv.get();
+                if (sv.ordinary != 0) {
+                    stakes[round.id] = sv.ordinary;
+                    total += sv.ordinary;
+                }
+                if (sv.vesting.hasValue()) {
+                    vestings[round.id] = sv.vesting.get();
+                    total += sv.vesting.get().remainingAmount;
+                }
+                if (sv.lock.hasValue()) {
+                    locks[round.id] = sv.lock.get();
+                    total += sv.lock.get().remainingAmount;
+                }
+            }
+            pair = nextRound(id);
+        }
+    }
+
+===== DIFF =====
+- function getParticipantInfo(address addr) returns(uint64, uint64, bool, uint64, (mapping(uint64 => uint64), (mapping(uint64 => InvestParams)), (mapping(uint64 => InvestParams)))) {
+- return (xValue
+- default);
++ function getParticipantInfo(address addr) public view
++ returns(uint64 total, uint64 withdrawValue, bool reinvest, uint64 reward, mapping(uint64 => uint64) stakes, mapping(uint64 => InvestParams) vestings, mapping(uint64 => InvestParams) locks) {
++ optional(Participant) optParticipant = fetchParticipant(addr);
++ require(optParticipant.hasValue(), Errors.NO_SUCH_PARTICIPANT);
++ Participant participant = optParticipant.get();
++ reinvest = participant.reinvest;
++ reward = participant.reward;
++ withdrawValue = participant.withdrawValue;
++ optional(uint64, Round) pair = minRound();
++ while (pair.hasValue()) {
++ (uint64 id, Round round) = pair.get();
++ optional(StakeValue) optSv = round.stakes.fetch(addr);
++ if (optSv.hasValue()) {
++ StakeValue sv = optSv.get();
++ if (sv.ordinary != 0) {
++ stakes[round.id] = sv.ordinary;
++ total += sv.ordinary;
++ }
++ if (sv.vesting.hasValue()) {
++ vestings[round.id] = sv.vesting.get();
++ total += sv.vesting.get().remainingAmount;
++ }
++ if (sv.lock.hasValue()) {
++ locks[round.id] = sv.lock.get();
++ total += sv.lock.get().remainingAmount;
++ }
++ }
++ pair = nextRound(id);
++ }
+  }

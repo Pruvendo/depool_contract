@@ -1,0 +1,53 @@
+Definition DePoolContract_Ф_checkPureDePoolBalance' : LedgerT (XValueValue XBool) := 
+                   
+  declareLocal Л_stakes :>: XInteger := DePoolContract_Ф_totalParticipantFunds (! $xInt0 !) ; 
+  declareLocal Л_msgValue :>: XInteger64 := msg_value ; 
+  declareLocal Л_sum :>: XInteger := $ DePool_ι_CRITICAL_THRESHOLD !+ $ Л_stakes !+ $ Л_msgValue; 
+  If! ( tvm_balance () ?< $ Л_sum ) then { 
+        
+    declareLocal Л_replenishment :>: XInteger := $ Л_sum !- tvm_balance (); 
+    (->emit TooLowDePoolBalance (!! $ Л_replenishment !!)) >> 
+    return! (xError xBoolFalse)         
+  }; return! xBoolTrue.
+===== TRANSLATED =====
+function checkPureDePoolBalance() returns(bool) {
+    uint stakes = totalParticipantFunds(0);
+    uint64 msgValue = msg.value;
+    uint sum = CRITICAL_THRESHOLD + stakes + msgValue;
+    if (address(this).balance < sum) {
+        uint replenishment = sum - address(this).balance;
+        emit TooLowDePoolBalance(replenishment);
+        return (false);
+    }
+    return true;
+}
+===== REFERENCE =====
+function checkPureDePoolBalance() private returns (bool) { 
+    uint stakes = totalParticipantFunds(0); 
+    uint64 msgValue = uint64(msg.value); 
+    uint sum = CRITICAL_THRESHOLD + stakes + msgValue; 
+    if (address(this).balance < sum) { 
+      uint replenishment = sum - address(this).balance; 
+      emit TooLowDePoolBalance(replenishment); 
+      return false; 
+    } 
+    return true; 
+  } 
+===== DIFF =====
+- function checkPureDePoolBalance() returns(bool) {
++ function checkPureDePoolBalance() private returns(bool) {
+?                                   ++++++++
+  uint stakes = totalParticipantFunds(0);
+- uint64 msgValue = msg.value;
++ uint64 msgValue = uint64(msg.value);
+?                   +++++++         +
+  uint sum = CRITICAL_THRESHOLD + stakes + msgValue;
+  if (address(this).balance < sum) {
+  uint replenishment = sum - address(this).balance;
+  emit TooLowDePoolBalance(replenishment);
+- return (false);
+?        -     -
++ return false;
+  }
+  return true;
+  }

@@ -1,0 +1,136 @@
+Definition DePoolContract_Ф_addOrdinaryStake' ( Л_stake : XInteger64 ) : LedgerT ( XErrorValue (XValueValue True) XInteger ) := 
+ Require {{ msg_sender () ?!= $ xInt0 , ξ$ Errors_ι_IS_EXT_MSG }} ; 
+                 
+ If!! ( ↑12 D2! DePoolContract_ι_m_poolClosed ) then { 
+  return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) } ; 
+                
+ declareLocal Л_msgValue :>: XInteger64 := msg_value () ; 
+                
+ If!! ( $ Л_msgValue ?< $ Л_stake !+ $ DePool_ι_STAKE_FEE ) then { 
+  return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_FEE_TOO_SMALL , 
+                        $ DePool_ι_STAKE_FEE !) ) } ; 
+
+               
+ declareLocal Л_fee :>: XInteger64 := $ Л_msgValue !- $ Л_stake ; 
+               
+ If! ( $ Л_stake ?< ↑12 D2! DePoolContract_ι_m_minStake ) then { 
+  return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_STAKE_TOO_SMALL , 
+                        ( ↑ε12 DePoolContract_ι_m_minStake ) !) ) } ; 
+
+                     
+ declareLocal Л_participant :>: ξ DePoolLib_ι_Participant := ParticipantBase_Ф_getOrCreateParticipant (! msg_sender () !) ; 
+                     
+ declareLocal Л_round :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ; 
+                     
+ declareLocal Л_empty :>: (XMaybe RoundsBase_ι_InvestParams) ; 
+                     
+ U0! {( Л_round , Л_participant )} := RoundsBase_Ф__addStakes (! $ Л_round , 
+                                  $ Л_participant , 
+                                  msg_sender () , 
+                                  $ Л_stake , 
+                                  $ Л_empty , 
+										              $ Л_empty !) ; 
+                     
+ RoundsBase_Ф_setRound0 (! $ Л_round !) >> 
+                    
+ (ParticipantBase_Ф__setOrDeleteParticipant (! msg_sender () , $ Л_participant !)) >> 
+                    
+ (DePoolContract_Ф_sendAcceptAndReturnChange128 (! $ Л_fee !)) .
+===== TRANSLATED =====
+function addOrdinaryStake(uint64 stake) {
+    require(msg.sender != 0, Errors.IS_EXT_MSG);
+    if (m_poolClosed) {
+        return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+    }
+    uint64 msgValue = msg.value;
+    if (msgValue < stake + STAKE_FEE) {
+        return (_sendError(STATUS_FEE_TOO_SMALL,
+            STAKE_FEE));
+    }
+    uint64 fee = msgValue - stake;
+    if (stake < m_minStake) {
+        return (_sendError(STATUS_STAKE_TOO_SMALL, m_minStake));
+    }
+    DePoolLib.Participant participant = getOrCreateParticipant(msg.sender);
+    Round round = getRound0();
+    optional(InvestParams) empty;
+    (round, participant) = _addStakes(round,
+        participant,
+        msg.sender,
+        stake,
+        empty,
+        empty);
+    setRound0(round);
+    (_setOrDeleteParticipant(msg.sender, participant));
+    (sendAcceptAndReturnChange128(fee));
+}
+===== REFERENCE =====
+
+function addOrdinaryStake(uint64 stake) public { 
+    require(msg.sender != address(0), Errors.IS_EXT_MSG); 
+                    
+    if (m_poolClosed) { 
+      return _sendError(STATUS_DEPOOL_CLOSED, 0); 
+    } 
+
+    uint64 msgValue = uint64(msg.value); 
+    if (msgValue < uint(stake) + STAKE_FEE) { 
+      return _sendError(STATUS_FEE_TOO_SMALL, STAKE_FEE); 
+    } 
+    uint64 fee = msgValue - stake; 
+    if (stake < m_minStake) { 
+      return _sendError(STATUS_STAKE_TOO_SMALL, m_minStake); 
+    } 
+
+    DePoolLib.Participant participant = getOrCreateParticipant(msg.sender); 
+    Round round = getRound0(); 
+    optional(InvestParams) empty; 
+    (round, participant) = _addStakes(round, participant, msg.sender, stake, empty, empty); 
+    setRound0(round); 
+    _setOrDeleteParticipant(msg.sender, participant); 
+
+    sendAcceptAndReturnChange128(fee); 
+  } 
+
+  } 
+===== DIFF =====
+- function addOrdinaryStake(uint64 stake) {
++ function addOrdinaryStake(uint64 stake) public {
+?                                         +++++++
+- require(msg.sender != 0, Errors.IS_EXT_MSG);
++ require(msg.sender != address(0), Errors.IS_EXT_MSG);
+?                       ++++++++ +
+  if (m_poolClosed) {
+- return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+?        -                                  -
++ return _sendError(STATUS_DEPOOL_CLOSED, 0);
+  }
+- uint64 msgValue = msg.value;
++ uint64 msgValue = uint64(msg.value);
+?                   +++++++         +
+- if (msgValue < stake + STAKE_FEE) {
++ if (msgValue < uint(stake) + STAKE_FEE) {
+?                +++++     +
+- return (_sendError(STATUS_FEE_TOO_SMALL, STAKE_FEE));
+?        -                                           -
++ return _sendError(STATUS_FEE_TOO_SMALL, STAKE_FEE);
+  }
+  uint64 fee = msgValue - stake;
+  if (stake < m_minStake) {
+- return (_sendError(STATUS_STAKE_TOO_SMALL, m_minStake));
+?        -                                              -
++ return _sendError(STATUS_STAKE_TOO_SMALL, m_minStake);
+  }
+  DePoolLib.Participant participant = getOrCreateParticipant(msg.sender);
+  Round round = getRound0();
+  optional(InvestParams) empty;
+  (round, participant) = _addStakes(round, participant, msg.sender, stake, empty, empty);
+  setRound0(round);
+- (_setOrDeleteParticipant(msg.sender, participant));
+? -                                                -
++ _setOrDeleteParticipant(msg.sender, participant);
+- (sendAcceptAndReturnChange128(fee));
+? -                                 -
++ sendAcceptAndReturnChange128(fee);
++ }
+  }

@@ -1,0 +1,224 @@
+Definition DePoolContract_Ф_updateRound2 ( Л_round2 : RoundsBase_ι_Round ) 
+                    ( Л_prevValidatorHash : XInteger256 ) 
+                    ( Л_curValidatorHash : XInteger256 ) 
+                    ( Л_validationStart : XInteger32 ) 
+                     : LedgerT RoundsBase_ι_Round := 
+ 
+( declareInit LocalState_ι_updateRound2_Л_round2 := $ Л_round2) >>						 
+                       
+( If ( (↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step) ?==  ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest ) then { 
+       
+   (↑17 U1! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step := $RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze	) >> 
+                       
+	 (If (↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_completionReason ?== ξ$ RoundsBase_ι_CompletionReasonP_ι_Undefined) then { 
+		↑17 U1! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_completionReason := $RoundsBase_ι_CompletionReasonP_ι_NoValidatorRequest 
+	 })	>>	 
+		                  
+	 (↑17 U1! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_unfreeze := $xInt0)	  
+} 
+		                  
+else { 
+	 If ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step) ?==  ξ$ RoundsBase_ι_RoundStepP_ι_Completing ) 
+   then { 
+		this->sendMessage ( DePoolContract_Ф_completeRoundWithChunkF (!! ↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_id , 
+						 																	 $ xInt1 !!)) with {|| messageBounce ::= $ xBoolFalse ||} 
+	     } 
+} ) >> 
+                       
+			 
+(If ( ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase) ?!= $Л_curValidatorHash) !& 
+	 ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase) ?!= $Л_prevValidatorHash) !& 
+	 ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_unfreeze) ?== ξ$ DePoolLib_ι_MAX_TIME )) then { 
+		  
+    (↑17 U1! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_unfreeze := 
+              $Л_validationStart !+ 
+             (D1! (D2! LocalState_ι_updateRound2_Л_round2) ^^ RoundsBase_ι_Round_ι_stakeHeldFor)) 
+} ) >> 
+( 
+	                   
+	If ( tvm_now () ?>= ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_unfreeze) !+ 
+						 ( ξ$ DePoolLib_ι_ELECTOR_UNFREEZE_LAG )) ) then { 
+		 
+		If ( ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step) ?== $RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze ) !& 
+		   ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_completionReason) ?!= ξ$ RoundsBase_ι_CompletionReasonP_ι_Undefined)) then { 
+         
+      ↑↑17 U2! LocalState_ι_updateRound2_Л_round2	 := DePoolContract_Ф_startRoundCompleting (! 
+              ↑17 D2! LocalState_ι_updateRound2_Л_round2 , 
+														↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_completionReason !) 
+		}	else { 
+			 
+			If ( ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step) ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidationStart) !| 
+				 ((↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step) ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze) ) then { 
+				 
+			(↑17 U1! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingReward) >> 
+			(ProxyBase_Ф__recoverStake (! ↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_proxy , 
+										 ↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_id , 
+										 ↑17 D2! LocalState_ι_updateRound2_Л_round2 ^^ RoundsBase_ι_Round_ι_elector !)) 
+			} 
+      
+		} 
+	} 
+) >> 
+
+ 
+
+return!! (↑17 D2! LocalState_ι_updateRound2_Л_round2).
+===== TRANSLATED =====
+function updateRound2(Round round2,
+    uint256 prevValidatorHash,
+    uint256 curValidatorHash,
+    uint32 validationStart) returns(Round) {
+    if (round2.step == RoundStep.WaitingValidatorRequest) {
+        (round2.step = WaitingUnfreeze);
+        if (round2.completionReason == CompletionReason.Undefined) {
+            round2.completionReason = NoValidatorRequest;
+        }
+        (round2.unfreeze = 0);
+    } else {
+        if (round2.step == RoundStep.Completing) {
+            this.completeRoundWithChunk {
+                bounce: false
+            }(round2.id,
+                1);
+        }
+    }
+    if ((round2.vsetHashInElectionPhase != curValidatorHash) &&
+        (round2.vsetHashInElectionPhase != prevValidatorHash) &&
+        (round2.unfreeze == DePoolLib.MAX_TIME)) {
+        (round2.unfreeze =
+            validationStart +
+            (round2.stakeHeldFor));
+    }
+    if (now >= (round2.unfreeze +
+            DePoolLib.ELECTOR_UNFREEZE_LAG)) {
+        if ((round2.step == WaitingUnfreeze) &&
+            (round2.completionReason != CompletionReason.Undefined)) {
+            round2 = startRoundCompleting(
+                round2,
+                round2.completionReason);
+        } else {
+            if ((round2.step == RoundStep.WaitingValidationStart) ||
+                (round2.step == RoundStep.WaitingUnfreeze)) {
+                (round2.step = RoundStep.WaitingReward);
+                (_recoverStake(round2.proxy,
+                    round2.id,
+                    round2.elector));
+            }
+        }
+    }
+    return (round2);
+}
+===== REFERENCE =====
+    function updateRound2(
+        Round round2,
+        uint256 prevValidatorHash,
+        uint256 curValidatorHash,
+        uint32 validationStart
+    )
+        private returns (Round)
+    {
+
+        if (round2.step == RoundStep.WaitingValidatorRequest) {
+            // Next validation is started. Round is expired because no request from validator or proxy
+            // rejected request. See onBounce function.
+            round2.step = RoundStep.WaitingUnfreeze;
+            if (round2.completionReason == CompletionReason.Undefined) {
+                round2.completionReason = CompletionReason.NoValidatorRequest;
+            }
+            round2.unfreeze = 0;
+        } else if (round2.step == RoundStep.Completing) {
+            this.completeRoundWithChunk{bounce: false}(round2.id, 1);
+            // For situations when there exists stake with value==V, but DePool balance == (V - epsilon)
+            // In such situations some extra funds must be sent to DePool balance (See function 'receiveFunds')
+        }
+
+        // try to update unfreeze time
+        if (round2.vsetHashInElectionPhase != curValidatorHash &&
+            round2.vsetHashInElectionPhase != prevValidatorHash &&
+            round2.unfreeze == DePoolLib.MAX_TIME
+        )
+        {
+            // at least 1 validation period is skipped
+            round2.unfreeze = validationStart + round2.stakeHeldFor;
+        }
+
+        // try to complete round
+        if (now >= uint(round2.unfreeze) + DePoolLib.ELECTOR_UNFREEZE_LAG) {
+            if (round2.step == RoundStep.WaitingUnfreeze &&
+                round2.completionReason != CompletionReason.Undefined
+            )
+            {
+                round2 = startRoundCompleting(round2, round2.completionReason);
+            } else if (
+                round2.step == RoundStep.WaitingValidationStart ||
+                round2.step == RoundStep.WaitingUnfreeze
+            )
+            {
+                // recover stake and complete round
+                round2.step = RoundStep.WaitingReward;
+                _recoverStake(round2.proxy, round2.id, round2.elector);
+            }
+        }
+        return round2;
+    }
+
+
+===== DIFF =====
+- function updateRound2(Round round2, uint256 prevValidatorHash, uint256 curValidatorHash, uint32 validationStart) returns(Round) {
+?                                                                                                                 -----------------
++ function updateRound2(Round round2, uint256 prevValidatorHash, uint256 curValidatorHash, uint32 validationStart)
++ private returns(Round) {
+  if (round2.step == RoundStep.WaitingValidatorRequest) {
+- (round2.step = WaitingUnfreeze);
++ // Next validation is started.Round is expired because no request from validator or proxy
++ // rejected request.See onBounce function.round2.step = RoundStep.WaitingUnfreeze;
+  if (round2.completionReason == CompletionReason.Undefined) {
+- round2.completionReason = NoValidatorRequest;
++ round2.completionReason = CompletionReason.NoValidatorRequest;
+?                           +++++++++++++++++
+  }
+- (round2.unfreeze = 0);
+? -                   -
++ round2.unfreeze = 0;
+- } else {
+- if (round2.step == RoundStep.Completing) {
++ } else if (round2.step == RoundStep.Completing) {
+? +++++++
+  this.completeRoundWithChunk {
+  bounce: false
+  }(round2.id, 1);
++ // For situations when there exists stake with value==V, but DePool balance == (V - epsilon)
++ // In such situations some extra funds must be sent to DePool balance (See function 'receiveFunds')
++ }
++ // try to update unfreeze time
++ if (round2.vsetHashInElectionPhase != curValidatorHash && round2.vsetHashInElectionPhase != prevValidatorHash && round2.unfreeze == DePoolLib.MAX_TIME) {
++ // at least 1 validation period is skipped
++ round2.unfreeze = validationStart + round2.stakeHeldFor;
++ }
++ // try to complete round
++ if (now >= uint(round2.unfreeze) + DePoolLib.ELECTOR_UNFREEZE_LAG) {
++ if (round2.step == RoundStep.WaitingUnfreeze && round2.completionReason != CompletionReason.Undefined) {
++ round2 = startRoundCompleting(round2, round2.completionReason);
++ } else if (round2.step == RoundStep.WaitingValidationStart || round2.step == RoundStep.WaitingUnfreeze) {
++ // recover stake and complete round
++ round2.step = RoundStep.WaitingReward;
++ _recoverStake(round2.proxy, round2.id, round2.elector);
+  }
+  }
+- if ((round2.vsetHashInElectionPhase != curValidatorHash) && (round2.vsetHashInElectionPhase != prevValidatorHash) && (round2.unfreeze == DePoolLib.MAX_TIME)) {
+- (round2.unfreeze = validationStart + (round2.stakeHeldFor));
+- }
+- if (now >= (round2.unfreeze + DePoolLib.ELECTOR_UNFREEZE_LAG)) {
+- if ((round2.step == WaitingUnfreeze) && (round2.completionReason != CompletionReason.Undefined)) {
+- round2 = startRoundCompleting(round2, round2.completionReason);
+- } else {
+- if ((round2.step == RoundStep.WaitingValidationStart) || (round2.step == RoundStep.WaitingUnfreeze)) {
+- (round2.step = RoundStep.WaitingReward);
+- (_recoverStake(round2.proxy, round2.id, round2.elector));
+- }
+- }
+- }
+- return (round2);
+?        -      -
++ return round2;
+  }

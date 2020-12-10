@@ -1,0 +1,37 @@
+Definition RoundsBase_Ф_stakeSum ( Л_stakes : RoundsBase_ι_StakeValue ) : LedgerT XInteger64 := 
+  declareLocal Л_v :>: ( XMaybe RoundsBase_ι_InvestParams ) := D0! Л_stakes ^^ RoundsBase_ι_StakeValue_ι_vesting ; 
+  declareLocal Л_l :>: ( XMaybe RoundsBase_ι_InvestParams ):= D0! Л_stakes ^^ RoundsBase_ι_StakeValue_ι_lock ; 
+  
+  return!! ( D0! Л_stakes ^^ RoundsBase_ι_StakeValue_ι_ordinary !+ 
+    ( (( $ Л_v ->hasValue ) ) ? ( D1! ( $ Л_v ->get ) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) ::: $ xInt0 ) !+ 
+    ( (( $ Л_l ->hasValue ) ) ? ( D1! ( $ Л_l ->get ) ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) ::: $ xInt0 ) ) .
+===== TRANSLATED =====
+function stakeSum(StakeValue stakes) returns(uint64) {
+    optional(InvestParams) v = stakes.vesting;
+    optional(InvestParams) l = stakes.lock;
+    return (stakes.ordinary +
+        (((v.hasValue())) ? ((v.get()).remainingAmount) : 0) +
+        (((l.hasValue())) ? ((l.get()).remainingAmount) : 0));
+}
+===== REFERENCE =====
+
+
+function stakeSum(StakeValue stakes) internal inline returns (uint64) { 
+  optional(InvestParams) v = stakes.vesting; 
+  optional(InvestParams) l = stakes.lock; 
+  return 
+    stakes.ordinary + 
+    (v.hasValue() ? v.get().amount : 0) + 
+    (l.hasValue() ? l.get().amount : 0); 
+} 
+ 
+===== DIFF =====
+- function stakeSum(StakeValue stakes) returns(uint64) {
++ function stakeSum(StakeValue stakes) internal inline returns(uint64) {
+?                                     ++++++++++++++++
+  optional(InvestParams) v = stakes.vesting;
+  optional(InvestParams) l = stakes.lock;
+- return (stakes.ordinary + (((v.hasValue())) ? ((v.get()).remainingAmount) : 0) + (((l.hasValue())) ? ((l.get()).remainingAmount) : 0));
+?        -                  --             --   --       - --- ------     -        --             --   --       - --- ------     -    -
++ return stakes.ordinary + (v.hasValue() ? v.get().amount : 0) + (l.hasValue() ? l.get().amount : 0);
+  }

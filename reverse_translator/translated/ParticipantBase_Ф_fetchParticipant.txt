@@ -1,0 +1,20 @@
+Definition ParticipantBase_Ф_fetchParticipant (Л_addr: XAddress) : LedgerT (XMaybe (ξ DePoolLib_ι_Participant) ) := 
+ return!!  (D1! (↑5 D2! ParticipantBase_ι_m_participants) ->fetch $ Л_addr) .
+===== TRANSLATED =====
+function fetchParticipant(address addr) returns(optional(DePoolLib.Participant)) {
+    return (m_participants.fetch(addr));
+}
+===== REFERENCE =====
+ontract ParticipantBase { 
+  function fetchParticipant(address addr) internal view returns (optional(DePoolLib.Participant)) { 
+    return m_participants.fetch(addr); 
+  }
+===== DIFF =====
++ ontract ParticipantBase {
+- function fetchParticipant(address addr) returns(optional(DePoolLib.Participant)) {
++ function fetchParticipant(address addr) internal view returns(optional(DePoolLib.Participant)) {
+?                                        ++++++++++++++
+- return (m_participants.fetch(addr));
+?        -                          -
++ return m_participants.fetch(addr);
+  }

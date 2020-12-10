@@ -1,0 +1,19 @@
+Definition ProxyBase_Ф_getProxy ( Л_roundId : XInteger64 ) : LedgerT XAddress := 
+  return!! ( ↑3 D2! ProxyBase_ι_m_proxies [[  $ Л_roundId !% $xInt2 ]] ).
+===== TRANSLATED =====
+function getProxy(uint64 roundId) returns(address) {
+    return (m_proxies[roundId % 2]);
+}
+===== REFERENCE =====
+    function getProxy(uint64 roundId) internal view inline returns (address) {
+        return m_proxies[roundId % 2];
+    }
+
+===== DIFF =====
+- function getProxy(uint64 roundId) returns(address) {
++ function getProxy(uint64 roundId) internal view inline returns(address) {
+?                                  +++++++++++++++++++++
+- return (m_proxies[roundId % 2]);
+?        -                      -
++ return m_proxies[roundId % 2];
+  }

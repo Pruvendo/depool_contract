@@ -1,0 +1,348 @@
+Definition DePoolContract_Ф_updateRounds : LedgerT (XErrorValue (XValueValue True) XInteger) := 
+              
+declareLocal {( Л_validatorsElectedFor :>: XInteger32 , Л_electionsStartBefore :>: XInteger32 , _ :>: _ , _ :>: _ )} ??:= ConfigParamsBase_Ф_roundTimeParams () ; 
+                
+declareLocal {( Л_curValidatorHash :>: XInteger256 , Л_validationStart :>: XInteger32 , Л_validationEnd  :>: XInteger32 )} ??:= ConfigParamsBase_Ф_getCurValidatorData () ; 
+                 
+declareLocal Л_prevValidatorHash  :>: XInteger256 ??:= ConfigParamsBase_Ф_getPrevValidatorHash () ; 
+                 
+declareLocal Л_areElectionsStarted :>: XBool := ( tvm_now () ?>=  $ Л_validationEnd !- $ Л_electionsStartBefore ) ; 
+
+                 
+( declareGlobal! LocalState_ι_updateRounds_Л_roundPre0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRoundPre0 () ) >> 
+                 
+( declareGlobal! LocalState_ι_updateRounds_Л_round0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ) >> 
+                 
+( declareGlobal! LocalState_ι_updateRounds_Л_round1 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound1 () ) >> 
+ 
+( declareGlobal! LocalState_ι_updateRounds_Л_round2 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound2 () ) >> 
+
+ 
+If2!! ((↑ε12 DePoolContract_ι_m_poolClosed ) !& 
+  (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 !) ) !& 
+  (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 !) ) !& 
+  (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round0 !) ) !& 
+  (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0 !))) then { 
+    (->selfdestruct ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) >> 
+    tvm_exit () 
+  };          
+
+ 
+(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 , 
+																				  $ Л_prevValidatorHash , 
+																				  $ Л_curValidatorHash , 
+                      $ Л_validationStart !) ) >> 
+
+ 
+If!! ( (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidationStart) !& 
+(↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?== $ Л_prevValidatorHash)) then { 
+
+(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfValidatorWinElections) >> 
+ProxyBase_Ф__recoverStake (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy , 
+              ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_id , 
+              ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector !) >> $ xValue I 
+}; 
+                                          
+ 																				 
+If! ( $ Л_areElectionsStarted !& 
+	 (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?!= $ Л_curValidatorHash) !& 
+	 (↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_Completed)) then { 
+		 
+		(↑↑11 U2! delete RoundsBase_ι_m_rounds [[ ↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_id ]]) >> 
+		 
+		(↑17 U1! LocalState_ι_updateRounds_Л_round2 := D2! LocalState_ι_updateRounds_Л_round1) >> 
+		 
+		(↑17 U1! LocalState_ι_updateRounds_Л_round1 := D2! LocalState_ι_updateRounds_Л_round0) >> 
+     
+    (↑17 U1! LocalState_ι_updateRounds_Л_round0 := D2! LocalState_ι_updateRounds_Л_roundPre0) >> 
+     
+		(↑↑17 U2! LocalState_ι_updateRounds_Л_roundPre0 := DePoolContract_Ф_generateRound () ) >> 
+    
+     
+		(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 , 
+																				  $ Л_prevValidatorHash , 
+																				  $ Л_curValidatorHash , 
+                                          $ Л_validationStart !) ) >> 
+    If! ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then { 
+       
+      (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt := $ 	Л_validationEnd) >> 
+                        
+      (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorsElectedFor := $ Л_validatorsElectedFor ) >> 
+       
+      ↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector ??:= ConfigParamsBase_Ф_getElector () ; 
+       
+      (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase := $ Л_curValidatorHash) >> 
+       
+declareLocal {( _ :>: _ , _ :>: _ , _ :>: _ , Л_stakeHeldFor :>: XInteger32 )} ?:= ConfigParamsBase_Ф_roundTimeParams () ; 
+       
+      (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakeHeldFor := $ Л_stakeHeldFor) >> 
+
+       
+      (↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake := 
+          RoundsBase_Ф_stakeSum (! D1! (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakes) [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] !)) >> 
+      declareLocal Л_isValidatorStakeOk :>: XBool := (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake) ?>= 
+                     (↑12 D2! DePoolContract_ι_m_validatorAssurance)	; 
+       
+      (If ( !¬ $ Л_isValidatorStakeOk ) then { 
+        (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze) >> 
+        (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_completionReason := ξ$ RoundsBase_ι_CompletionReasonP_ι_ValidatorStakeIsTooSmall) >> 
+        (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_unfreeze := $ xInt0) 
+      } else { 
+        (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest) >> 
+        (->emit StakeSigningRequested (!! ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt , 
+                        ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy  !!)) 
+      }) }; 
+       
+
+      (If ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then { 
+        (↑17 U1! LocalState_ι_updateRounds_Л_round0 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_Pooling) 
+      })  
+      
+      } ;        
+       
+      ( RoundsBase_Ф_setRoundPre0 (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0 !) ) >> 
+      ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι_updateRounds_Л_round0 !) ) >> 
+      ( RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 !) ) >> 
+      ( RoundsBase_Ф_setRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 !) ) >> 
+return! (xValue I) .
+===== TRANSLATED =====
+function updateRounds() {
+    (uint32 validatorsElectedFor, uint32 electionsStartBefore, , ) = roundTimeParams();
+    (uint256 curValidatorHash, uint32 validationStart, uint32 validationEnd) = getCurValidatorData();
+    uint256 prevValidatorHash = getPrevValidatorHash();
+    bool areElectionsStarted = (now >= validationEnd - electionsStartBefore);
+    Round roundPre0 = getRoundPre0();
+    Round round0 = getRound0();
+    Round round1 = getRound1();
+    Round round2 = getRound2();
+    if (m_poolClosed &&
+        (isEmptyRound(round2)) &&
+        (isEmptyRound(round1)) &&
+        (isEmptyRound(round0)) &&
+        (isEmptyRound(roundPre0))) {
+        (selfdestruct(m_validatorWallet));
+        tvm.exit();
+    }
+    (round2 = updateRound2(round2,
+        prevValidatorHash,
+        curValidatorHash,
+        validationStart));
+    if ((round1.step == RoundStep.WaitingValidationStart) &&
+        (round1.vsetHashInElectionPhase == prevValidatorHash)) {
+        (round1.step = RoundStep.WaitingIfValidatorWinElections);
+        _recoverStake(round1.proxy,
+            round1.id,
+            round1.elector);
+    }
+    if (areElectionsStarted &&
+        (round1.vsetHashInElectionPhase != curValidatorHash) &&
+        (round2.step == RoundStep.Completed)) {
+        delete m_rounds[round2.id];
+        (round2 = round1);
+        (round1 = round0);
+        (round0 = roundPre0);
+        (roundPre0 = generateRound());
+        (round2 = updateRound2(round2,
+            prevValidatorHash,
+            curValidatorHash,
+            validationStart));
+        if (!m_poolClosed) {
+            (round1.supposedElectedAt = validationEnd);
+            (round1.validatorsElectedFor = validatorsElectedFor);
+            round1.elector = getElector();
+            (round1.vsetHashInElectionPhase = curValidatorHash);
+            (, , , uint32 stakeHeldFor) = roundTimeParams();
+            (round1.stakeHeldFor = stakeHeldFor);
+            (round1.validatorStake =
+                stakeSum(round1.stakes[m_validatorWallet]));
+            bool isValidatorStakeOk = round1.validatorStake >= m_validatorAssurance;
+            if (!isValidatorStakeOk) {
+                (round1.step = RoundStep.WaitingUnfreeze);
+                (round1.completionReason = CompletionReason.ValidatorStakeIsTooSmall);
+                (round1.unfreeze = 0);
+            } else {
+                (round1.step = RoundStep.WaitingValidatorRequest);
+                emit StakeSigningRequested(round1.supposedElectedAt,
+                    round1.proxy);
+            }
+        }
+        if (!m_poolClosed) {
+            (round0.step = RoundStep.Pooling);
+        }
+    }
+    (setRoundPre0(roundPre0));
+    (setRound0(round0));
+    (setRound1(round1));
+    (setRound2(round2));
+    return;
+}
+===== REFERENCE =====
+
+function updateRounds() private { 
+    (uint32 validatorsElectedFor, uint32 electionsStartBefore,,) = roundTimeParams(); 
+    (uint256 curValidatorHash, uint32 validationStart, uint32 validationEnd) = getCurValidatorData(); 
+    uint256 prevValidatorHash = getPrevValidatorHash(); 
+    bool areElectionsStarted = now >= validationEnd - electionsStartBefore; 
+    Round roundPre0 = getRoundPre0();     Round round0  = getRound0();     Round round1  = getRound1();     Round round2  = getRound2(); 
+        if (m_poolClosed && isEmptyRound(round2) && isEmptyRound(round1) && isEmptyRound(round0) && isEmptyRound(roundPre0) ) { 
+      selfdestruct(m_validatorWallet); 
+      tvm.exit(); 
+    } 
+
+    round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart); 
+
+        if (round1.step == RoundStep.WaitingValidationStart && 
+      round1.vsetHashInElectionPhase == prevValidatorHash 
+    ) 
+    { 
+      round1.step = RoundStep.WaitingIfValidatorWinElections; 
+      _recoverStake(round1.proxy, round1.id, round1.elector); 
+    } 
+
+        if (areElectionsStarted &&       round1.vsetHashInElectionPhase != curValidatorHash &&       round2.step == RoundStep.Completed     ) { 
+            delete m_rounds[round2.id]; 
+      round2 = round1; 
+      round1 = round0; 
+      round0 = roundPre0; 
+      roundPre0 = generateRound(); 
+
+            round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart); 
+
+            if (!m_poolClosed) { 
+        round1.supposedElectedAt = validationEnd; 
+round1.validatorsElectedFor = validatorsElectedFor; 
+        round1.elector = getElector(); 
+        round1.vsetHashInElectionPhase = curValidatorHash; 
+        (, , ,uint32 stakeHeldFor) = roundTimeParams(); 
+        round1.stakeHeldFor = stakeHeldFor; 
+                round1.validatorStake = stakeSum(round1.stakes[m_validatorWallet]); 
+        bool isValidatorStakeOk = round1.validatorStake >= m_validatorAssurance; 
+        if (!isValidatorStakeOk) { 
+          round1.step = RoundStep.WaitingUnfreeze; 
+          round1.completionReason = CompletionReason.ValidatorStakeIsTooSmall; 
+          round1.unfreeze = 0; 
+        } else { 
+          round1.step = RoundStep.WaitingValidatorRequest; 
+          emit StakeSigningRequested(round1.supposedElectedAt, round1.proxy); 
+        } 
+      } 
+
+            if (!m_poolClosed) 
+        round0.step = RoundStep.Pooling; 
+    } 
+
+    setRoundPre0(roundPre0); 
+    setRound0(round0); 
+    setRound1(round1); 
+    setRound2(round2); 
+  }
+===== DIFF =====
+- function updateRounds() {
++ function updateRounds() private {
+?                         ++++++++
+  (uint32 validatorsElectedFor, uint32 electionsStartBefore, ,) = roundTimeParams();
+  (uint256 curValidatorHash, uint32 validationStart, uint32 validationEnd) = getCurValidatorData();
+  uint256 prevValidatorHash = getPrevValidatorHash();
+- bool areElectionsStarted = (now >= validationEnd - electionsStartBefore);
+?                            -                                           -
++ bool areElectionsStarted = now >= validationEnd - electionsStartBefore;
+  Round roundPre0 = getRoundPre0();
+  Round round0 = getRound0();
+  Round round1 = getRound1();
+  Round round2 = getRound2();
+- if (m_poolClosed && (isEmptyRound(round2)) && (isEmptyRound(round1)) && (isEmptyRound(round0)) && (isEmptyRound(roundPre0))) {
+?                     -                    -    -                    -    -                    -    -                        -
++ if (m_poolClosed && isEmptyRound(round2) && isEmptyRound(round1) && isEmptyRound(round0) && isEmptyRound(roundPre0)) {
+- (selfdestruct(m_validatorWallet));
+? -                               -
++ selfdestruct(m_validatorWallet);
+  tvm.exit();
+  }
+- (round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart));
+? -                                                                                   -
++ round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart);
+- if ((round1.step == RoundStep.WaitingValidationStart) && (round1.vsetHashInElectionPhase == prevValidatorHash)) {
+?    -                                                -    -                                                    -
++ if (round1.step == RoundStep.WaitingValidationStart && round1.vsetHashInElectionPhase == prevValidatorHash) {
+- (round1.step = RoundStep.WaitingIfValidatorWinElections);
+? -                                                      -
++ round1.step = RoundStep.WaitingIfValidatorWinElections;
+  _recoverStake(round1.proxy, round1.id, round1.elector);
+  }
+- if (areElectionsStarted && (round1.vsetHashInElectionPhase != curValidatorHash) && (round2.step == RoundStep.Completed)) {
+?                            -                                                  -    -                                   -
++ if (areElectionsStarted && round1.vsetHashInElectionPhase != curValidatorHash && round2.step == RoundStep.Completed) {
+  delete m_rounds[round2.id];
+- (round2 = round1);
+? -               -
++ round2 = round1;
+- (round1 = round0);
+? -               -
++ round1 = round0;
+- (round0 = roundPre0);
+? -                  -
++ round0 = roundPre0;
+- (roundPre0 = generateRound());
+? -                           -
++ roundPre0 = generateRound();
+- (round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart));
+? -                                                                                   -
++ round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart);
+  if (!m_poolClosed) {
+- (round1.supposedElectedAt = validationEnd);
+? -                                        -
++ round1.supposedElectedAt = validationEnd;
+- (round1.validatorsElectedFor = validatorsElectedFor);
+? -                                                  -
++ round1.validatorsElectedFor = validatorsElectedFor;
+  round1.elector = getElector();
+- (round1.vsetHashInElectionPhase = curValidatorHash);
+? -                                                 -
++ round1.vsetHashInElectionPhase = curValidatorHash;
+  (, , , uint32 stakeHeldFor) = roundTimeParams();
+- (round1.stakeHeldFor = stakeHeldFor);
+? -                                  -
++ round1.stakeHeldFor = stakeHeldFor;
+- (round1.validatorStake = stakeSum(round1.stakes[m_validatorWallet]));
+? -                                                                  -
++ round1.validatorStake = stakeSum(round1.stakes[m_validatorWallet]);
+  bool isValidatorStakeOk = round1.validatorStake >= m_validatorAssurance;
+  if (!isValidatorStakeOk) {
+- (round1.step = RoundStep.WaitingUnfreeze);
+? -                                       -
++ round1.step = RoundStep.WaitingUnfreeze;
+- (round1.completionReason = CompletionReason.ValidatorStakeIsTooSmall);
+? -                                                                   -
++ round1.completionReason = CompletionReason.ValidatorStakeIsTooSmall;
+- (round1.unfreeze = 0);
+? -                   -
++ round1.unfreeze = 0;
+  } else {
+- (round1.step = RoundStep.WaitingValidatorRequest);
+? -                                               -
++ round1.step = RoundStep.WaitingValidatorRequest;
+  emit StakeSigningRequested(round1.supposedElectedAt, round1.proxy);
+  }
+  }
+- if (!m_poolClosed) {
+?                   --
++ if (!m_poolClosed)
+- (round0.step = RoundStep.Pooling);
+? -                               -
++ round0.step = RoundStep.Pooling;
+  }
+- }
+- (setRoundPre0(roundPre0));
+? -                       -
++ setRoundPre0(roundPre0);
+- (setRound0(round0));
+? -                 -
++ setRound0(round0);
+- (setRound1(round1));
+? -                 -
++ setRound1(round1);
+- (setRound2(round2));
+? -                 -
++ setRound2(round2);
+- return;
+  }

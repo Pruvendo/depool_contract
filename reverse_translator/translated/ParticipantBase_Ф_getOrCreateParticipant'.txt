@@ -1,0 +1,61 @@
+Definition ParticipantBase_Ф_getOrCreateParticipant' ( Л_addr : XAddress ) : LedgerT (XValueValue (ξ DePoolLib_ι_Participant)) := 
+  declareLocal Л_optParticipant :>: ( XMaybe (ξ DePoolLib_ι_Participant) ) := ↑5 D1! (D2! ParticipantBase_ι_m_participants) ->fetch $ Л_addr ; 
+  If! (( $ Л_optParticipant) ->hasValue ) then { 
+   return!!! ( $ Л_optParticipant) ->get 
+  }; 
+  declareLocal Л_newParticipant :>: ξ DePoolLib_ι_Participant := {|| 
+    DePoolLib_ι_Participant_ι_roundQty ::= $ xInt0 , 
+    DePoolLib_ι_Participant_ι_reward ::= $ xInt0 , 
+    DePoolLib_ι_Participant_ι_haveVesting ::= $ xBoolFalse , 
+    DePoolLib_ι_Participant_ι_haveLock ::= $ xBoolFalse , 
+    DePoolLib_ι_Participant_ι_reinvest ::= $ xBoolTrue , 
+    DePoolLib_ι_Participant_ι_withdrawValue ::= $ xInt0 
+  ||} ; 
+    return! Л_newParticipant.
+===== TRANSLATED =====
+function getOrCreateParticipant(address addr) returns(DePoolLib.Participant) {
+    optional(DePoolLib.Participant) optParticipant = m_participants.fetch(addr);
+    if (optParticipant.hasValue()) {
+        return (optParticipant).get();
+    }
+    DePoolLib.Participant newParticipant = DePoolLib.Participant({
+        roundQty: 0,
+        reward: 0,
+        haveVesting: false,
+        haveLock: false,
+        reinvest: true,
+        withdrawValue: 0
+    });
+    return newParticipant;
+}
+===== REFERENCE =====
+function getOrCreateParticipant(address addr) internal view returns (DePoolLib.Participant) { 
+  optional(DePoolLib.Participant) optParticipant = m_participants.fetch(addr); 
+  if (optParticipant.hasValue()) { 
+    return optParticipant.get(); 
+  } 
+  DePoolLib.Participant newParticipant = DePoolLib.Participant({ 
+    roundQty: 0, 
+    reward: 0, 
+    haveVesting: false, 
+    haveLock: false, 
+    reinvest: true, 
+    withdrawValue: 0 
+  }); 
+  return newParticipant; 
+} 
+===== DIFF =====
+- function getOrCreateParticipant(address addr) returns(DePoolLib.Participant) {
++ function getOrCreateParticipant(address addr) internal view returns(DePoolLib.Participant) {
+?                                              ++++++++++++++
+  optional(DePoolLib.Participant) optParticipant = m_participants.fetch(addr);
+  if (optParticipant.hasValue()) {
+- return (optParticipant).get();
+?        -              -
++ return optParticipant.get();
+  }
+  DePoolLib.Participant newParticipant = DePoolLib.Participant({
+  roundQty: 0, reward: 0, haveVesting: false, haveLock: false, reinvest: true, withdrawValue: 0
+  });
+  return newParticipant;
+  }

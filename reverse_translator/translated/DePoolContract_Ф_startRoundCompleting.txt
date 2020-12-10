@@ -1,0 +1,122 @@
+Definition DePoolContract_Ф_startRoundCompleting ( Л_round : RoundsBase_ι_Round ) 
+                         ( Л_reason : RoundsBase_ι_CompletionReason ) 
+                         : LedgerT RoundsBase_ι_Round := 
+( declareInit LocalState_ι_startRoundCompleting_Л_round := $ Л_round ) >> 
+         
+( ↑17 U1! LocalState_ι_startRoundCompleting_Л_round ^^ RoundsBase_ι_Round_ι_completionReason := $ Л_reason ) >> 
+       
+( ↑17 U1! LocalState_ι_startRoundCompleting_Л_round ^^ RoundsBase_ι_Round_ι_handledStakesAndRewards := $ xInt0 ) >> 
+       
+( ↑17 U1! LocalState_ι_startRoundCompleting_Л_round ^^ RoundsBase_ι_Round_ι_validatorRemainingStake := $ xInt0 ) >> 
+
+( If ( ↑17 D2! LocalState_ι_startRoundCompleting_Л_round ^^ RoundsBase_ι_Round_ι_participantQty ?== $ xInt0 ) 
+then { 
+         
+ ( ↑17 U1! LocalState_ι_startRoundCompleting_Л_round ^^ RoundsBase_ι_Round_ι_step 
+            := ξ$ RoundsBase_ι_RoundStepP_ι_Completed ) >> 
+         
+ this->sendMessage ( $ DePoolContract_Ф_ticktockF ) with {|| messageValue ::= $ DePool_ι_VALUE_FOR_SELF_CALL , messageBounce ::= $ xBoolFalse ||}
+} 
+else { 
+         
+ ( ↑17 U1! LocalState_ι_startRoundCompleting_Л_round ^^ RoundsBase_ι_Round_ι_step 
+            := ξ$ RoundsBase_ι_RoundStepP_ι_Completing ) >> 
+         
+ ( this->sendMessage ( DePoolContract_Ф_completeRoundF (!! 
+   ( ↑17 D1! ( D2! LocalState_ι_startRoundCompleting_Л_round ) ^^ RoundsBase_ι_Round_ι_id ) , 
+   ( ↑17 D1! ( D2! LocalState_ι_startRoundCompleting_Л_round ) ^^ RoundsBase_ι_Round_ι_participantQty ) !!) ) 
+       with {|| messageValue ::= $ DePool_ι_VALUE_FOR_SELF_CALL , 
+            messageBounce ::= $ xBoolFalse , 
+            messageFlag  ::= $ xInt1 ||} ) 
+} ) >> 
+         
+(->emit (RoundCompleted (!! RoundsBase_Ф_toTruncatedRound (! ↑ε17 LocalState_ι_startRoundCompleting_Л_round !) !!))) >> 
+      
+   DePoolContract_Ф_setLastRoundInfo (! ↑ε17 LocalState_ι_startRoundCompleting_Л_round !) >> 
+         
+ return!! ( ↑ε17 LocalState_ι_startRoundCompleting_Л_round ) .
+===== TRANSLATED =====
+function startRoundCompleting(Round round,
+    CompletionReason reason) returns(Round) {
+    (round.completionReason = reason);
+    (round.handledStakesAndRewards = 0);
+    (round.validatorRemainingStake = 0);
+    if (round.participantQty == 0) {
+        (round.step = RoundStep.Completed);
+        this.ticktock {
+            value: VALUE_FOR_SELF_CALL,
+            bounce: false
+        }();
+    } else {
+        (round.step = RoundStep.Completing);
+        (this.completeRound {
+            value: VALUE_FOR_SELF_CALL,
+            bounce: false,
+            flag: 1
+        }(
+            (round.id),
+            (round.participantQty)));
+    }
+    emit RoundCompleted(toTruncatedRound(round));
+    setLastRoundInfo(round);
+    return (round);
+}
+===== REFERENCE =====
+    function startRoundCompleting(Round round, CompletionReason reason) private returns (Round) {
+        round.completionReason = reason;
+        round.handledStakesAndRewards = 0;
+        round.validatorRemainingStake = 0;
+
+        if (round.participantQty == 0) {
+            round.step = RoundStep.Completed;
+            this.ticktock{value: VALUE_FOR_SELF_CALL, bounce: false}();
+        } else {
+            round.step = RoundStep.Completing;
+            this.completeRound{flag: 1, bounce: false, value: VALUE_FOR_SELF_CALL}(round.id, round.participantQty);
+        }
+
+        emit RoundCompleted(toTruncatedRound(round));
+        setLastRoundInfo(round);
+
+        return round;
+    }
+
+===== DIFF =====
+- function startRoundCompleting(Round round, CompletionReason reason) returns(Round) {
++ function startRoundCompleting(Round round, CompletionReason reason) private returns(Round) {
+?                                                                    ++++++++
+- (round.completionReason = reason);
+? -                               -
++ round.completionReason = reason;
+- (round.handledStakesAndRewards = 0);
+? -                                 -
++ round.handledStakesAndRewards = 0;
+- (round.validatorRemainingStake = 0);
+? -                                 -
++ round.validatorRemainingStake = 0;
+  if (round.participantQty == 0) {
+- (round.step = RoundStep.Completed);
+? -                                -
++ round.step = RoundStep.Completed;
+  this.ticktock {
+  value: VALUE_FOR_SELF_CALL, bounce: false
+  }();
+  } else {
+- (round.step = RoundStep.Completing);
+? -                                 -
++ round.step = RoundStep.Completing;
+- (this.completeRound {
+? -
++ this.completeRound {
+- value: VALUE_FOR_SELF_CALL, bounce: false, flag: 1
++ flag: 1, bounce: false, value: VALUE_FOR_SELF_CALL
+- }((round.id), (round.participantQty)));
+?  -         -  -                     --
++ }(round.id, round.participantQty);
+  }
+  emit RoundCompleted(toTruncatedRound(round));
+  setLastRoundInfo(round);
+- return (round);
+?        -     -
++ return round;
+  }

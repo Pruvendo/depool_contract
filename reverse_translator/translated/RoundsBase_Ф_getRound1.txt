@@ -1,0 +1,16 @@
+Definition RoundsBase_Ф_getRound1 : LedgerT RoundsBase_ι_Round := 
+ return!! (  RoundsBase_Ф_roundAt (! (↑11 D2! RoundsBase_ι_m_roundQty) !- $ xInt3 !) ).
+===== TRANSLATED =====
+function getRound1() returns(Round) {
+    return (roundAt(m_roundQty - 3));
+}
+===== REFERENCE =====
+function getRound1()  internal inline returns (Round) { return roundAt(m_roundQty - 3); } 
+===== DIFF =====
+- function getRound1() returns(Round) {
++ function getRound1() internal inline returns(Round) {
+?                     ++++++++++++++++
+- return (roundAt(m_roundQty - 3));
+?        -                      -
++ return roundAt(m_roundQty - 3);
+  }

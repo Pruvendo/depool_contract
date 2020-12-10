@@ -1,0 +1,34 @@
+Definition ConfigParamsBase_Ф_roundTimeParams : LedgerT ( XErrorValue ( XInteger32 # XInteger32 # XInteger32 # XInteger32 ) XInteger ) := 
+returns ( Л_validatorsElectedFor :>: XInteger32 , Л_electionsStartBefore :>: XInteger32 , Л_electionsEndBefore :>: XInteger32 , Л_stakeHeldFor :>: XInteger32 ) >>
+  U0! {( Л_validatorsElectedFor , Л_electionsStartBefore , Л_electionsEndBefore , Л_stakeHeldFor , Л_ok )} := tvm_configParam_15; 
+declareLocal Л_ok :>: XBool ;
+  Require {{ $ Л_ok , ξ$ InternalErrors_ι_ERROR509 }} ; 
+ς return# ( $ Л_validatorsElectedFor, $ Л_electionsStartBefore, $ Л_electionsEndBefore, $ Л_stakeHeldFor ).
+===== TRANSLATED =====
+function roundTimeParams() returns(uint32 validatorsElectedFor, uint32 electionsStartBefore, uint32 electionsEndBefore, uint32 stakeHeldFor) {
+    (validatorsElectedFor, electionsStartBefore, electionsEndBefore, stakeHeldFor, ok) = tvm.configParam(15);
+    bool ok;
+    require(ok, InternalErrors.ERROR509);
+}
+===== REFERENCE =====
+
+function roundTimeParams() virtual internal returns ( 
+    uint32 validatorsElectedFor, 
+    uint32 electionsStartBefore, 
+    uint32 electionsEndBefore, 
+    uint32 stakeHeldFor 
+  ) { 
+    bool ok; 
+    (validatorsElectedFor, electionsStartBefore, electionsEndBefore, stakeHeldFor, ok) = tvm.configParam(15); 
+    require(ok, InternalErrors.ERROR509); 
+  } 
+
+===== DIFF =====
+- function roundTimeParams() returns(uint32 validatorsElectedFor, uint32 electionsStartBefore, uint32 electionsEndBefore, uint32 stakeHeldFor) {
++ function roundTimeParams() virtual internal returns(uint32 validatorsElectedFor, uint32 electionsStartBefore, uint32 electionsEndBefore, uint32 stakeHeldFor) {
+?                            +++++++++++++++++
++ bool ok;
+  (validatorsElectedFor, electionsStartBefore, electionsEndBefore, stakeHeldFor, ok) = tvm.configParam(15);
+- bool ok;
+  require(ok, InternalErrors.ERROR509);
+  }

@@ -1,0 +1,23 @@
+Definition DePoolProxyContract_Ф_onSuccessToRecoverStake ( Л_queryId : XInteger64 ) : LedgerT True := 
+  IDePool of ( ↑ε10 DePoolProxyContract_ι_m_dePool ) ->sendMessage ( DePoolContract_Ф_onSuccessToRecoverStakeF (!! $ Л_queryId , ( msg_sender () ) !!) )
+                with {|| messageValue ::= msg_value () !- ξ$ DePoolLib_ι_PROXY_FEE ||} .
+===== TRANSLATED =====
+function onSuccessToRecoverStake(uint64 queryId) {
+    IDePool(m_dePool).onSuccessToRecoverStake {
+        value: msg.value - DePoolLib.PROXY_FEE
+    }(queryId, msg.sender);
+}
+===== REFERENCE =====
+
+function onSuccessToRecoverStake(uint64 queryId) public functionID(0xF96F7324) { 
+    IDePool(m_dePool).onSuccessToRecoverStake{value: msg.value - DePoolLib.PROXY_FEE}(queryId, msg.sender); 
+  } 
+
+===== DIFF =====
+- function onSuccessToRecoverStake(uint64 queryId) {
++ function onSuccessToRecoverStake(uint64 queryId) public functionID(0xF96F7324) {
+?                                                  ++++++++++++++++++++++++++++++
+  IDePool(m_dePool).onSuccessToRecoverStake {
+  value: msg.value - DePoolLib.PROXY_FEE
+  }(queryId, msg.sender);
+  }

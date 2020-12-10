@@ -1,0 +1,16 @@
+Definition ValidatorBase_Ф_Constructor2 ( Л_validatorWallet : XAddress ) : LedgerT True := 
+  ↑2 U1! ValidatorBase_ι_m_validatorWallet := $ Л_validatorWallet.
+===== TRANSLATED =====
+constructor(address validatorWallet) {
+    m_validatorWallet = validatorWallet;
+}
+===== REFERENCE =====
+constructor(address validatorWallet) internal { 
+    m_validatorWallet = validatorWallet; 
+  } 
+===== DIFF =====
+- constructor(address validatorWallet) {
++ constructor(address validatorWallet) internal {
+?                                      +++++++++
+  m_validatorWallet = validatorWallet;
+  }

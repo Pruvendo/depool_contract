@@ -1,0 +1,46 @@
+Definition ProxyBase_Ф__sendElectionRequest ( Л_proxy : XAddress ) ( Л_requestId : XInteger64 ) ( Л_validatorStake : XInteger64 )( Л_req : ξ DePoolLib_ι_Request ) (Л_elector: XAddress) : LedgerT True := 
+ "IProxy" of ( $ Л_proxy) ->sendMessage (DePoolProxyContract_Ф_process_new_stakeF (!! $ Л_requestId , 
+   $ (Л_req ->> DePoolLib_ι_Request_ι_validatorKey) , 
+   $ (Л_req ->> DePoolLib_ι_Request_ι_stakeAt) , 
+   $ (Л_req ->> DePoolLib_ι_Request_ι_maxFactor) , 
+   $ (Л_req ->> DePoolLib_ι_Request_ι_adnlAddr) , 
+   $ (Л_req ->> DePoolLib_ι_Request_ι_signature) , 
+   $ Л_elector !!) ) with {|| messageValue ::= $ Л_validatorStake !+ ξ$ DePoolLib_ι_ELECTOR_FEE !+ ξ$ DePoolLib_ι_PROXY_FEE ||}.
+===== TRANSLATED =====
+function _sendElectionRequest(address proxy, uint64 requestId, uint64 validatorStake, DePoolLib.Request req, address elector) {
+    IProxy(proxy).process_new_stake {
+        value: validatorStake + DePoolLib.ELECTOR_FEE + DePoolLib.PROXY_FEE
+    }(requestId, req.validatorKey, req.stakeAt, req.maxFactor, req.adnlAddr, req.signature,
+        elector);
+}
+===== REFERENCE =====
+
+function _sendElectionRequest( 
+    address proxy, 
+    uint64 requestId, 
+    uint64 validatorStake, 
+    DePoolLib.Request req, 
+    address elector 
+  ) 
+    internal 
+  { 
+            IProxy(proxy).process_new_stake{value: validatorStake + DePoolLib.ELECTOR_FEE + DePoolLib.PROXY_FEE}( 
+      requestId, 
+      req.validatorKey, 
+      req.stakeAt, 
+      req.maxFactor, 
+      req.adnlAddr, 
+      req.signature, 
+      elector 
+    ); 
+  } 
+ 
+===== DIFF =====
+- function _sendElectionRequest(address proxy, uint64 requestId, uint64 validatorStake, DePoolLib.Request req, address elector) {
+?                                                                                                                              --
++ function _sendElectionRequest(address proxy, uint64 requestId, uint64 validatorStake, DePoolLib.Request req, address elector)
++ internal {
+  IProxy(proxy).process_new_stake {
+  value: validatorStake + DePoolLib.ELECTOR_FEE + DePoolLib.PROXY_FEE
+  }(requestId, req.validatorKey, req.stakeAt, req.maxFactor, req.adnlAddr, req.signature, elector);
+  }

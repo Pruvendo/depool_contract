@@ -1,0 +1,22 @@
+Definition ProxyBase_Ф__recoverStake ( Л_proxy : XAddress )( Л_requestId : XInteger64 )( Л_elector : XAddress ) : LedgerT True := 
+"IProxy" of ( $ Л_proxy ) ->sendMessage (DePoolProxyContract_Ф_recover_stakeF (!! $ Л_requestId , $ Л_elector !!)) with {|| messageValue ::= ξ $ DePoolLib_ι_ELECTOR_FEE !+ ξ $ DePoolLib_ι_PROXY_FEE ||} .
+===== TRANSLATED =====
+function _recoverStake(address proxy, uint64 requestId, address elector) {
+    IProxy(proxy).recover_stake {
+        value: DePoolLib.ELECTOR_FEE + DePoolLib.PROXY_FEE
+    }(requestId, elector);
+}
+===== REFERENCE =====
+
+function _recoverStake(address proxy, uint64 requestId, address elector) internal { 
+    IProxy(proxy).recover_stake{value: DePoolLib.ELECTOR_FEE + DePoolLib.PROXY_FEE}(requestId, elector); 
+  } 
+ 
+===== DIFF =====
+- function _recoverStake(address proxy, uint64 requestId, address elector) {
++ function _recoverStake(address proxy, uint64 requestId, address elector) internal {
+?                                                                          +++++++++
+  IProxy(proxy).recover_stake {
+  value: DePoolLib.ELECTOR_FEE + DePoolLib.PROXY_FEE
+  }(requestId, elector);
+  }

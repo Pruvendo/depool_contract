@@ -1,0 +1,16 @@
+Definition RoundsBase_Ф_isRound2 (Л_id: XInteger64) : LedgerT XBool := 
+  return!! (  $ Л_id ?== (↑11 D2! RoundsBase_ι_m_roundQty) !- $ xInt4 ).
+===== TRANSLATED =====
+function isRound2(uint64 id) returns(bool) {
+    return (id == m_roundQty - 4);
+}
+===== REFERENCE =====
+function isRound2(uint64 id)  internal inline returns (bool) { return id == m_roundQty - 4; } 
+===== DIFF =====
+- function isRound2(uint64 id) returns(bool) {
++ function isRound2(uint64 id) internal inline returns(bool) {
+?                             ++++++++++++++++
+- return (id == m_roundQty - 4);
+?        -                    -
++ return id == m_roundQty - 4;
+  }

@@ -1,0 +1,72 @@
+Definition RoundsBase_Ф_toTruncatedRound ( Л_round : RoundsBase_ι_Round ) : LedgerT RoundsBase_ι_TruncatedRound :=  
+return!! 
+ {|| RoundsBase_ι_TruncatedRound_ι_id ::= $ Л_round ->> RoundsBase_ι_Round_ι_id , 
+   RoundsBase_ι_TruncatedRound_ι_supposedElectedAt ::= $ Л_round ->> RoundsBase_ι_Round_ι_supposedElectedAt, 
+   RoundsBase_ι_TruncatedRound_ι_unfreeze ::= $ Л_round ->> RoundsBase_ι_Round_ι_unfreeze , 
+   RoundsBase_ι_TruncatedRound_ι_stakeHeldFor ::= $ Л_round ->> RoundsBase_ι_Round_ι_stakeHeldFor , 
+   RoundsBase_ι_TruncatedRound_ι_vsetHashInElectionPhase ::= $ Л_round ->> RoundsBase_ι_Round_ι_vsetHashInElectionPhase , 
+   RoundsBase_ι_TruncatedRound_ι_step ::= $ Л_round ->> RoundsBase_ι_Round_ι_step , 
+   RoundsBase_ι_TruncatedRound_ι_completionReason ::= $ Л_round ->> RoundsBase_ι_Round_ι_completionReason , 
+   RoundsBase_ι_TruncatedRound_ι_stake ::= $ Л_round ->> RoundsBase_ι_Round_ι_stake , 
+   RoundsBase_ι_TruncatedRound_ι_recoveredStake ::= $ Л_round ->> RoundsBase_ι_Round_ι_recoveredStake , 
+   RoundsBase_ι_TruncatedRound_ι_unused ::= $ Л_round ->> RoundsBase_ι_Round_ι_unused , 
+   RoundsBase_ι_TruncatedRound_ι_isValidatorStakeCompleted ::= $ Л_round ->> RoundsBase_ι_Round_ι_isValidatorStakeCompleted , 
+   RoundsBase_ι_TruncatedRound_ι_rewards ::= $ Л_round ->> RoundsBase_ι_Round_ι_rewards , 
+   RoundsBase_ι_TruncatedRound_ι_participantQty ::= $ Л_round ->> RoundsBase_ι_Round_ι_participantQty , 
+   RoundsBase_ι_TruncatedRound_ι_validatorStake ::= $ Л_round ->> RoundsBase_ι_Round_ι_validatorStake , 
+   RoundsBase_ι_TruncatedRound_ι_validatorRemainingStake ::= $ Л_round ->> RoundsBase_ι_Round_ι_validatorRemainingStake , 
+   RoundsBase_ι_TruncatedRound_ι_handledStakesAndRewards ::= $ Л_round ->> RoundsBase_ι_Round_ι_handledStakesAndRewards ||}.
+===== TRANSLATED =====
+function toTruncatedRound(Round round) returns(TruncatedRound) {
+    return {
+        id: round.id,
+        supposedElectedAt: round.supposedElectedAt,
+        unfreeze: round.unfreeze,
+        stakeHeldFor: round.stakeHeldFor,
+        vsetHashInElectionPhase: round.vsetHashInElectionPhase,
+        step: round.step,
+        completionReason: round.completionReason,
+        stake: round.stake,
+        recoveredStake: round.recoveredStake,
+        unused: round.unused,
+        isValidatorStakeCompleted: round.isValidatorStakeCompleted,
+        rewards: round.rewards,
+        participantQty: round.participantQty,
+        validatorStake: round.validatorStake,
+        validatorRemainingStake: round.validatorRemainingStake,
+        handledStakesAndRewards: round.handledStakesAndRewards
+    };
+}
+===== REFERENCE =====
+                                                  WHY HERE NEED RETURNS???
+function toTruncatedRound(Round round) internal pure returns (TruncatedRound r) { 
+    return TruncatedRound({ 
+      id: round.id, 
+      supposedElectedAt: round.supposedElectedAt, 
+      unfreeze: round.unfreeze, 
+      stakeHeldFor: round.stakeHeldFor, 
+      vsetHashInElectionPhase: round.vsetHashInElectionPhase, 
+      step: round.step, 
+      completionReason: round.completionReason, 
+
+      stake: round.stake, 
+      recoveredStake: round.recoveredStake, 
+      unused: round.unused, 
+      isValidatorStakeCompleted: round.isValidatorStakeCompleted, 
+      rewards: round.rewards, 
+      participantQty: round.participantQty, 
+      validatorStake: round.validatorStake, 
+      validatorRemainingStake: round.validatorRemainingStake, 
+      handledStakesAndRewards: round.handledStakesAndRewards 
+    } 
+
+===== DIFF =====
++ WHY HERE NEED RETURNS ?? ?
+- function toTruncatedRound(Round round) returns(TruncatedRound) {
++ function toTruncatedRound(Round round) internal pure returns(TruncatedRound r) {
+?                                       ++++++++++++++                       ++
+- return {
++ return TruncatedRound({
+  id: round.id, supposedElectedAt: round.supposedElectedAt, unfreeze: round.unfreeze, stakeHeldFor: round.stakeHeldFor, vsetHashInElectionPhase: round.vsetHashInElectionPhase, step: round.step, completionReason: round.completionReason, stake: round.stake, recoveredStake: round.recoveredStake, unused: round.unused, isValidatorStakeCompleted: round.isValidatorStakeCompleted, rewards: round.rewards, participantQty: round.participantQty, validatorStake: round.validatorStake, validatorRemainingStake: round.validatorRemainingStake, handledStakesAndRewards: round.handledStakesAndRewards
+- };
+  }

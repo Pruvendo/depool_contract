@@ -1,0 +1,58 @@
+Definition DePoolProxyContract_Ф_constructor5 : LedgerT ( XErrorValue True XInteger ) := 
+ ( declareGlobal LocalState_ι_constructor5_Л_ok :>: XBool := $ xBoolFalse) >> 
+ ( ForIndexed (xListCons xInt0 (xListCons xInt1 xListNil)) do (fun (i: XInteger) => 
+  declareLocal Л_b :>: TvmBuilder ; 
+  U0! Л_b ->store msg_sender() $ i; 
+  declareLocal Л_publicKey :>: XInteger256 := tvm_hash (!! $Л_b ->toCell !!); 
+  (↑↑17 U2! LocalState_ι_constructor5_Л_ok := ((↑17 D2! LocalState_ι_constructor5_Л_ok) !| (tvm_pubkey () ?== $ Л_publicKey)) ) 
+ )) >> 
+ Require {{ ↑17 D2! LocalState_ι_constructor5_Л_ok , $ DePoolProxyContract_ι_ERROR_IS_NOT_DEPOOL }} ; 
+ (↑↑10 U2! DePoolProxyContract_ι_m_dePool := msg_sender ()).
+===== TRANSLATED =====
+constructor() {
+    bool ok = false;
+    for (uint i = 0; i < 2; ++i) {
+        TvmBuilder b;
+        b.store(msg.sender, i);
+        uint256 publicKey = tvm.hash(b.toCell());
+        (ok = (ok || (tvm.pubkey() == publicKey)));
+    }
+    require(ok, ERROR_IS_NOT_DEPOOL);
+    (m_dePool = msg.sender);
+}
+===== REFERENCE =====
+
+constructor() public { 
+    bool ok = false; 
+    for (uint8 i = 0; i < 2; ++i) { 
+      TvmBuilder b; 
+      b.store(address(msg.sender), i); 
+      uint256 publicKey = tvm.hash(b.toCell()); 
+      ok = ok || tvm.pubkey() == publicKey; 
+    } 
+    require(ok, ERROR_IS_NOT_DEPOOL); 
+    m_dePool = msg.sender; 
+  } 
+ 
+===== DIFF =====
+- constructor() {
++ constructor() public {
+?               +++++++
+  bool ok = false;
+- for (uint i = 0; i < 2; ++i) {
++ for (uint8 i = 0; i < 2; ++i) {
+?          +
+  TvmBuilder b;
+- b.store(msg.sender, i);
++ b.store(address(msg.sender), i);
+?        ++++++++           +
+  uint256 publicKey = tvm.hash(b.toCell());
+- (ok = (ok || (tvm.pubkey() == publicKey)));
+? -     -      -                         ---
++ ok = ok || tvm.pubkey() == publicKey;
+  }
+  require(ok, ERROR_IS_NOT_DEPOOL);
+- (m_dePool = msg.sender);
+? -                     -
++ m_dePool = msg.sender;
+  }

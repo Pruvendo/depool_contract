@@ -1,0 +1,51 @@
+Definition DePool_Ф_getDePoolInfo 
+		  : LedgerT ( XInteger64 # XInteger64 # XInteger64 # XAddress # XAddress # XAddress # XBool # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 ) := return! default.
+===== TRANSLATED =====
+function getDePoolInfo() returns(uint64, uint64, uint64, address, address, address, bool, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64) {
+    return default;
+}
+===== REFERENCE =====
+   // Returns DePool configuration parameters and constants.
+    function getDePoolInfo() public view returns (
+        bool poolClosed,
+        uint64 minStake,
+        uint64 validatorAssurance,
+        uint8 participantRewardFraction,
+        uint8 validatorRewardFraction,
+
+        address validatorWallet,
+        address[] proxies,
+
+        uint64 stakeFee,
+        uint64 retOrReinvFee,
+        uint64 proxyFee
+    )
+    {
+        poolClosed = m_poolClosed;
+        minStake = m_minStake;
+        validatorAssurance = m_validatorAssurance;
+        participantRewardFraction = m_participantRewardFraction;
+        validatorRewardFraction = m_validatorRewardFraction;
+
+        validatorWallet = m_validatorWallet;
+        proxies = m_proxies;
+
+        stakeFee = STAKE_FEE;
+        retOrReinvFee = RET_OR_REINV_FEE;
+        proxyFee = DePoolLib.PROXY_FEE;
+    }
+===== DIFF =====
+- function getDePoolInfo() returns(uint64, uint64, uint64, address, address, address, bool, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64) {
+- return default;
++ // Returns DePool configuration parameters and constants.function getDePoolInfo() public view returns(bool poolClosed, uint64 minStake, uint64 validatorAssurance, uint8 participantRewardFraction, uint8 validatorRewardFraction, address validatorWallet, address[] proxies, uint64 stakeFee, uint64 retOrReinvFee, uint64 proxyFee) {
++ poolClosed = m_poolClosed;
++ minStake = m_minStake;
++ validatorAssurance = m_validatorAssurance;
++ participantRewardFraction = m_participantRewardFraction;
++ validatorRewardFraction = m_validatorRewardFraction;
++ validatorWallet = m_validatorWallet;
++ proxies = m_proxies;
++ stakeFee = STAKE_FEE;
++ retOrReinvFee = RET_OR_REINV_FEE;
++ proxyFee = DePoolLib.PROXY_FEE;
+  }

@@ -1,0 +1,210 @@
+Definition DePoolContract_Ф_cutWithdrawalValue ( Л_p : RoundsBase_ι_InvestParams ) 
+                                               ( Л_doPunish : XBool) 
+                                               (Л_punishInterval : XInteger32) 
+                  : LedgerT ( (XMaybe RoundsBase_ι_InvestParams) # XInteger64 # XInteger64 ) := 
+ ( declareInit LocalState_ι_cutWithdrawalValue_Л_p := $ Л_p ) >> 
+      
+ ( declareGlobal LocalState_ι_cutWithdrawalValue_Л_withdrawalTons :>: XInteger64 := $ xInt0 ) >> 
+ ( declareGlobal LocalState_ι_cutWithdrawalValue_Л_tonsForOwner :>: XInteger64 := $ xInt0 ) >> 
+        
+  ( If ( $ Л_doPunish ) 
+   then { 
+    ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_p ^^ 
+          RoundsBase_ι_InvestParams_ι_lastWithdrawalTime 
+                        !+= $ Л_punishInterval ) >> 
+    ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_tonsForOwner := 
+      math->muldiv (! $ Л_punishInterval , D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p) 
+                          ^^ RoundsBase_ι_InvestParams_ι_withdrawalValue , 
+                        D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p) 
+                          ^^ RoundsBase_ι_InvestParams_ι_withdrawalPeriod !) ) >> 
+    ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_tonsForOwner := 
+      math->min2 (! ε LocalState_ι_cutWithdrawalValue_Л_tonsForOwner , 
+               D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                          ^^ RoundsBase_ι_InvestParams_ι_remainingAmount !) ) >> 
+    ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_p ^^ 
+       RoundsBase_ι_InvestParams_ι_remainingAmount !-= 
+         D2! LocalState_ι_cutWithdrawalValue_Л_tonsForOwner ) 
+     } 
+  ) >> 
+      
+
+  ( If ( tvm_now () ?> ( D1! ( ↑17 D2! LocalState_ι_cutWithdrawalValue_Л_p) 
+                  ^^ RoundsBase_ι_InvestParams_ι_lastWithdrawalTime ) ) 
+   then { 
+       declareLocal Л_periodQty :>: XInteger64 := 
+       tvm_now () !- ( ↑17 ( ( ( D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                  ^^ RoundsBase_ι_InvestParams_ι_lastWithdrawalTime ) ) 
+                   !/ 
+          ( D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                  ^^ RoundsBase_ι_InvestParams_ι_withdrawalPeriod ) ) ) ; 
+
+     ( If ( $ Л_periodQty ?> $ xInt0 ) 
+      then 
+      { 
+       ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_withdrawalTons := 
+         math->min2 (! $ Л_periodQty !* ( D1! (D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                          ^^ RoundsBase_ι_InvestParams_ι_withdrawalValue ) , 
+                         ( D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                          ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) !)  ) >> 
+       ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_p ^^ 
+               RoundsBase_ι_InvestParams_ι_remainingAmount !-= 
+                         ε LocalState_ι_cutWithdrawalValue_Л_withdrawalTons ) >> 
+       ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_p ^^ 
+               RoundsBase_ι_InvestParams_ι_lastWithdrawalTime !+= 
+                     $ Л_periodQty !* ( D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                          ^^ RoundsBase_ι_InvestParams_ι_withdrawalPeriod ) ) 
+      } 
+     ) 
+   } 
+  ) >> 
+      
+  ( If ( D1! ( ↑17 D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+           ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ?< ( ↑ε12 DePoolContract_ι_m_minStake ) ) 
+   then { 
+     ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_withdrawalTons !+= 
+        D1! ( D2! LocalState_ι_cutWithdrawalValue_Л_p ) 
+                          ^^ RoundsBase_ι_InvestParams_ι_remainingAmount ) >> 
+     ( ↑17 U1! LocalState_ι_cutWithdrawalValue_Л_p 
+                          ^^ RoundsBase_ι_InvestParams_ι_remainingAmount := $ xInt0 ) 
+    } 
+   ) >> 
+   
+  declareLocal Л_opt :>: ( XMaybe RoundsBase_ι_InvestParams ) := $ default ; 
+  ς U0! Л_opt ->set (↑17 D2! LocalState_ι_cutWithdrawalValue_Л_p ) ; 
+  ς U0! Л_withdrawalTons := ↑ε17 LocalState_ι_cutWithdrawalValue_Л_withdrawalTons ; 
+  ς U0! Л_tonsForOwner := ↑ε17 LocalState_ι_cutWithdrawalValue_Л_tonsForOwner ; 
+
+return! [( Л_opt , Л_withdrawalTons , Л_tonsForOwner )].
+===== TRANSLATED =====
+function cutWithdrawalValue(InvestParams p,
+    bool doPunish,
+    uint32 punishInterval) returns(optional(InvestParams), uint64, uint64) {
+    uint64 withdrawalTons = 0;
+    uint64 tonsForOwner = 0;
+    if (doPunish) {
+        (p.lastWithdrawalTime += punishInterval);
+        (tonsForOwner =
+            math.muldiv(punishInterval, p.withdrawalValue, p.withdrawalPeriod));
+        (tonsForOwner =
+            math.min(tonsForOwner, p.remainingAmount));
+        (p.remainingAmount -=
+            tonsForOwner);
+    }
+    if (now > (p.lastWithdrawalTime)) {
+        uint64 periodQty =
+            now - ((((p.lastWithdrawalTime)) /
+                (p.withdrawalPeriod)));
+        if (periodQty > 0)
+        {
+            (withdrawalTons =
+                math.min(periodQty * (p.withdrawalValue),
+                    (p.remainingAmount)));
+            (p.remainingAmount -=
+                withdrawalTons);
+            (p.lastWithdrawalTime +=
+                periodQty * (p.withdrawalPeriod));
+        }
+    }
+    if (p.remainingAmount < m_minStake) {
+        (withdrawalTons += p.remainingAmount);
+        (p
+            .remainingAmount = 0);
+    }
+    optional(InvestParams) opt;
+    ς opt.set(p);
+    ς withdrawalTons = withdrawalTons;
+    ς tonsForOwner = tonsForOwner;
+    return (opt, withdrawalTons, tonsForOwner);
+}
+===== REFERENCE =====
+    function cutWithdrawalValue(InvestParams p, bool doPunish, uint32 punishInterval)
+        private
+        returns (optional(InvestParams), uint64, uint64)
+    {
+        uint64 withdrawalTons = 0;
+        uint64 tonsForOwner = 0;
+        if (doPunish) {
+            p.lastWithdrawalTime += punishInterval;
+            tonsForOwner = math.muldiv(punishInterval, p.withdrawalValue, p.withdrawalPeriod);
+            tonsForOwner = math.min(tonsForOwner, p.remainingAmount);
+            p.remainingAmount -= tonsForOwner;
+        }
+
+        if (uint64(now) > p.lastWithdrawalTime) {
+            uint64 periodQty = (uint64(now) - p.lastWithdrawalTime) / p.withdrawalPeriod;
+            if (periodQty > 0) {
+                withdrawalTons = math.min(periodQty * p.withdrawalValue, p.remainingAmount);
+                p.remainingAmount -= withdrawalTons;
+                p.lastWithdrawalTime += periodQty * p.withdrawalPeriod;
+            }
+        }
+
+        if (p.remainingAmount < m_minStake) {
+            withdrawalTons += p.remainingAmount;
+            p.remainingAmount = 0;
+        }
+
+        optional(InvestParams) opt;
+        opt.set(p);
+        return (opt, withdrawalTons, tonsForOwner);
+    }
+
+
+===== DIFF =====
+- function cutWithdrawalValue(InvestParams p, bool doPunish, uint32 punishInterval) returns(optional(InvestParams), uint64, uint64) {
+?                                                                                  --------------------------------------------------
++ function cutWithdrawalValue(InvestParams p, bool doPunish, uint32 punishInterval)
++ private
++ returns(optional(InvestParams), uint64, uint64) {
+  uint64 withdrawalTons = 0;
+  uint64 tonsForOwner = 0;
+  if (doPunish) {
+- (p.lastWithdrawalTime += punishInterval);
+? -                                      -
++ p.lastWithdrawalTime += punishInterval;
+- (tonsForOwner = math.muldiv(punishInterval, p.withdrawalValue, p.withdrawalPeriod));
+? -                                                                                 -
++ tonsForOwner = math.muldiv(punishInterval, p.withdrawalValue, p.withdrawalPeriod);
+- (tonsForOwner = math.min(tonsForOwner, p.remainingAmount));
+? -                                                        -
++ tonsForOwner = math.min(tonsForOwner, p.remainingAmount);
+- (p.remainingAmount -= tonsForOwner);
+? -                                 -
++ p.remainingAmount -= tonsForOwner;
+  }
+- if (now > (p.lastWithdrawalTime)) {
+?           -                     -
++ if (uint64(now) > p.lastWithdrawalTime) {
+?    +++++++    +
+- uint64 periodQty = now - ((((p.lastWithdrawalTime)) / (p.withdrawalPeriod)));
+?                          ----                     -   -                  ---
++ uint64 periodQty = (uint64(now) - p.lastWithdrawalTime) / p.withdrawalPeriod;
+?                    ++++++++   +
+  if (periodQty > 0) {
+- (withdrawalTons = math.min(periodQty * (p.withdrawalValue), (p.remainingAmount)));
+? -                                      -                 -  -                  --
++ withdrawalTons = math.min(periodQty * p.withdrawalValue, p.remainingAmount);
+- (p.remainingAmount -= withdrawalTons);
+? -                                   -
++ p.remainingAmount -= withdrawalTons;
+- (p.lastWithdrawalTime += periodQty * (p.withdrawalPeriod));
+? -                                    -                  --
++ p.lastWithdrawalTime += periodQty * p.withdrawalPeriod;
+  }
+  }
+  if (p.remainingAmount < m_minStake) {
+- (withdrawalTons += p.remainingAmount);
+? -                                   -
++ withdrawalTons += p.remainingAmount;
+- (p.remainingAmount = 0);
+? -                     -
++ p.remainingAmount = 0;
+  }
+  optional(InvestParams) opt;
+- ς opt.set(p);
+? --
++ opt.set(p);
+- ς withdrawalTons = withdrawalTons;
+- ς tonsForOwner = tonsForOwner;
+  return (opt, withdrawalTons, tonsForOwner);
+  }

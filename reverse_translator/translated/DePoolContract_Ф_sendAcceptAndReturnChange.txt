@@ -1,0 +1,23 @@
+Definition DePoolContract_Ф_sendAcceptAndReturnChange : LedgerT True := 
+  IParticipant of ( msg_sender () ) ->sendMessage (IParticipant_И_receiveAnswerF (!! $ DePool_ι_STATUS_SUCCESS , $xInt0 !!))
+    with {|| messageValue ::= $ xInt0 , messageBounce ::= $ xBoolFalse , messageFlag ::= $ xInt64 ||} .
+===== TRANSLATED =====
+function sendAcceptAndReturnChange() {
+    IParticipant(msg.sender).receiveAnswer {
+        value: 0,
+        bounce: false,
+        flag: 64
+    }(STATUS_SUCCESS, 0);
+}
+===== REFERENCE =====
+function sendAcceptAndReturnChange() private { 
+  IParticipant(msg.sender).receiveAnswer{value: 0, bounce: false, flag: 64}(STATUS_SUCCESS, 0); 
+} 
+===== DIFF =====
+- function sendAcceptAndReturnChange() {
++ function sendAcceptAndReturnChange() private {
+?                                      ++++++++
+  IParticipant(msg.sender).receiveAnswer {
+  value: 0, bounce: false, flag: 64
+  }(STATUS_SUCCESS, 0);
+  }

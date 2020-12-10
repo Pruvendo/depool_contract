@@ -1,0 +1,57 @@
+Definition RoundsBase_Ф_getRounds : LedgerT (XHMap XInteger64 RoundsBase_ι_TruncatedRound) := 
+	( declareInit LocalState_ι_getRounds_Л_rounds := $ default ) >> 
+	 
+	( declareGlobal! LocalState_ι_getRounds_Л_pair :>: ( XMaybe ( XInteger64 # RoundsBase_ι_Round ) ) := RoundsBase_Ф_minRound () ) >> 
+	 
+	(While ((↑17 D2! LocalState_ι_getRounds_Л_pair) ->hasValue) do ( 
+		declareLocal {( Л_id :>: XInteger64 , Л_round :>: RoundsBase_ι_Round )} := (↑17 D2! LocalState_ι_getRounds_Л_pair) ->get ; 
+		declareLocal Л_r :>: RoundsBase_ι_TruncatedRound := RoundsBase_Ф_toTruncatedRound (! $ Л_round !) ; 
+		(↑17 U1! LocalState_ι_getRounds_Л_rounds [[ $ (Л_r ->> RoundsBase_ι_TruncatedRound_ι_id ) ]] := $ Л_r) >> 
+		(↑↑17 U2! LocalState_ι_getRounds_Л_pair := RoundsBase_Ф_nextRound (! $ Л_id !) ) >> 
+		continue! I 
+	)) >> 
+	 
+	return!! ( ↑17 D2! LocalState_ι_getRounds_Л_rounds ).
+===== TRANSLATED =====
+function getRounds() returns(mapping(uint64 => TruncatedRound)) {
+    optional(uint64, Round) pair = minRound();
+    while (pair.hasValue()) {
+        (uint64 id, Round round) = pair.get();
+        TruncatedRound r = toTruncatedRound(round);
+        (rounds[r.id] = r);
+        (pair = nextRound(id));
+    }
+    return (rounds);
+}
+===== REFERENCE =====
+
+function getRounds() external view returns (mapping(uint64 => TruncatedRound)) { 
+    optional(uint64, Round) pair = minRound(); 
+    while (pair.hasValue()) { 
+      (uint64 id, Round round) = pair.get(); 
+      TruncatedRound r = toTruncatedRound(round); 
+      rounds[r.id] = r; 
+      pair = nextRound(id); 
+    } 
+    return rounds; 
+  } 
+ 
+===== DIFF =====
+- function getRounds() returns(mapping(uint64 => TruncatedRound)) {
++ function getRounds() external view returns(mapping(uint64 => TruncatedRound)) {
+?                     ++++++++++++++
+  optional(uint64, Round) pair = minRound();
+  while (pair.hasValue()) {
+  (uint64 id, Round round) = pair.get();
+  TruncatedRound r = toTruncatedRound(round);
+- (rounds[r.id] = r);
+? -                -
++ rounds[r.id] = r;
+- (pair = nextRound(id));
+? -                    -
++ pair = nextRound(id);
+  }
+- return (rounds);
+?        -      -
++ return rounds;
+  }

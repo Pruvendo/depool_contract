@@ -1,0 +1,138 @@
+Definition DePoolContract_Ф_participateInElections' ( Л_queryId : XInteger64 ) 
+													( Л_validatorKey : XInteger256 ) 
+													( Л_stakeAt : XInteger32 ) 
+													( Л_maxFactor : XInteger32 ) 
+													( Л_adnlAddr : XInteger256 ) 
+													( Л_signature : XList XInteger8 ) 
+             : LedgerT ( XErrorValue (XValueValue True) XInteger ) := 
+               
+Require {{ msg_sender () ?== ↑2 D2! ValidatorBase_ι_m_validatorWallet , $ Errors_ι_IS_NOT_VALIDATOR }} ; 
+                 
+If!! ( ↑12 D2! DePoolContract_ι_m_poolClosed ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) 
+} ; 
+                    					 
+tvm_accept () >> 
+If! (DePoolContract_Ф_checkPureDePoolBalance ()) then {							 
+                     
+declareLocal Л_round :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound1 (); 
+                     
+If!! ( $ Л_round ->> RoundsBase_ι_Round_ι_step ?!= ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_NO_ELECTION_ROUND , $ xInt0 !) ) 
+} ; 
+                        
+If! ( $ Л_stakeAt ?!=  $ (Л_round ->> RoundsBase_ι_Round_ι_supposedElectedAt) ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_ELECTION_ID , $ xInt0 !) ) 
+} ; 
+                         
+U0! Л_round ^^ RoundsBase_ι_Round_ι_validatorRequest := $ (ξ DePoolLib_ι_RequestC Л_queryId Л_validatorKey Л_stakeAt Л_maxFactor Л_adnlAddr Л_signature) ; 
+                           
+(ProxyBase_Ф__sendElectionRequest (! $ (Л_round ->> RoundsBase_ι_Round_ι_proxy) , 
+									  $ (Л_round ->> RoundsBase_ι_Round_ι_id) , 
+									  $ (Л_round ->> RoundsBase_ι_Round_ι_stake) , 
+									  $ (Л_round ->> RoundsBase_ι_Round_ι_validatorRequest) , 
+									  $ (Л_round ->> RoundsBase_ι_Round_ι_elector) !)) >> 
+                       
+U0! Л_round ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfStakeAccepted ; 
+                    	 
+(RoundsBase_Ф_setRound1 (! $ Л_round !) ) } ; 
+                    
+DePoolContract_Ф__returnChange ().
+===== TRANSLATED =====
+function participateInElections(uint64 queryId,
+    uint256 validatorKey,
+    uint32 stakeAt,
+    uint32 maxFactor,
+    uint256 adnlAddr,
+    bytes signature) {
+    require(msg.sender == m_validatorWallet, IS_NOT_VALIDATOR);
+    if (m_poolClosed) {
+        return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+    }
+    tvm.accept();
+    if (checkPureDePoolBalance()) {
+        Round round = getRound1();
+        if (round.step != RoundStep.WaitingValidatorRequest) {
+            return (_sendError(STATUS_NO_ELECTION_ROUND, 0));
+        }
+        if (stakeAt != round.supposedElectedAt) {
+            return (_sendError(STATUS_INVALID_ELECTION_ID, 0));
+        }
+        round.validatorRequest = (Request(queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature));
+        (_sendElectionRequest(round.proxy, round.id, round.stake, round.validatorRequest, round.elector));
+        round.step = RoundStep.WaitingIfStakeAccepted;
+        (setRound1(round));
+    }
+    _returnChange();
+}
+===== REFERENCE =====
+
+function participateInElections(
+        uint64 queryId,
+        uint256 validatorKey,
+        uint32 stakeAt,
+        uint32 maxFactor,
+        uint256 adnlAddr,
+        bytes signature
+    ) public functionID(0x4E73744B) onlyValidatorContract {
+        if (m_poolClosed)
+            return _sendError(STATUS_DEPOOL_CLOSED, 0);
+        tvm.accept();
+        if (checkPureDePoolBalance()) {
+            Round round = getRound1();
+            if (round.step != RoundStep.WaitingValidatorRequest)
+                return _sendError(STATUS_NO_ELECTION_ROUND, 0);
+            if (stakeAt != round.supposedElectedAt)
+                return _sendError(STATUS_INVALID_ELECTION_ID, 0);
+            round.validatorRequest = Request(queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature);
+            _sendElectionRequest(round.proxy, round.id, round.stake, round.validatorRequest, round.elector);
+            round.step = RoundStep.WaitingIfStakeAccepted;
+            setRound1(round);
+        }
+        _returnChange();
+    } 
+===== DIFF =====
+- function participateInElections(uint64 queryId, uint256 validatorKey, uint32 stakeAt, uint32 maxFactor, uint256 adnlAddr, bytes signature) {
++ function participateInElections(uint64 queryId, uint256 validatorKey, uint32 stakeAt, uint32 maxFactor, uint256 adnlAddr, bytes signature) public functionID(0x4E73744B) onlyValidatorContract {
+?                                                                                                                                            ++++++++++++++++++++++++++++++++++++++++++++++++++++
+- require(msg.sender == m_validatorWallet, IS_NOT_VALIDATOR);
+- if (m_poolClosed) {
+?                  --
++ if (m_poolClosed)
+- return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+?        -                                  -
++ return _sendError(STATUS_DEPOOL_CLOSED, 0);
+- }
+  tvm.accept();
+  if (checkPureDePoolBalance()) {
+  Round round = getRound1();
+- if (round.step != RoundStep.WaitingValidatorRequest) {
+?                                                     --
++ if (round.step != RoundStep.WaitingValidatorRequest)
+- return (_sendError(STATUS_NO_ELECTION_ROUND, 0));
+?        -                                      -
++ return _sendError(STATUS_NO_ELECTION_ROUND, 0);
+- }
+- if (stakeAt != round.supposedElectedAt) {
+?                                        --
++ if (stakeAt != round.supposedElectedAt)
+- return (_sendError(STATUS_INVALID_ELECTION_ID, 0));
+?        -                                        -
++ return _sendError(STATUS_INVALID_ELECTION_ID, 0);
+- }
+- round.validatorRequest = (Request(queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature));
+?                          -                                                                       -
++ round.validatorRequest = Request(queryId, validatorKey, stakeAt, maxFactor, adnlAddr, signature);
+- (_sendElectionRequest(round.proxy, round.id, round.stake, round.validatorRequest, round.elector));
+? -                                                                                               -
++ _sendElectionRequest(round.proxy, round.id, round.stake, round.validatorRequest, round.elector);
+  round.step = RoundStep.WaitingIfStakeAccepted;
+- (setRound1(round));
+? -                -
++ setRound1(round);
+  }
+  _returnChange();
+  }

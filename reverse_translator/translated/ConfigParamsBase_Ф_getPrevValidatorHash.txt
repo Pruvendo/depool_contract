@@ -1,0 +1,28 @@
+Definition ConfigParamsBase_Ф_getPrevValidatorHash : LedgerT ( XErrorValue XInteger XInteger ) := 
+	declareLocal {( Л_cell :>: TvmCell , Л_ok :>: XBool )} := tvm_rawConfigParam_32 ; 
+ 	Require {{ $ Л_ok , ξ$ InternalErrors_ι_ERROR507 }} ; 
+ 	return!! ( tvm_hash (!! $ Л_cell !!) ).
+===== TRANSLATED =====
+function getPrevValidatorHash() returns(uint) {
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(32);
+    require(ok, InternalErrors.ERROR507);
+    return (tvm.hash(cell));
+}
+===== REFERENCE =====
+
+function getPrevValidatorHash() virtual internal returns (uint) { 
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(32); 
+    require(ok, InternalErrors.ERROR507); 
+    return tvm.hash(cell); 
+  } 
+ 
+===== DIFF =====
+- function getPrevValidatorHash() returns(uint) {
++ function getPrevValidatorHash() virtual internal returns(uint) {
+?                                 +++++++++++++++++
+  (TvmCell cell, bool ok) = tvm.rawConfigParam(32);
+  require(ok, InternalErrors.ERROR507);
+- return (tvm.hash(cell));
+?        -              -
++ return tvm.hash(cell);
+  }

@@ -1,0 +1,18 @@
+Definition RoundsBase_Ф_nextRound (Л_id: XInteger64) : LedgerT (XMaybe (XInteger64 # RoundsBase_ι_Round)) := 
+  return!! (D1! (↑11 D2! RoundsBase_ι_m_rounds) ->next $ Л_id) .
+===== TRANSLATED =====
+function nextRound(uint64 id) returns(optional(uint64, Round)) {
+    return (m_rounds.next(id));
+}
+===== REFERENCE =====
+function nextRound(uint64 id) internal view returns(optional(uint64, Round)) { 
+  return m_rounds.next(id); 
+} 
+===== DIFF =====
+- function nextRound(uint64 id) returns(optional(uint64, Round)) {
++ function nextRound(uint64 id) internal view returns(optional(uint64, Round)) {
+?                              ++++++++++++++
+- return (m_rounds.next(id));
+?        -                 -
++ return m_rounds.next(id);
+  }

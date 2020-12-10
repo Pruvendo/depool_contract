@@ -1,0 +1,164 @@
+Definition RoundsBase_Ф_withdrawStakeInPoolingRound' (Л_participant : ξ DePoolLib_ι_Participant ) (Л_participantAddress : XAddress) (Л_targetAmount : XInteger64) (Л_minStake : XInteger64) : LedgerT ( XValueValue (XInteger64 # ξ DePoolLib_ι_Participant) ) := 
+   
+  ( declareInit LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount := $ Л_targetAmount) >> 
+  ( declareInit LocalState_ι_withdrawStakeInPoolingRound_Л_participant := $ Л_participant) >> 
+
+   
+  ( declareGlobal! LocalState_ι_withdrawStakeInPoolingRound_Л_round :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ) >> 
+   
+  declareLocal Л_optSv :>: ( XMaybe RoundsBase_ι_StakeValue ) := (D1! (↑17 D2! LocalState_ι_withdrawStakeInPoolingRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes) ->fetch $ Л_participantAddress) ; 
+
+   
+  If! ( !¬ ( $ Л_optSv) ->hasValue ) then { 
+    return! (xError ( [( xInt0, Л_participant )] ) ) 
+  } ; 
+
+   
+  ( declareGlobal LocalState_ι_withdrawStakeInPoolingRound_Л_sv :>: RoundsBase_ι_StakeValue := ( $ Л_optSv) ->get) >> 
+   
+  (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount := math->min2 (! ε LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount , 
+                                          D2! LocalState_ι_withdrawStakeInPoolingRound_Л_sv ^^ RoundsBase_ι_StakeValue_ι_ordinary !) ) >> 
+   
+  (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_sv ^^ RoundsBase_ι_StakeValue_ι_ordinary !-= ε LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount) >> 
+   
+  (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_round ^^ RoundsBase_ι_Round_ι_stake !-= ε LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount) >> 
+   
+  (If (↑17 D2! LocalState_ι_withdrawStakeInPoolingRound_Л_sv ^^ RoundsBase_ι_StakeValue_ι_ordinary ?< $ Л_minStake ) then { 
+    (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_round ^^ RoundsBase_ι_Round_ι_stake !-= D1! (ε LocalState_ι_withdrawStakeInPoolingRound_Л_sv) ^^ RoundsBase_ι_StakeValue_ι_ordinary) >> 
+    (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount !+= D1! (ε LocalState_ι_withdrawStakeInPoolingRound_Л_sv) ^^ RoundsBase_ι_StakeValue_ι_ordinary) >> 
+    (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_sv ^^ RoundsBase_ι_StakeValue_ι_ordinary := $ xInt0 ) 
+  }) >> 
+
+   
+  (If (RoundsBase_Ф_stakeSum (! ↑ε17 LocalState_ι_withdrawStakeInPoolingRound_Л_sv !) ?== $xInt0 ) then { 
+    (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_round ^^ RoundsBase_ι_Round_ι_participantQty !--) >> 
+    (↑17 U1! delete LocalState_ι_withdrawStakeInPoolingRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes [[ $ Л_participantAddress ]] ) >> 
+    (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_participant ^^ DePoolLib_ι_Participant_ι_roundQty !--) 
+  } else { 
+    (↑17 U1! LocalState_ι_withdrawStakeInPoolingRound_Л_round ^^ RoundsBase_ι_Round_ι_stakes [[ $ Л_participantAddress ]] := ε LocalState_ι_withdrawStakeInPoolingRound_Л_sv) 
+  }) >> 
+
+   
+  (RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι_withdrawStakeInPoolingRound_Л_round !)) >> 
+
+   
+  return# ( ↑ε17 LocalState_ι_withdrawStakeInPoolingRound_Л_targetAmount , ↑ε17 LocalState_ι_withdrawStakeInPoolingRound_Л_participant ).
+===== TRANSLATED =====
+function withdrawStakeInPoolingRound(DePoolLib.Participant participant, address participantAddress, uint64 targetAmount, uint64 minStake) returns(uint64, DePoolLib.Participant) {
+    Round round = getRound0();
+    optional(StakeValue) optSv = (round.stakes.fetch(participantAddress));
+    if (!optSv.hasValue()) {
+        return (((0, participant)));
+    }
+    StakeValue sv = optSv.get();
+    (targetAmount = math.min(targetAmount,
+        sv.ordinary));
+    (sv.ordinary -= targetAmount);
+    (round.stake -= targetAmount);
+    if (sv.ordinary < minStake) {
+        (round.stake -= sv.ordinary);
+        (targetAmount += sv.ordinary);
+        (sv.ordinary = 0);
+    }
+    if (stakeSum(sv) == 0) {
+        (round.participantQty--);
+        delete round.stakes[participantAddress];
+        (participant.roundQty--);
+    } else {
+        (round.stakes[participantAddress] = sv);
+    }
+    (setRound0(round));
+    return (targetAmount, participant);
+}
+===== REFERENCE =====
+
+function withdrawStakeInPoolingRound( 
+    DePoolLib.Participant participant, 
+    address participantAddress, 
+    uint64 targetAmount, 
+    uint64 minStake 
+  ) 
+    internal inline returns (uint64, DePoolLib.Participant) 
+  { 
+    Round round = getRound0(); 
+    optional(StakeValue) optSv = round.stakes.fetch(participantAddress); 
+    if (!optSv.hasValue()) { 
+      return (0, participant); 
+    } 
+    StakeValue sv = optSv.get(); 
+    targetAmount = math.min(targetAmount, sv.ordinary); 
+    sv.ordinary -= targetAmount; 
+    round.stake -= targetAmount; 
+    if (sv.ordinary < minStake) { 
+      round.stake -= sv.ordinary; 
+      targetAmount += sv.ordinary; 
+      sv.ordinary = 0; 
+    } 
+
+    if (stakeSum(sv) == 0) { 
+      --round.participantQty; 
+      delete round.stakes[participantAddress]; 
+      --participant.roundQty; 
+    } else { 
+      round.stakes[participantAddress] = sv; 
+    } 
+    setRound0(round); 
+    return (targetAmount, participant); 
+  } 
+
+ 
+===== DIFF =====
+- function withdrawStakeInPoolingRound(DePoolLib.Participant participant, address participantAddress, uint64 targetAmount, uint64 minStake) returns(uint64, DePoolLib.Participant) {
+?                                                                                                                                          -----------------------------------------
++ function withdrawStakeInPoolingRound(DePoolLib.Participant participant, address participantAddress, uint64 targetAmount, uint64 minStake)
++ internal inline returns(uint64, DePoolLib.Participant) {
+  Round round = getRound0();
+- optional(StakeValue) optSv = (round.stakes.fetch(participantAddress));
+?                              -                                      -
++ optional(StakeValue) optSv = round.stakes.fetch(participantAddress);
+  if (!optSv.hasValue()) {
+- return (((0, participant)));
+?        --                --
++ return (0, participant);
+  }
+  StakeValue sv = optSv.get();
+- (targetAmount = math.min(targetAmount, sv.ordinary));
+? -                                                  -
++ targetAmount = math.min(targetAmount, sv.ordinary);
+- (sv.ordinary -= targetAmount);
+? -                           -
++ sv.ordinary -= targetAmount;
+- (round.stake -= targetAmount);
+? -                           -
++ round.stake -= targetAmount;
+  if (sv.ordinary < minStake) {
+- (round.stake -= sv.ordinary);
+? -                          -
++ round.stake -= sv.ordinary;
+- (targetAmount += sv.ordinary);
+? -                           -
++ targetAmount += sv.ordinary;
+- (sv.ordinary = 0);
+? -               -
++ sv.ordinary = 0;
+  }
+  if (stakeSum(sv) == 0) {
+- (round.participantQty--);
+? ^                    ---
++ --round.participantQty;
+? ^^
+  delete round.stakes[participantAddress];
+- (participant.roundQty--);
+? ^                    ---
++ --participant.roundQty;
+? ^^
+  } else {
+- (round.stakes[participantAddress] = sv);
+? -                                     -
++ round.stakes[participantAddress] = sv;
+  }
+- (setRound0(round));
+? -                -
++ setRound0(round);
+  return (targetAmount, participant);
+  }

@@ -1,0 +1,14 @@
+Definition RoundsBase_Ф_fetchRound :=  RoundsBase_Ф_fetchRound .
+===== TRANSLATED =====
+function fetchRound( = fetchRound;
+}
+===== REFERENCE =====
+
+function fetchRound(uint64 id) internal returns (optional(Round)) { 
+  return m_rounds.fetch(id); 
+} 
+===== DIFF =====
+- function fetchRound(= fetchRound;
++ function fetchRound(uint64 id) internal returns(optional(Round)) {
++ return m_rounds.fetch(id);
+  }

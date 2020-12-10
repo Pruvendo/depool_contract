@@ -1,0 +1,27 @@
+Definition DePoolContract_Ф_sendAcceptAndReturnChange128 (Л_fee : XInteger64) : LedgerT True := 
+  tvm_rawReserve (! tvm_balance () !- $ Л_fee,  $xInt0 !) >> 
+  IParticipant of ( msg_sender () ) ->sendMessage (IParticipant_И_receiveAnswerF (!! $ DePool_ι_STATUS_SUCCESS , $xInt0 !!))
+    with {|| messageValue ::= $ xInt0 , messageBounce ::= $ xBoolFalse , messageFlag ::= $ xInt128 ||} .
+===== TRANSLATED =====
+function sendAcceptAndReturnChange128(uint64 fee) {
+    tvm.rawReserve(address(this).balance - fee, 0);
+    IParticipant(msg.sender).receiveAnswer {
+        value: 0,
+        bounce: false,
+        flag: 128
+    }(STATUS_SUCCESS, 0);
+}
+===== REFERENCE =====
+ function sendAcceptAndReturnChange128(uint64 fee) private { 
+    tvm.rawReserve(address(this).balance - fee, 0); 
+    IParticipant(msg.sender).receiveAnswer{value: 0, bounce: false, flag: 128}(STATUS_SUCCESS, 0); 
+  } 
+===== DIFF =====
+- function sendAcceptAndReturnChange128(uint64 fee) {
++ function sendAcceptAndReturnChange128(uint64 fee) private {
+?                                                   ++++++++
+  tvm.rawReserve(address(this).balance - fee, 0);
+  IParticipant(msg.sender).receiveAnswer {
+  value: 0, bounce: false, flag: 128
+  }(STATUS_SUCCESS, 0);
+  }

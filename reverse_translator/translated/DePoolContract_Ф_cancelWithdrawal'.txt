@@ -1,0 +1,88 @@
+Definition DePoolContract_Ф_cancelWithdrawal' : LedgerT (XErrorValue (XValueValue True) XInteger) := 
+   
+Require {{ msg_sender () ?!= $ xInt0 , $ Errors_ι_IS_EXT_MSG }} ; 
+ 
+If!! ( ↑ε12 DePoolContract_ι_m_poolClosed ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) 
+ } ; 
+ 
+declareLocal Л_optParticipant :>: (XMaybe ( ξ DePoolLib_ι_Participant ) ) := ParticipantBase_Ф_fetchParticipant (! msg_sender () !) ; 
+If! ( !¬ ( $ Л_optParticipant ->hasValue ) ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_NO_PARTICIPANT , $ xInt0 !) )
+ } ; 
+
+                      
+declareLocal Л_participant :>: ξ DePoolLib_ι_Participant := $ Л_optParticipant ->get ; 
+                     
+U0! Л_participant ^^ DePoolLib_ι_Participant_ι_reinvest := $ xBoolTrue ; 
+U0! Л_participant ^^ DePoolLib_ι_Participant_ι_withdrawValue := $ xInt0 ; 
+
+ 
+(ParticipantBase_Ф__setOrDeleteParticipant (! msg_sender () , $ Л_participant !)) >> 
+return!! (DePoolContract_Ф_sendAcceptAndReturnChange () ).
+===== TRANSLATED =====
+function cancelWithdrawal() {
+    require(msg.sender != 0, IS_EXT_MSG);
+    if (m_poolClosed) {
+        return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+    }
+    optional(DePoolLib.Participant) optParticipant = fetchParticipant(msg.sender);
+    if (!(optParticipant.hasValue())) {
+        return (_sendError(STATUS_NO_PARTICIPANT, 0));
+    }
+    DePoolLib.Participant participant = optParticipant.get();
+    participant.reinvest = true;
+    participant.withdrawValue = 0;
+    (_setOrDeleteParticipant(msg.sender, participant));
+    return (sendAcceptAndReturnChange());
+}
+===== REFERENCE =====
+function cancelWithdrawal() public onlyInternalMessage {
+        if (m_poolClosed) {
+            return _sendError(STATUS_DEPOOL_CLOSED, 0);
+        }
+
+        optional(Participant) optParticipant = fetchParticipant(msg.sender);
+        if (!optParticipant.hasValue()) {
+            return _sendError(STATUS_NO_PARTICIPANT, 0);
+        }
+        Participant participant = optParticipant.get();
+
+        participant.reinvest = true;
+        participant.withdrawValue = 0;
+        _setOrDeleteParticipant(msg.sender, participant);
+        sendAcceptAndReturnChange();
+    } 
+===== DIFF =====
++ function cancelWithdrawal() public onlyInternalMessage {
+- function cancelWithdrawal() {
+- require(msg.sender != 0, IS_EXT_MSG);
+  if (m_poolClosed) {
+- return (_sendError(STATUS_DEPOOL_CLOSED, 0));
+?        -                                  -
++ return _sendError(STATUS_DEPOOL_CLOSED, 0);
+  }
+- optional(DePoolLib.Participant) optParticipant = fetchParticipant(msg.sender);
+?          ----------
++ optional(Participant) optParticipant = fetchParticipant(msg.sender);
+- if (!(optParticipant.hasValue())) {
+?      -                          -
++ if (!optParticipant.hasValue()) {
+- return (_sendError(STATUS_NO_PARTICIPANT, 0));
+?        -                                   -
++ return _sendError(STATUS_NO_PARTICIPANT, 0);
+  }
+- DePoolLib.Participant participant = optParticipant.get();
+? ----------
++ Participant participant = optParticipant.get();
+  participant.reinvest = true;
+  participant.withdrawValue = 0;
+- (_setOrDeleteParticipant(msg.sender, participant));
+? -                                                -
++ _setOrDeleteParticipant(msg.sender, participant);
+- return (sendAcceptAndReturnChange());
+? --------                           -
++ sendAcceptAndReturnChange();
+  }

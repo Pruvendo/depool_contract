@@ -1,0 +1,19 @@
+Definition DePoolContract_Ф_isEmptyRound (Л_round: RoundsBase_ι_Round) : LedgerT XBool := 
+ return!! ( $(Л_round ->> RoundsBase_ι_Round_ι_step) ?== (ξ$ RoundsBase_ι_RoundStepP_ι_Completed) !| 
+   $(Л_round ->> RoundsBase_ι_Round_ι_stake) ?== $ xInt0).
+===== TRANSLATED =====
+function isEmptyRound(Round round) returns(bool) {
+    return (round.step == RoundStep.Completed || round.stake == 0);
+}
+===== REFERENCE =====
+function isEmptyRound(Round round) private pure returns (bool) { 
+  return round.step == RoundStep.Completed || round.stake == 0; 
+} 
+===== DIFF =====
+- function isEmptyRound(Round round) returns(bool) {
++ function isEmptyRound(Round round) private pure returns(bool) {
+?                                   +++++++++++++
+- return (round.step == RoundStep.Completed || round.stake == 0);
+?        -                                                     -
++ return round.step == RoundStep.Completed || round.stake == 0;
+  }

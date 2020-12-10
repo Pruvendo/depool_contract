@@ -1,0 +1,232 @@
+Definition DePoolContract_Ф__returnOrReinvest ( Л_round2 : RoundsBase_ι_Round ) 
+                       ( Л_chunkSize : XInteger8 ) 
+                       : LedgerT ( XErrorValue RoundsBase_ι_Round XInteger ) 
+											 :=  
+ 
+( declareInit LocalState_ι__returnOrReinvest_Л_round2   := $ Л_round2 ) >> 
+
+ 
+tvm_accept () >> 
+     
+( declareGlobal! LocalState_ι__returnOrReinvest_Л_round0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ) >> 
+     
+ U0! Л_round := ( RoundsBase_Ф_getRound1 () ) ; 
+ declareLocal Л_round1ValidatorsElectedFor :>: XInteger32 :=  $ Л_round ->> RoundsBase_ι_Round_ι_validatorsElectedFor ; 
+ 
+( declareGlobal! LocalState_ι__returnOrReinvest_Л_startIndex :>: XInteger := $ xInt0 ) >> 
+      
+ 
+ 
+If!! ( !¬ ( ↑17 D1! ( D2! LocalState_ι__returnOrReinvest_Л_round2 ) ^^ 
+            RoundsBase_ι_Round_ι_isValidatorStakeCompleted ) ) 
+then 
+{  
+  ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_round2 ^^ 
+        RoundsBase_ι_Round_ι_isValidatorStakeCompleted := $ xBoolTrue ) >> 
+             
+  declareLocal Л_optStake :>: (XMaybe RoundsBase_ι_StakeValue) := (D1! (↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ 
+                                                                           RoundsBase_ι_Round_ι_stakes) 
+         ->fetch ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) ; 
+   
+   If! ( ( $ Л_optStake ) ->hasValue ) 
+   then  
+   { 
+     
+    declareLocal Л_stake :>: RoundsBase_ι_StakeValue := ( $ Л_optStake ) ->get ; 
+      
+    ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_startIndex := $ xInt1 ) >> 
+     
+    ( ↑↑17 U2! delete LocalState_ι__returnOrReinvest_Л_round2 ^^ 
+             RoundsBase_ι_Round_ι_stakes [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] ) >> 
+     
+    U0! Л_rounds ?:= 
+        DePoolContract_Ф__returnOrReinvestForParticipant (! 
+         ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 , 
+         ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
+         ↑2 D2! ValidatorBase_ι_m_validatorWallet , 
+         $ Л_stake , 
+         $ xBoolTrue , 
+         $ Л_round1ValidatorsElectedFor !) ; 
+( ↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ Л_rounds ) 
+   } ; $ I 
+} ;  
+ 
+ 
+
+do _ ← ( WhileE ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_startIndex ?< $ Л_chunkSize ) !& 
+   ( !¬ ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes) ->empty ) ) ) 
+do 
+( 
+           
+
+declareLocal {( Л_addr :>: XAddress , Л_stake :>: RoundsBase_ι_StakeValue )} := ( ↑17 U1! delMin LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes )  ; 
+
+DePoolContract_Ф__returnOrReinvestForParticipant (!  
+         ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 , 
+         ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
+         $ Л_addr , 
+         $ Л_stake , 
+         $ xBoolFalse , 
+         $ Л_round1ValidatorsElectedFor !) >>= 
+fun ea => xErrorMapDefaultF (fun a => (↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ a ) >> continue! (xValue I)) 
+          ea (fun er => break! (xError er)))) >>= 
+    fun r => return! (xProdSnd r) ?; 
+  
+ 
+     
+ ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 !) ) >> 
+      
+ ( If ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes ) ->empty ) 
+ then 
+{ 
+	(↑17 U1! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_step := 
+                       ξ$ RoundsBase_ι_RoundStepP_ι_Completed ) >> 
+
+     this->sendMessage ( $ DePoolContract_Ф_ticktockF ) with {|| messageValue ::= $ DePool_ι_VALUE_FOR_SELF_CALL , 
+			  						  messageBounce ::= $ xBoolFalse||}  
+    } ) >> 
+ 
+return!! ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ) .
+===== TRANSLATED =====
+function _returnOrReinvest(Round round2,
+    uint8 chunkSize) returns(Round) {
+        tvm.accept();
+        Round round0 = getRound0();
+        round = (getRound1());
+        uint32 round1ValidatorsElectedFor = round.validatorsElectedFor;
+        uint startIndex = 0;
+        if (!(round2.isValidatorStakeCompleted))
+        {
+            (round2.isValidatorStakeCompleted = true);
+            optional(StakeValue) optStake = (round2.stakes.fetch(m_validatorWallet));
+            if (optStake.hasValue())
+            {
+                StakeValue stake = optStake.get();
+                (startIndex = 1);
+                delete round2.
+                stakes[m_validatorWallet];
+                rounds =
+                    _returnOrReinvestForParticipant(
+                        round2,
+                        round0,
+                        m_validatorWallet,
+                        stake,
+                        true,
+                        round1ValidatorsElectedFor);
+                ((round0, round2) = rounds);
+            }
+        }
+        while ((startIndex < chunkSize) &&
+            (!(round2.stakes.empty()))) {
+            (
+                (address addr, StakeValue stake) = round2.stakes.delMin().get();
+                _returnOrReinvestForParticipant(
+                    round2,
+                    round0,
+                    addr,
+                    stake,
+                    false,
+                    round1ValidatorsElectedFor);
+                (setRound0(round0));
+                if (round2.stakes.empty())
+                {
+                    (round2.step =
+                        RoundStep.Completed);
+                    this.ticktock {
+                        value: VALUE_FOR_SELF_CALL,
+                        bounce: false
+                    }();
+                }
+                return (round2);
+            }
+===== REFERENCE =====
+  
+function _returnOrReinvest(Round round2, uint8 chunkSize) private returns (Round) { 
+    tvm.accept(); 
+
+    Round round0 = getRound0(); 
+    uint32 round1ValidatorsElectedFor = getRound1().validatorsElectedFor; 
+    uint startIndex = 0; 
+    if (!round2.isValidatorStakeCompleted) { 
+      round2.isValidatorStakeCompleted = true; 
+      optional(StakeValue) optStake = round2.stakes.fetch(m_validatorWallet); 
+      if (optStake.hasValue()) { 
+        StakeValue stake = optStake.get(); 
+        startIndex = 1; 
+        delete round2.stakes[m_validatorWallet]; 
+        (round0, round2) = _returnOrReinvestForParticipant(round2, round0, m_validatorWallet, stake, true, round1ValidatorsElectedFor); 
+      } 
+    } 
+
+    for (uint i = startIndex; i < chunkSize && !round2.stakes.empty(); ++i) { 
+      (address addr, StakeValue stake) = round2.stakes.delMin().get(); 
+      (round0, round2) = _returnOrReinvestForParticipant(round2, round0, addr, stake, false, round1ValidatorsElectedFor); 
+    } 
+
+    setRound0(round0); 
+    if (round2.stakes.empty()) { 
+      round2.step = RoundStep.Completed; 
+      this.ticktock{value: VALUE_FOR_SELF_CALL, bounce: false}(); 
+    } 
+    return round2; 
+  }
+===== DIFF =====
+- function _returnOrReinvest(Round round2, uint8 chunkSize) returns(Round) {
++ function _returnOrReinvest(Round round2, uint8 chunkSize) private returns(Round) {
+?                                                          ++++++++
+  tvm.accept();
+  Round round0 = getRound0();
+- round = (getRound1());
+- uint32 round1ValidatorsElectedFor = round.validatorsElectedFor;
+?                                     ^
++ uint32 round1ValidatorsElectedFor = getRound1().validatorsElectedFor;
+?                                     ^^^^    +++
+  uint startIndex = 0;
+- if (!(round2.isValidatorStakeCompleted)) {
+?      -                                 -
++ if (!round2.isValidatorStakeCompleted) {
+- (round2.isValidatorStakeCompleted = true);
+? -                                       -
++ round2.isValidatorStakeCompleted = true;
+- optional(StakeValue) optStake = (round2.stakes.fetch(m_validatorWallet));
+?                                 -                                      -
++ optional(StakeValue) optStake = round2.stakes.fetch(m_validatorWallet);
+  if (optStake.hasValue()) {
+  StakeValue stake = optStake.get();
+- (startIndex = 1);
+? -              -
++ startIndex = 1;
+  delete round2.stakes[m_validatorWallet];
+- rounds = _returnOrReinvestForParticipant(round2, round0, m_validatorWallet, stake, true, round1ValidatorsElectedFor);
+?      ^
++ (round0, round2) = _returnOrReinvestForParticipant(round2, round0, m_validatorWallet, stake, true, round1ValidatorsElectedFor);
+? +     ^^^^^^^^^^
+- ((round0, round2) = rounds);
+  }
+  }
+- while ((startIndex < chunkSize) && (!(round2.stakes.empty()))) {
+? ^^ ^^^^^                      -    - -                      --
++ for (uint i = startIndex; i < chunkSize && !round2.stakes.empty(); ++i) {
+? ^^^^^^ ^^^^^^^          +++                                      +++++
+- ((address addr, StakeValue stake) = round2.stakes.delMin().get();
+? -
++ (address addr, StakeValue stake) = round2.stakes.delMin().get();
+- _returnOrReinvestForParticipant(round2, round0, addr, stake, false, round1ValidatorsElectedFor);
++ (round0, round2) = _returnOrReinvestForParticipant(round2, round0, addr, stake, false, round1ValidatorsElectedFor);
+? +++++++++++++++++++
++ }
+- (setRound0(round0));
+? -                 -
++ setRound0(round0);
+  if (round2.stakes.empty()) {
+- (round2.step = RoundStep.Completed);
+? -                                 -
++ round2.step = RoundStep.Completed;
+  this.ticktock {
+  value: VALUE_FOR_SELF_CALL, bounce: false
+  }();
+  }
+- return (round2);
+?        -      -
++ return round2;
+  }

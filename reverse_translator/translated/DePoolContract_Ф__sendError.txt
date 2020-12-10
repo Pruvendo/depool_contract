@@ -1,0 +1,24 @@
+Definition DePoolContract_Ф__sendError ( Л_errcode : XInteger32 ) ( Л_comment : XInteger64 ) : LedgerT True := 
+IParticipant of (msg_sender ()) ->sendMessage ( IParticipant_И_receiveAnswerF (!! $ Л_errcode , $ Л_comment !!) )
+with {|| messageValue ::= $ xInt0 , messageBounce ::= $ xBoolFalse , messageFlag ::= $ xInt64 ||} .
+===== TRANSLATED =====
+function _sendError(uint32 errcode, uint64 comment) {
+    IParticipant(msg.sender).receiveAnswer {
+        value: 0,
+        bounce: false,
+        flag: 64
+    }(errcode, comment);
+}
+===== REFERENCE =====
+
+function DePoolContract._sendError(uint32 errcode, uint64 comment) private { 
+    IParticipant(msg.sender).receiveAnswer{value:0, bounce: false, flag: 64}(errcode, comment); 
+  } 
+===== DIFF =====
+- function _sendError(uint32 errcode, uint64 comment) {
++ function DePoolContract._sendError(uint32 errcode, uint64 comment) private {
+?          +++++++++++++++                                           ++++++++
+  IParticipant(msg.sender).receiveAnswer {
+  value: 0, bounce: false, flag: 64
+  }(errcode, comment);
+  }

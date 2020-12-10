@@ -1,0 +1,23 @@
+Definition DePoolProxyContract_Ф_onStakeReject ( Л_queryId : XInteger64 )( Л_comment : XInteger32 ) : LedgerT True := 
+  IDePool of ( ↑ε10 DePoolProxyContract_ι_m_dePool ) ->sendMessage ( DePoolContract_Ф_onStakeRejectF (!! $ Л_queryId , $ Л_comment , ( msg_sender () ) !!) )
+                with {|| messageValue ::= msg_value () !- ξ$ DePoolLib_ι_PROXY_FEE ||} .
+===== TRANSLATED =====
+function onStakeReject(uint64 queryId, uint32 comment) {
+    IDePool(m_dePool).onStakeReject {
+        value: msg.value - DePoolLib.PROXY_FEE
+    }(queryId, comment, msg.sender);
+}
+===== REFERENCE =====
+
+function onStakeReject(uint64 queryId, uint32 comment) public functionID(0xEE6F454C) { 
+    IDePool(m_dePool).onStakeReject{value: msg.value - DePoolLib.PROXY_FEE}(queryId, comment, msg.sender); 
+  } 
+ 
+===== DIFF =====
+- function onStakeReject(uint64 queryId, uint32 comment) {
++ function onStakeReject(uint64 queryId, uint32 comment) public functionID(0xEE6F454C) {
+?                                                        ++++++++++++++++++++++++++++++
+  IDePool(m_dePool).onStakeReject {
+  value: msg.value - DePoolLib.PROXY_FEE
+  }(queryId, comment, msg.sender);
+  }

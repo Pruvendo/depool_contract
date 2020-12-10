@@ -1,0 +1,45 @@
+Definition DePoolContract_Ф_ticktock : LedgerT ( XErrorValue True XInteger ) := 
+ Require2 {{ msg_sender () ?!= $xInt0, ξ$ Errors_ι_IS_EXT_MSG }} ; 
+ If! (DePoolContract_Ф_checkPureDePoolBalance () ) then 
+ { U0! _ ?:= DePoolContract_Ф_updateRounds () ; $I } ; 
+ (If (msg_sender () ?!= tvm_address () ) then { 
+  DePoolContract_Ф__returnChange () 
+ }).
+===== TRANSLATED =====
+function ticktock() {
+    require(msg.sender != 0, Errors.IS_EXT_MSG);
+    if (checkPureDePoolBalance()) {
+        updateRounds();
+    }
+    if (msg.sender != address(this)) {
+        _returnChange();
+    }
+}
+===== REFERENCE =====
+
+function ticktock() public override { 
+    require(msg.sender != address(0), Errors.IS_EXT_MSG); 
+
+    if (checkPureDePoolBalance()) 
+    { 
+      updateRounds(); 
+    } 
+    if (msg.sender != address(this)) 
+      _returnChange(); 
+  } 
+
+===== DIFF =====
+- function ticktock() {
++ function ticktock() public override {
+- require(msg.sender != 0, Errors.IS_EXT_MSG);
++ require(msg.sender != address(0), Errors.IS_EXT_MSG);
+?                       ++++++++ +
+  if (checkPureDePoolBalance()) {
+  updateRounds();
+  }
+- if (msg.sender != address(this)) {
+?                                 --
++ if (msg.sender != address(this))
+  _returnChange();
+- }
+  }

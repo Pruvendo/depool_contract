@@ -1,0 +1,24 @@
+Definition DePoolProxyContract_Ф_getProxyInfo : LedgerT ( XAddress # XInteger64 ) := 
+returns ( Л_depool :>: XAddress , Л_minBalance :>: XInteger64 ) >>
+ U0! Л_depool := ↑ε10 DePoolProxyContract_ι_m_dePool ; 
+ U0! Л_minBalance := ξ$ DePoolLib_ι_MIN_PROXY_BALANCE ; 
+ς return# ( $ Л_depool , $ Л_minBalance ) .
+===== TRANSLATED =====
+function getProxyInfo() returns(address depool, uint64 minBalance) {
+    depool = m_dePool;
+    minBalance = DePoolLib.MIN_PROXY_BALANCE;
+}
+===== REFERENCE =====
+
+function getProxyInfo() public view returns (address depool, uint64 minBalance) { 
+    depool = m_dePool; 
+    minBalance = DePoolLib.MIN_PROXY_BALANCE; 
+  } 
+ 
+===== DIFF =====
+- function getProxyInfo() returns(address depool, uint64 minBalance) {
++ function getProxyInfo() public view returns(address depool, uint64 minBalance) {
+?                        ++++++++++++
+  depool = m_dePool;
+  minBalance = DePoolLib.MIN_PROXY_BALANCE;
+  }

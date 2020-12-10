@@ -1,0 +1,36 @@
+Definition ConfigParamsBase_Ф_getElector : LedgerT ( XErrorValue XAddress XInteger ) := 
+ declareLocal {( Л_cell :>: TvmCell , Л_ok :>: XBool )} := tvm_rawConfigParam_1 ; 
+ Require {{ $ Л_ok , ξ$ InternalErrors_ι_ERROR517 }} ; 
+ declareLocal Л_s :>: TvmSlice := ( $ Л_cell) ->toSlice() ; 
+ declareLocal Л_value :::: XInteger256 :=  Л_s ->decode(uint256)  ; 
+ return!! ( address->makeAddrStd (! $xInt0 !- $ xInt1 , $ Л_value !) ).
+===== TRANSLATED =====
+function getElector() returns(address) {
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(1);
+    require(ok, InternalErrors.ERROR517);
+    TvmSlice s = cell.toSlice();
+    uint256 value = s.decode(uint256);
+    return (address.makeAddrStd(-1, value));
+}
+===== REFERENCE =====
+
+function getElector() virtual pure internal returns (address) { 
+    (TvmCell cell, bool ok) = tvm.rawConfigParam(1); 
+    require(ok, InternalErrors.ERROR517); 
+    TvmSlice s = cell.toSlice(); 
+    uint256 value = s.decode(uint256); 
+    return address.makeAddrStd(-1, value); 
+  } 
+
+===== DIFF =====
+- function getElector() returns(address) {
++ function getElector() virtual pure internal returns(address) {
+?                      ++++++++++++++++++++++
+  (TvmCell cell, bool ok) = tvm.rawConfigParam(1);
+  require(ok, InternalErrors.ERROR517);
+  TvmSlice s = cell.toSlice();
+  uint256 value = s.decode(uint256);
+- return (address.makeAddrStd(-1, value));
+?        -                              -
++ return address.makeAddrStd(-1, value);
+  }

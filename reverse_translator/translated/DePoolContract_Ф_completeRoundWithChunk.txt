@@ -1,0 +1,165 @@
+Definition DePoolContract_Ф_completeRoundWithChunk ( Л_roundId : XInteger64 ) 
+                          ( Л_chunkSize : XInteger8 ) 
+                    : LedgerT (XErrorValue ( XValueValue True ) XInteger ) := 
+Require2 {{ msg_sender () ?== tvm_address (),  ξ$ Errors_ι_IS_NOT_DEPOOL }} ; 
+  
+tvm_accept () >> 
+     
+If2!! ( !¬ ( ( RoundsBase_Ф_isRound2 (! $ Л_roundId !) ) !| ( ↑12 D2! DePoolContract_ι_m_poolClosed ) ) ) 
+then 
+{  
+ return! ( xError I ) 
+} ; 
+        
+If2!! ( !¬ ( DePoolContract_Ф_checkPureDePoolBalance () ) ) 
+then 
+{  
+ return! ( xError I ) 
+} ; 
+           
+declareLocal Л_optRound :>: ( XMaybe RoundsBase_ι_Round ) := ( RoundsBase_Ф_fetchRound (! $ Л_roundId !) ) ; 
+           
+Require2 {{ ( $ Л_optRound ) ->hasValue , ξ$ InternalErrors_ι_ERROR519 }} ;  
+           
+declareLocal Л_round :>: RoundsBase_ι_Round := ( $ Л_optRound ) ->get ; 
+           
+If2!! ( ↑11 D0! Л_round ^^ RoundsBase_ι_Round_ι_step ?!= ξ$ RoundsBase_ι_RoundStepP_ι_Completing ) 
+then 
+{ 
+ return! ( xError I ) 
+} ; 
+           
+U0! Л_round ?:= DePoolContract_Ф__returnOrReinvest (! $ Л_round , $ Л_chunkSize !) ; 
+
+(If ( ( $ Л_chunkSize ?< ( $ DePool_ι_MAX_MSGS_PER_TR )) !& 
+   ( !¬ ( ( $ (Л_round ->> RoundsBase_ι_Round_ι_stakes)) ->empty ) ) ) 
+then 
+{ 
+	 
+	declareLocal Л_doubleChunkSize :>: XInteger8 := $xInt2 !*  $ Л_chunkSize; 
+	 
+
+    ( this->sendMessage ( DePoolContract_Ф_completeRoundWithChunkF (!! $ Л_roundId , ( $Л_doubleChunkSize ?< $ DePool_ι_MAX_MSGS_PER_TR ) ? $ Л_doubleChunkSize ::: $ Л_chunkSize !!) )
+                with {|| messageBounce ::= $xBoolFalse , messageFlag ::= $xInt1 ||} ) >>
+
+	  
+	 ( this->sendMessage ( DePoolContract_Ф_completeRoundWithChunkF (!! $ Л_roundId , $ Л_chunkSize !!) )
+                with {|| messageBounce ::= $xBoolFalse , messageFlag ::= $xInt1 ||} ) 
+} ) >> 
+            
+ RoundsBase_Ф_setRound (! $ Л_roundId , $ Л_round !) >> 
+ $ (xValue I).
+===== TRANSLATED =====
+function completeRoundWithChunk(uint64 roundId,
+    uint8 chunkSize) {
+    require(msg.sender == address(this), Errors.IS_NOT_DEPOOL);
+    tvm.accept();
+    if (!((isRound2(roundId)) || m_poolClosed))
+    {
+        return;
+    }
+    if (!(checkPureDePoolBalance()))
+    {
+        return;
+    }
+    optional(Round) optRound = (fetchRound(roundId));
+    require(optRound.hasValue(), InternalErrors.ERROR519);
+    Round round = optRound.get();
+    if (round.step != RoundStep.Completing)
+    {
+        return;
+    }
+    round = _returnOrReinvest(round, chunkSize);
+    if ((chunkSize < MAX_MSGS_PER_TR) &&
+        (!((round.stakes).empty())))
+    {
+        uint8 doubleChunkSize = 2 * chunkSize;
+        (this.completeRoundWithChunk {
+            bounce: false,
+            flag: 1
+        }(roundId, (doubleChunkSize < MAX_MSGS_PER_TR) ? doubleChunkSize : chunkSize));
+        (this.completeRoundWithChunk {
+            bounce: false,
+            flag: 1
+        }(roundId, chunkSize));
+    }
+    setRound(roundId, round);
+}
+===== REFERENCE =====
+
+function completeRoundWithChunk(uint64 roundId, uint8 chunkSize) public selfCall { 
+    tvm.accept(); 
+    if (!(isRound2(roundId) || m_poolClosed)) 
+      return; 
+    if (!checkPureDePoolBalance()) { 
+      return; 
+    } 
+    optional(Round) optRound = fetchRound(roundId); 
+    require(optRound.hasValue(), InternalErrors.ERROR519); 
+    Round round = optRound.get(); 
+    if (round.step != RoundStep.Completing) 
+      return; 
+
+    round = _returnOrReinvest(round, chunkSize); 
+
+    if (chunkSize < MAX_MSGS_PER_TR && !round.stakes.empty()) { 
+      uint8 doubleChunkSize = 2 * chunkSize; 
+      this.completeRoundWithChunk{flag: 1, bounce: false}( 
+        roundId, 
+        doubleChunkSize < MAX_MSGS_PER_TR? doubleChunkSize : chunkSize 
+      ); 
+      this.completeRoundWithChunk{flag: 1, bounce: false}(roundId, chunkSize); 
+    } 
+
+    setRound(roundId, round); 
+  }
+===== DIFF =====
+- function completeRoundWithChunk(uint64 roundId, uint8 chunkSize) {
++ function completeRoundWithChunk(uint64 roundId, uint8 chunkSize) public selfCall {
+?                                                                  ++++++++++++++++
+- require(msg.sender == address(this), Errors.IS_NOT_DEPOOL);
+  tvm.accept();
+- if (!((isRound2(roundId)) || m_poolClosed)) {
+?      -                  -                  --
++ if (!(isRound2(roundId) || m_poolClosed))
++ return;
++ if (!checkPureDePoolBalance()) {
+  return;
+  }
+- if (!(checkPureDePoolBalance())) {
+- return;
+- }
+- optional(Round) optRound = (fetchRound(roundId));
+?                            -                   -
++ optional(Round) optRound = fetchRound(roundId);
+  require(optRound.hasValue(), InternalErrors.ERROR519);
+  Round round = optRound.get();
+- if (round.step != RoundStep.Completing) {
+?                                        --
++ if (round.step != RoundStep.Completing)
+  return;
+- }
+  round = _returnOrReinvest(round, chunkSize);
+- if ((chunkSize < MAX_MSGS_PER_TR) && (!((round.stakes).empty()))) {
+?    -                            -    - --            -         --
++ if (chunkSize < MAX_MSGS_PER_TR && !round.stakes.empty()) {
+  uint8 doubleChunkSize = 2 * chunkSize;
+- (this.completeRoundWithChunk {
+? -
++ this.completeRoundWithChunk {
+- bounce: false, flag: 1
++ flag: 1, bounce: false
+- }(roundId, (doubleChunkSize < MAX_MSGS_PER_TR) ? doubleChunkSize : chunkSize));
+?            -                                 -                               -
++ }(roundId, doubleChunkSize < MAX_MSGS_PER_TR ? doubleChunkSize : chunkSize);
+- (this.completeRoundWithChunk {
+? -
++ this.completeRoundWithChunk {
+- bounce: false, flag: 1
++ flag: 1, bounce: false
+- }(roundId, chunkSize));
+?                      -
++ }(roundId, chunkSize);
+  }
+  setRound(roundId, round);
+  }
