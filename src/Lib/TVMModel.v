@@ -210,8 +210,8 @@ Definition tvm_rawReserve (res : XInteger128)  (_: XInteger) :=
 
 
 Parameter selfdestruct : XAddress -> LedgerT True.
-Notation "'->selfdestruct' a" := (do a' ← a; ↓ selfdestruct a') (at level 20).
-
+(* Notation "'->selfdestruct' a" := (do a' ← a; ↓ selfdestruct a') (at level 20).
+ *)
 Definition tvm_exit : LedgerT ( XValueValue True) := return! (xError I).
 
 
@@ -229,12 +229,12 @@ Definition tvm_new (dc: DeployableContract) (msg: ConstructorMessage) (constr: L
 	U0! address := $ (deployablePrefix dc ) !+ $ n ; 
 	tvm_transfer address (msg ->> cmessage_value) xBoolFalse xInt0 default >>
 	$ address.
-
+(* TODO: send change back to msg_sender if error *)
 Definition tvm_newE {E} (dc: DeployableContract) (msg: LedgerT ConstructorMessage) (constr: LedgerT (XErrorValue True E)) : LedgerT (XErrorValue XAddress E) :=
 
 U0! n := ↑16 D2! VMState_ι_deployed [[ $ dc ]] ; 
 U0! address := $ (deployablePrefix dc ) !+ $ n ; 
-(↑↑16 U2! VMState_ι_balance := D1! msg ^^ cmessage_value ) >> 
+(* (↑↑16 U2! VMState_ι_balance := D1! msg ^^ cmessage_value ) >>  *)
 (* tvm_transfer address (m ->> cmessage_value) xBoolFalse xInt0 default >> *)
 do _ ← constr ?;
 (↑16 U1! VMState_ι_deployed [[ $ dc ]] !++) >>

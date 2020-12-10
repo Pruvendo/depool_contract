@@ -5,6 +5,7 @@ Require Import Setoid.
 Require Import ZArith.
 Require Import Psatz.
 
+
 Require Import FinProof.Common.
 Require Import FinProof.CommonInstances.
 Require Import FinProof.StateMonad2.
@@ -20,10 +21,6 @@ Require Import depoolContract.SolidityNotations.
 
 Require Import depoolContract.NewProofs.ProofHelpers.
 Require Import depoolContract.DePoolFunc.
-Module DePoolFuncs := DePoolFuncs XTypesSig StateMonadSig.
-Import DePoolFuncs.
-Import DePoolSpec.
-Import LedgerClass.
 
 (* Set Typeclasses Iterative Deepening.
 Set Typeclasses Depth 100. *)
@@ -34,7 +31,6 @@ Import CommonModelProofs.
 Require Import depoolContract.Lib.Tactics.
 Require Import depoolContract.Lib.ErrorValueProofs.
 Require Import depoolContract.Lib.CommonCommon.
-Require Import depoolContract.Lib.CommonStateProofs.
 
 (* Require Import MultiSigWallet.Proofs.tvmFunctionsProofs. *)
 
@@ -47,16 +43,32 @@ Require Import Lists.List.
 Import ListNotations.
 Local Open Scope list_scope.
 
+Require Import depoolContract.DePoolConsts.
+Module DePoolContract_Ф_constructor6 (dc : DePoolConstsTypesSig XTypesSig StateMonadSig).
+Module DePoolFuncs := DePoolFuncs XTypesSig StateMonadSig dc.
+Module ProofHelpers := ProofHelpers dc.
+
+Import dc.
+Import ProofHelpers.
+Import DePoolFuncs.
+Import DePoolSpec.
+Import LedgerClass.
+
+
 Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.gtb Z.modulo deleteListPair intInc hmapPush.
 
-Check hmapPush.
+(* Check eval_state tvm_address _. *)
+
+(* Locate "address". *)
+
 Lemma DePoolContract_Ф_constructor6_exec: forall  ( minStake validatorAssurance: Z )
                                                   ( proxyCode: TvmCell ) 
                                                   ( validatorWallet : Z )
                                                   ( participantRewardFraction : Z )
                                                   ( l: Ledger ),
-let lv := exec_state (↓ ValidatorBase_Ф_Constructor2 validatorWallet) l in
-let address := eval_state tvm_address l in
+let lv := exec_state (↓ ValidatorBase_Ф_Constructor2 validatorWallet) l in 
+let lv := {$ lv With (RoundsBase_ι_m_roundQty, 0) $} in
+let address := eval_state tvm_address l in 
 let wid := addressWid address in
     let wid0 := wid =? 0 in
 let tvm_pubkey := eval_state tvm_pubkey l in
@@ -66,19 +78,19 @@ let msg_pubkey := eval_state msg_pubkey l in
     let minstake1 := minStake >=? x1_ton in
     let minStakeValidator := minStake <=? validatorAssurance in
 let proxy_code_hash := tvm_hash proxyCode in
-let PROXY_CODE_HASH := eval_state (↑ε12 DePoolContract_ι_PROXY_CODE_HASH) l in
+let PROXY_CODE_HASH := DePool_ι_PROXY_CODE_HASH in 
     let proxyCodeSame := proxy_code_hash =? PROXY_CODE_HASH in 
     let validatorStdAddrWithoutAnyCast := isStdAddrWithoutAnyCast validatorWallet in
    (*  let associationStdAddrWithoutAnyCast := isStdAddrWithoutAnyCast validatorWallet in  *)
     let participantRewardFraction0 := ( ( participantRewardFraction >? 0 ) && 
                                         ( participantRewardFraction <? 100 ) )%bool in
 let validatorRewardFraction := 100 - participantRewardFraction in
-let CRITICAL_THRESHOLD := eval_state ( ↑ε12 DePoolContract_ι_CRITICAL_THRESHOLD ) l in
+let CRITICAL_THRESHOLD := DePool_ι_CRITICAL_THRESHOLD in
    (*  let if1 : bool := balanceThreshold >=? CRITICAL_THRESHOLD in *)
 let balance := eval_state tvm_balance l in 
-let DEPOOL_CONSTRUCTOR_FEE := eval_state ( ↑ε9 DePoolLib_ι_DEPOOL_CONSTRUCTOR_FEE ) l in
-let MIN_PROXY_BALANCE := eval_state (↑ε9 DePoolLib_ι_MIN_PROXY_BALANCE) l in 
-let PROXY_CONSTRUCTOR_FEE := eval_state (↑ε9 DePoolLib_ι_PROXY_CONSTRUCTOR_FEE) l in 
+let DEPOOL_CONSTRUCTOR_FEE :=  DePoolLib_ι_DEPOOL_CONSTRUCTOR_FEE in
+let MIN_PROXY_BALANCE := DePoolLib_ι_MIN_PROXY_BALANCE in 
+let PROXY_CONSTRUCTOR_FEE := DePoolLib_ι_PROXY_CONSTRUCTOR_FEE in 
     let balance2 := balance >? CRITICAL_THRESHOLD + DEPOOL_CONSTRUCTOR_FEE + 
                                 2 * ( MIN_PROXY_BALANCE + PROXY_CONSTRUCTOR_FEE ) in
 
@@ -102,15 +114,15 @@ let data1 := tvm_buildEmptyData pk1 in
 let stateInit0 := tvm_buildStateInit proxyCode data0 in
 let stateInit1 := tvm_buildStateInit proxyCode data1 in
 let m_proxies := eval_state (↑3 ε ProxyBase_ι_m_proxies) l in
-let (epa0, lp0) := run (tvm_newE DePoolProxyContractD 
-                                {|| cmessage_wid := $ xInt0 !- $ xInt1 ,
-                                cmessage_value := ↑ε9 DePoolLib_ι_MIN_PROXY_BALANCE !+ ↑ε9 DePoolLib_ι_PROXY_CONSTRUCTOR_FEE ,
-                                cmessage_stateInit := $ stateInit0 ||}
+let (epa0, lp0) := run (↓ tvm_newE DePoolProxyContractD 
+                                {|| cmessage_wid ::= $ xInt0 !- $ xInt1 ,
+                                cmessage_value ::= $ DePoolLib_ι_MIN_PROXY_BALANCE !+ $ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE ,
+                                cmessage_stateInit ::= $ stateInit0 ||}
                                 DePoolProxyContract_Ф_constructor5 ) la in
-let (epa1, lp1) := run (tvm_newE DePoolProxyContractD 
-                                {|| cmessage_wid := $ xInt0 !- $ xInt1 ,
-                                cmessage_value := ↑ε9 DePoolLib_ι_MIN_PROXY_BALANCE !+ ↑ε9 DePoolLib_ι_PROXY_CONSTRUCTOR_FEE ,
-                                cmessage_stateInit := $ stateInit1 ||}
+let (epa1, lp1) := run (↓ tvm_newE DePoolProxyContractD 
+                                {|| cmessage_wid ::= $ xInt0 !- $ xInt1 ,
+                                cmessage_value ::= $ DePoolLib_ι_MIN_PROXY_BALANCE !+ $ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE ,
+                                cmessage_stateInit ::= $ stateInit1 ||}
                                 DePoolProxyContract_Ф_constructor5 ) lp0 in
 let pa0 := errorMapDefault Datatypes.id epa0 (-1) in
 let pa1 := errorMapDefault Datatypes.id epa1 (-1) in
@@ -143,7 +155,7 @@ let r1 := {$ r1 with (RoundsBase_ι_Round_ι_step, RoundsBase_ι_RoundStepP_ι_W
                      (RoundsBase_ι_Round_ι_vsetHashInElectionPhase, vhash)  $} in 
                   
 let lsetPre0 := exec_state (↓ RoundsBase_Ф_setRound (rpre0 ->> RoundsBase_ι_Round_ι_id) rpre0) lrpre0 in
-let lset0 := exec_state (↓ RoundsBase_Ф_setRound (r0 ->> RoundsBase_ι_Round_ι_id) r0) lsetPre0 in                       
+let lset0 := exec_state (↓ RoundsBase_Ф_setRound (r0 ->> RoundsBase_ι_Round_ι_id) r0) lsetPre0 in
 let lset1 := exec_state (↓ RoundsBase_Ф_setRound (r1 ->> RoundsBase_ι_Round_ι_id) r1) lset0 in
 let lset2 := exec_state (↓ RoundsBase_Ф_setRound (r2 ->> RoundsBase_ι_Round_ι_id) r2) lset1 in
                         
@@ -156,26 +168,26 @@ if (wid0) then
             if (minstake1) then 
                 if (minStakeValidator) then  
                     if (proxyCodeSame) then 
-                        if (validatorStdAddrWithoutAnyCast) then                          
+                        if (validatorStdAddrWithoutAnyCast) then
                             if (participantRewardFraction0) then 
                                 if (balance2) then 
-                                    if isDepool then                                         
-                                        if (errorValueIsValue roundTimeParams) then 
+                                    if isDepool then
+                                         if (errorValueIsValue roundTimeParams) then 
                                             if (errorValueIsValue curValidatorData) then 
-                                                if (errorValueIsValue prevValidatorHash) then lset2
-                                                else lp1'
+                                                if (errorValueIsValue prevValidatorHash) then  lset2
+                                                 else lp1'
                                             else lp1'
-                                        else lp1'    
-                                    else l
-                                else l                          
-                            else l
-                        else l
-                    else l
-                else l
-            else l
-        else l
-    else l
-else l. 
+                                        else lp1'     
+                                    else la
+                                else lv 
+                            else lv
+                        else lv
+                    else lv
+                else lv
+            else lv
+        else lv
+    else lv
+else lv. 
 
 Proof.
     intros.
@@ -188,9 +200,18 @@ Proof.
     repeat rewrite matchIf.  idtac.
     repeat rewrite letIf.  idtac. 
 
-    all: repeat destructIf_solve2. idtac.
+    all: repeat destructIf_solve2. (* idtac. *)
+    
+    (* idtac.*)
 
-    all: try congruence.
+   (* Require Import depoolContract.Lib.CommonStateProofs.
+    all: apply ledgerEq; auto. idtac.
+    simpl.
+
+    apply RoundsBaseEq; auto. idtac.
+    simpl. idtac.
+
+    all: try congruence. *)
 
 Qed.
 
@@ -209,19 +230,19 @@ let msg_pubkey := eval_state msg_pubkey l in
     let minstake1 := minStake >=? x1_ton in
     let minStakeValidator := minStake <=? validatorAssurance in
 let proxy_code_hash := tvm_hash proxyCode in
-let PROXY_CODE_HASH := eval_state (↑ε12 DePoolContract_ι_PROXY_CODE_HASH) l in
+let PROXY_CODE_HASH :=  DePool_ι_PROXY_CODE_HASH in
     let proxyCodeSame := proxy_code_hash =? PROXY_CODE_HASH in 
     let validatorStdAddrWithoutAnyCast := isStdAddrWithoutAnyCast validatorWallet in
    (*  let associationStdAddrWithoutAnyCast := isStdAddrWithoutAnyCast validatorWallet in  *)
     let participantRewardFraction0 := ( ( participantRewardFraction >? 0 ) && 
                                         ( participantRewardFraction <? 100 ) )%bool in
 let validatorRewardFraction := 100 - participantRewardFraction in
-let CRITICAL_THRESHOLD := eval_state ( ↑ε12 DePoolContract_ι_CRITICAL_THRESHOLD ) l in
+let CRITICAL_THRESHOLD :=  DePool_ι_CRITICAL_THRESHOLD  in
    (*  let if1 : bool := balanceThreshold >=? CRITICAL_THRESHOLD in *)
 let balance := eval_state tvm_balance l in 
-let DEPOOL_CONSTRUCTOR_FEE := eval_state ( ↑ε9 DePoolLib_ι_DEPOOL_CONSTRUCTOR_FEE ) l in
-let MIN_PROXY_BALANCE := eval_state (↑ε9 DePoolLib_ι_MIN_PROXY_BALANCE) l in 
-let PROXY_CONSTRUCTOR_FEE := eval_state (↑ε9 DePoolLib_ι_PROXY_CONSTRUCTOR_FEE) l in 
+let DEPOOL_CONSTRUCTOR_FEE := DePoolLib_ι_DEPOOL_CONSTRUCTOR_FEE  in
+let MIN_PROXY_BALANCE :=  DePoolLib_ι_MIN_PROXY_BALANCE in 
+let PROXY_CONSTRUCTOR_FEE :=  DePoolLib_ι_PROXY_CONSTRUCTOR_FEE in 
     let balance2 := balance >? CRITICAL_THRESHOLD + DEPOOL_CONSTRUCTOR_FEE + 
                                 2 * ( MIN_PROXY_BALANCE + PROXY_CONSTRUCTOR_FEE ) in
 
@@ -276,3 +297,4 @@ Proof.
 Qed.
 
 
+End DePoolContract_Ф_constructor6.

@@ -60,51 +60,48 @@ Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.g
 Import TVMModel.LedgerClass.
 Opaque DePoolContract_Ф_startRoundCompleting roundStepEqb.
 
+Definition DePoolContract_Ф_terminator_tailer Л_roundPre0 Л_round0 : LedgerT True := 
+->emit $ DePoolClosed >> 
+(RoundsBase_Ф_setRoundPre0 (! $ Л_roundPre0 !) ) >> 
+(RoundsBase_Ф_setRound0 (! $ Л_round0 !) ) >> 
+(RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_terminator_Л_round1 !) )  .
 
-Definition DePoolContract_Ф_terminator_header f : LedgerT ( XErrorValue True XInteger ) := 
-(*require(msg.pubkey() == tvm.pubkey(), Errors.IS_NOT_OWNER);*) 	 
+
+Definition DePoolContract_Ф_terminator_header : LedgerT ( XErrorValue True XInteger ) := 
+ 
 Require2 {{ msg_pubkey () ?== tvm_pubkey () , ξ$ Errors_ι_IS_NOT_OWNER }} ; 
-(*require(!m_poolClosed, Errors.DEPOOL_IS_CLOSED);*) 
 Require {{ !¬ ↑12 D2! DePoolContract_ι_m_poolClosed , ξ$ Errors_ι_DEPOOL_IS_CLOSED }} ; 
-(* m_poolClosed = true; *) 
 (↑12 U1! DePoolContract_ι_m_poolClosed := $xBoolTrue) >> 
-(* tvm.commit(); *) 
 tvm_commit () >> 
-(* tvm.accept(); *) 
 tvm_accept () >> 
-
-
-(* Round roundPre0 = getRoundPre0(); *) 
 declareLocal Л_roundPre0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRoundPre0 (); 
-(* Round round0 = getRound0(); *) 
 declareLocal Л_round0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 (); 
-(*Round round1 = getRound1();*) 
-(↑↑17 U2! LocalState_ι_terminator_Л_round1 := RoundsBase_Ф_getRound1 () ) >> 
-
-(* roundPre0 = startRoundCompleting(roundPre0, CompletionReason.PoolClosed); *) 
+(declareGlobal! LocalState_ι_terminator_Л_round1 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound1 () ) >> 
 U0! Л_roundPre0 := DePoolContract_Ф_startRoundCompleting (! $ Л_roundPre0 , 
 														 ξ$ RoundsBase_ι_CompletionReasonP_ι_PoolClosed !) ; 
-(*round0 = startRoundCompleting(round0, CompletionReason.PoolClosed);*) 
 U0! Л_round0 := DePoolContract_Ф_startRoundCompleting (! $ Л_round0 , 
 														 ξ$ RoundsBase_ι_CompletionReasonP_ι_PoolClosed !) ; 
-(* if (round1.step == RoundStep.WaitingValidatorRequest) { 
-	round1 = startRoundCompleting(round1, CompletionReason.PoolClosed); 
-} *) 
 (If (↑17 D2! LocalState_ι_terminator_Л_round1 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest) then { 
 	↑↑17 U2! LocalState_ι_terminator_Л_round1 := DePoolContract_Ф_startRoundCompleting (! ↑17 D2! LocalState_ι_terminator_Л_round1 , 
 																						  ξ$ RoundsBase_ι_CompletionReasonP_ι_PoolClosed !) 
-}) >> f Л_roundPre0 Л_round0.
+}) >> DePoolContract_Ф_terminator_tailer Л_roundPre0 Л_round0.
+
+Lemma DePoolContract_Ф_terminator_header_run_eq: forall (l: Ledger), 
+run DePoolContract_Ф_terminator l = run DePoolContract_Ф_terminator_header l.
+Proof.
+  intros.
+  destructLedger l. 
+  compute.
+  Time repeat destructIf_solve. idtac.
 
 
-Definition DePoolContract_Ф_terminator_tailer Л_roundPre0 Л_round0 : LedgerT True := 
-(* emit DePoolClosed(); *) 
-->emit $ DePoolClosed >> 
-(* setRoundPre0(roundPre0); *) 
-(RoundsBase_Ф_setRoundPre0 (! $ Л_roundPre0 !) ) >> 
-(* setRound0(round0); *) 
-(RoundsBase_Ф_setRound0 (! $ Л_round0 !) ) >> 
-(* setRound1(round1); *) 
-(RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_terminator_Л_round1 !) )  .
+  all: try destructFunction2 DePoolContract_Ф_startRoundCompleting; auto. idtac. 
+  all: try destructFunction2 DePoolContract_Ф_startRoundCompleting; auto. idtac. 
+  all: repeat destructIf_solve. idtac.
+  all: try destructFunction2 DePoolContract_Ф_startRoundCompleting; auto. 
+Qed.
+
+
 
 
 Lemma DePoolContract_Ф_terminator_eval : forall (l : Ledger),
@@ -155,7 +152,9 @@ Qed.
 
 Import LedgerClass.
 
-Lemma DePoolContract_Ф_terminator_header_exec : forall f (l : Ledger),
+Opaque DePoolContract_Ф_terminator_tailer.
+
+Lemma DePoolContract_Ф_terminator_header_exec : forall  (l : Ledger),
 let isOwner := eval_state msg_pubkey l =? eval_state tvm_pubkey l in
 let isNotClosed := negb (eval_state (↑12 ε DePoolContract_ι_m_poolClosed) l) in
 
@@ -172,9 +171,9 @@ let (srcPre0, l_pre0) := run (↓ DePoolContract_Ф_startRoundCompleting oldRoun
 let (src0, l_0) := run (↓ DePoolContract_Ф_startRoundCompleting oldRound0 RoundsBase_ι_CompletionReasonP_ι_PoolClosed) l_pre0 in
 let (src1, l_1) := if round1ToBeUpdated then run (↓ DePoolContract_Ф_startRoundCompleting oldRound1 RoundsBase_ι_CompletionReasonP_ι_PoolClosed) l_0 
                                         else (oldRound1, l_0) in
-let l' := exec_state (f srcPre0 src0) {$ l_1 With (LocalState_ι_terminator_Л_round1, src1) $} in                                        
+let l' := exec_state (DePoolContract_Ф_terminator_tailer srcPre0 src0) {$ l_1 With (LocalState_ι_terminator_Л_round1, src1) $} in                                        
 
-exec_state (DePoolContract_Ф_terminator_header f) l =
+exec_state DePoolContract_Ф_terminator_header l =
 if isOwner then 
     if isNotClosed then l'
                    else l else l.
@@ -190,8 +189,26 @@ Proof.
   all: try destructFunction2 DePoolContract_Ф_startRoundCompleting; auto. idtac. 
   all: repeat destructIf_solve. idtac.
   all: try destructFunction2 DePoolContract_Ф_startRoundCompleting; auto. idtac.
-  all: try destructFunction2 f; auto. idtac.
+  all: try destructFunction2 DePoolContract_Ф_terminator_tailer; auto. idtac.
   all: try congruence.
+Qed.
+
+Lemma DePoolContract_Ф_terminator_header_eval_eq: forall (l: Ledger), 
+eval_state DePoolContract_Ф_terminator l = eval_state DePoolContract_Ф_terminator_header l.
+Proof.
+  intros.
+  unfold eval_state.
+  rewrite DePoolContract_Ф_terminator_header_run_eq.
+  auto.
+Qed.
+
+Lemma DePoolContract_Ф_terminator_header_exec_eq: forall (l: Ledger), 
+exec_state DePoolContract_Ф_terminator l = exec_state DePoolContract_Ф_terminator_header l.
+Proof.
+  intros.
+  unfold exec_state.
+  rewrite DePoolContract_Ф_terminator_header_run_eq.
+  auto.
 Qed.
 
  End DePoolContract_Ф_terminator.

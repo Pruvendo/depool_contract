@@ -58,95 +58,39 @@ Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.g
  
 Opaque  DePoolContract_Ф_updateRound2 RoundsBase_Ф_stakeSum ProxyBase_Ф__recoverStake (* RoundsBase_Ф_setRound0 *).
 
-Notation "'->selfdestruct' a" := (do a' ← a; ↓ selfdestruct a') (at level 20).
+(* Notation "'->selfdestruct' a" := (do a' ← a; ↓ selfdestruct a') (at level 20). *)
 
-Definition DePoolContract_Ф_updateRounds_header (f: XBool -> XInteger -> XInteger -> XInteger -> XInteger -> XInteger -> LedgerT (XErrorValue (XValueValue True) XInteger)) : LedgerT (XErrorValue (XValueValue True) XInteger) := 
-U0! {( Л_validatorsElectedFor ,  Л_electionsStartBefore  , _ , _ )} ??:= ConfigParamsBase_Ф_roundTimeParams () ;
-U0! {( Л_curValidatorHash,  Л_validationStart , Л_validationEnd )} ??:= ConfigParamsBase_Ф_getCurValidatorData () ;
-U0! Л_prevValidatorHash ??:= ConfigParamsBase_Ф_getPrevValidatorHash () ;
-U0! Л_areElectionsStarted := (tvm_now () ?>=  $Л_validationEnd !- $Л_electionsStartBefore) ;
-
-(↑↑17 U2! LocalState_ι_updateRounds_Л_roundPre0 := RoundsBase_Ф_getRoundPre0 () ) >>
-(↑↑17 U2! LocalState_ι_updateRounds_Л_round0 := RoundsBase_Ф_getRound0 () ) >>
-(↑↑17 U2! LocalState_ι_updateRounds_Л_round1 := RoundsBase_Ф_getRound1 () ) >>
-(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := RoundsBase_Ф_getRound2 () ) >> 
-
-If2!! ((↑ε12 DePoolContract_ι_m_poolClosed ) !& 
-    (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round2  !) ) !& 
-    (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round1  !) ) !& 
-    (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round0  !) ) !& 
-    (DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0  !))) then {
-        (->selfdestruct ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) >>
-        tvm_exit ()
-    };                   
-
-(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 ,
-																				  $ Л_prevValidatorHash , 
-																				  $ Л_curValidatorHash , 
-                                          $ Л_validationStart  !) ) >>
-
-If!! ( (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step  ?== $ RoundsBase_ι_RoundStepP_ι_WaitingValidationStart) !& 
-(↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?== $ Л_prevValidatorHash)) then {
-
-(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := $ RoundsBase_ι_RoundStepP_ι_WaitingIfValidatorWinElections) >> 
-ProxyBase_Ф__recoverStake (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy , 
-                           ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_id , 
-                           ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector  !) >>
-                           $ (xValue I)                          
-} ; f Л_areElectionsStarted Л_curValidatorHash Л_prevValidatorHash Л_validationStart Л_validationEnd Л_validatorsElectedFor.
+(* Import TVMModel.LedgerClass. *)
 
 Definition DePoolContract_Ф_updateRounds_tailer (Л_areElectionsStarted: XBool) 
                                                 (Л_curValidatorHash Л_prevValidatorHash: XInteger) 
                                                 (Л_validationStart Л_validationEnd Л_validatorsElectedFor:  XInteger) 
                                                       : LedgerT (XErrorValue (XValueValue True) XInteger) := 
-
 If! ( $ Л_areElectionsStarted !& 
 	 (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?!= $ Л_curValidatorHash) !& 
 	 (↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_Completed)) then { 
-		(*delete m_rounds[round2.id];*) 
+
 		(↑↑11 U2! delete RoundsBase_ι_m_rounds [[ ↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_id ]]) >> 
-		(*		 round2 = round1;*) 
 		(↑17 U1! LocalState_ι_updateRounds_Л_round2 := D2! LocalState_ι_updateRounds_Л_round1) >> 
-		(*round1 = round0;*) 
 		(↑17 U1! LocalState_ι_updateRounds_Л_round1 := D2! LocalState_ι_updateRounds_Л_round0) >> 
-    (*round0 = roundPre0;*) 
-    (↑17 U1! LocalState_ι_updateRounds_Л_round0 := D2! LocalState_ι_updateRounds_Л_roundPre0) >> 
-    (*roundPre0 = generateRound();*) 
+    (↑17 U1! LocalState_ι_updateRounds_Л_round0 := D2! LocalState_ι_updateRounds_Л_roundPre0) >>  
 		(↑↑17 U2! LocalState_ι_updateRounds_Л_roundPre0 := DePoolContract_Ф_generateRound () ) >> 
-    
-    (*round2 = updateRound2(round2, prevValidatorHash, curValidatorHash, validationStart, stakeHeldFor);*) 
+
 		(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 , 
 																				  $ Л_prevValidatorHash , 
 																				  $ Л_curValidatorHash , 
                                           $ Л_validationStart !) ) >> 
     If! ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then { 
-      (*round1.supposedElectedAt = validationEnd;*) 
       (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt := $ 	Л_validationEnd) >> 
-                       (* round1.validatorsElectedFor = validatorsElectedFor; *) 
       (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorsElectedFor := $ Л_validatorsElectedFor ) >> 
-      (*round1.elector = getElector();*) 
       ↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector ??:= ConfigParamsBase_Ф_getElector () ; 
-      (*round1.vsetHashInElectionPhase = curValidatorHash;*) 
       (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase := $ Л_curValidatorHash) >> 
-      (*(, , ,uint32 stakeHeldFor) = roundTimeParams();*) 
 declareLocal {( _ :>: _ , _ :>: _ , _ :>: _ , Л_stakeHeldFor :>: XInteger32 )} ?:= ConfigParamsBase_Ф_roundTimeParams () ; 
-      (* round1.stakeHeldFor = stakeHeldFor; *) 
       (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakeHeldFor := $ Л_stakeHeldFor) >> 
-
-      (*           round1.validatorStake = stakeSum(round1.stakes[m_validatorWallet]); 
-          bool isValidatorStakeOk = round1.validatorStake >= m_validatorAssurance; *) 
       (↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake := 
           RoundsBase_Ф_stakeSum (! D1! (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakes) [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] !)) >> 
       declareLocal Л_isValidatorStakeOk :>: XBool := (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake) ?>= 
                      (↑12 D2! DePoolContract_ι_m_validatorAssurance)	; 
-      (*if (!isValidatorStakeOk) { 
-      round1.step = RoundStep.WaitingUnfreeze; 
-      round1.completionReason = CompletionReason.ValidatorStakeIsTooSmall; 
-      round1.unfreeze = 0; 
-    } else { 
-      round1.step = RoundStep.WaitingValidatorRequest; 
-      emit stakeSigningRequested(round1.supposedElectedAt, round1.proxy); 
-    }*) 
       (If ( !¬ $ Л_isValidatorStakeOk ) then { 
         (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze) >> 
         (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_completionReason := ξ$ RoundsBase_ι_CompletionReasonP_ι_ValidatorStakeIsTooSmall) >> 
@@ -156,24 +100,60 @@ declareLocal {( _ :>: _ , _ :>: _ , _ :>: _ , Л_stakeHeldFor :>: XInteger32 )} 
         (->emit StakeSigningRequested (!! ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt , 
                         ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy  !!)) 
       }) }; 
-      (* if (!m_poolClosed) 
-        round0.step = RoundStep.Pooling; *) 
 
       (If ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then { 
         (↑17 U1! LocalState_ι_updateRounds_Л_round0 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_Pooling) 
       })  
       
-      } ;
-           ( RoundsBase_Ф_setRoundPre0 (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0  !) ) >>
-           ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι_updateRounds_Л_round0  !) ) >>
-           ( RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_updateRounds_Л_round1  !) ) >>
-           ( RoundsBase_Ф_setRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2  !) )  >>
-return! (xValue I) .
+      } ;        
+      ( RoundsBase_Ф_setRoundPre0 (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0 !) ) >> 
+      ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι_updateRounds_Л_round0 !) ) >> 
+      ( RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 !) ) >> 
+      ( RoundsBase_Ф_setRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 !) ) >> 
+return! (xValue I) . 
+ 
 
 
-Check ((true && false) && false)%bool.
+Definition DePoolContract_Ф_updateRounds_header  : LedgerT (XErrorValue (XValueValue True) XInteger) := 
+declareLocal {( Л_validatorsElectedFor :>: XInteger32 , Л_electionsStartBefore :>: XInteger32 , _ :>: _ , _ :>: _ )} ??:= ConfigParamsBase_Ф_roundTimeParams () ; 
+declareLocal {( Л_curValidatorHash :>: XInteger256 , Л_validationStart :>: XInteger32 , Л_validationEnd  :>: XInteger32 )} ??:= ConfigParamsBase_Ф_getCurValidatorData () ; 
+declareLocal Л_prevValidatorHash  :>: XInteger256 ??:= ConfigParamsBase_Ф_getPrevValidatorHash () ; 
+declareLocal Л_areElectionsStarted :>: XBool := ( tvm_now () ?>=  $ Л_validationEnd !- $ Л_electionsStartBefore ) ; 
+( declareGlobal! LocalState_ι_updateRounds_Л_roundPre0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRoundPre0 () ) >> 
+( declareGlobal! LocalState_ι_updateRounds_Л_round0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ) >> 
+( declareGlobal! LocalState_ι_updateRounds_Л_round1 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound1 () ) >> 
+( declareGlobal! LocalState_ι_updateRounds_Л_round2 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound2 () ) >> 
+If2!! ((↑ε12 DePoolContract_ι_m_poolClosed ) !& 
+(DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 !) ) !& 
+(DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 !) ) !& 
+(DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_round0 !) ) !& 
+(DePoolContract_Ф_isEmptyRound (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0 !))) then { 
+  (->selfdestruct ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) >> 
+  tvm_exit () 
+};          
+(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 , 
+                                        $ Л_prevValidatorHash , 
+                                        $ Л_curValidatorHash , 
+                    $ Л_validationStart !) ) >> 
+If!! ( (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidationStart) !& 
+(↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?== $ Л_prevValidatorHash)) then { 
 
-Lemma DePoolContract_Ф_updateRounds_header_exec : forall (l: Ledger) (f: XBool -> XInteger -> XInteger -> XInteger -> XInteger -> XInteger -> LedgerT (XErrorValue (XValueValue True) XInteger)),                            
+(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingIfValidatorWinElections) >> 
+ProxyBase_Ф__recoverStake (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy , 
+            ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_id , 
+            ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector !) >> $ xValue I 
+};  DePoolContract_Ф_updateRounds_tailer Л_areElectionsStarted Л_curValidatorHash Л_prevValidatorHash Л_validationStart Л_validationEnd Л_validatorsElectedFor.
+
+
+Lemma DePoolContract_Ф_updateRounds_header_eq: DePoolContract_Ф_updateRounds_header = DePoolContract_Ф_updateRounds.
+Proof.
+  auto.
+Qed.
+
+Opaque DePoolContract_Ф_updateRounds_tailer.
+
+
+Lemma DePoolContract_Ф_updateRounds_header_exec : forall (l: Ledger) ,                            
 let ertp := eval_state ( ↓ ConfigParamsBase_Ф_roundTimeParams ) l in
 let ret1 : bool := errorValueIsValue ertp in
 let rtp := errorMapDefault Datatypes.id ertp (0,0,0,0) in 
@@ -220,12 +200,12 @@ let newl := if if2 then exec_state ( ↓ ProxyBase_Ф__recoverStake ( round1 ->>
                                                                ( round1 ->> RoundsBase_ι_Round_ι_elector ) ) newl'
                  else newl' in
 
-exec_state ( DePoolContract_Ф_updateRounds_header f ) l = 
+exec_state ( DePoolContract_Ф_updateRounds_header ) l = 
 if ret1 then
   if ret2 then 
     if ret3 then 
       if if1 then exec_state (↓ selfdestruct m_validatorWallet) l'
-      else exec_state (f areElectionsStarted curValidatorHash prevValidatorHash validationStart validationEnd validatorsElectedFor) newl  
+      else exec_state (DePoolContract_Ф_updateRounds_tailer areElectionsStarted curValidatorHash prevValidatorHash validationStart validationEnd validatorsElectedFor) newl  
     else l
   else l
 else l. 
@@ -239,6 +219,8 @@ Proof.
 
   all: repeat destructIf_solve2. idtac.
   all: try destructFunction4 DePoolContract_Ф_updateRound2; auto. idtac.
+
+
   all: try destructFunction1 selfdestruct; auto. idtac.
         
   all: repeat destructIf_solve2. 
@@ -246,7 +228,7 @@ Proof.
 Qed.  
 
 
-Lemma DePoolContract_Ф_updateRounds_header_eval : forall (l: Ledger) (f: XBool -> XInteger -> XInteger -> XInteger -> XInteger -> XInteger -> LedgerT (XErrorValue (XValueValue True) XInteger)),                            
+Lemma DePoolContract_Ф_updateRounds_header_eval : forall (l: Ledger) ,                            
 let ertp := eval_state ( ↓ ConfigParamsBase_Ф_roundTimeParams ) l in
 let ret1 : bool := errorValueIsValue ertp in
 let rtp := errorMapDefault Datatypes.id ertp (0,0,0,0) in 
@@ -293,12 +275,12 @@ let newl := if if2 then exec_state ( ↓ ProxyBase_Ф__recoverStake ( round1 ->>
                                                                ( round1 ->> RoundsBase_ι_Round_ι_elector ) ) newl'
                  else newl' in
 
-eval_state ( DePoolContract_Ф_updateRounds_header f ) l = 
+eval_state ( DePoolContract_Ф_updateRounds_header  ) l = 
 (* if ret1 then
   if ret2 then 
     if ret3 then  *)
       if if1 then Value (Error I)
-      else eval_state (f areElectionsStarted curValidatorHash prevValidatorHash validationStart validationEnd validatorsElectedFor) newl  .
+      else eval_state (DePoolContract_Ф_updateRounds_tailer areElectionsStarted curValidatorHash prevValidatorHash validationStart validationEnd validatorsElectedFor) newl  .
 (*     else l
   else l
 else l *)
@@ -319,58 +301,58 @@ Proof.
 Qed.  
 
 Definition DePoolContract_Ф_updateRounds_tailer3 (Л_validationEnd Л_validatorsElectedFor Л_curValidatorHash: XInteger) : LedgerT (XErrorValue True XInteger):=
-(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt := $ 	Л_validationEnd) >> 
-(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorsElectedFor := $ Л_validatorsElectedFor ) >>
-↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector ??:= ConfigParamsBase_Ф_getElector ()  ;
-(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase := $ Л_curValidatorHash) >>
-U0! {( _ ,  _  , _ , Л_stakeHeldFor )} ?:= ConfigParamsBase_Ф_roundTimeParams () ; 
-(↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakeHeldFor := $Л_stakeHeldFor) >>
-(↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake := 
-        RoundsBase_Ф_stakeSum  (!  D1! (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakes) [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet  ]] !)) >>
-U0! Л_isValidatorStakeOk :=  (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake) ?>= 
-                              (↑12 D2! DePoolContract_ι_m_validatorAssurance)	; 
-(If ( !¬ $ Л_isValidatorStakeOk ) then  {
-    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := $ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze) >> 
-    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_completionReason := $ RoundsBase_ι_CompletionReasonP_ι_ValidatorStakeIsTooSmall) >> 
-    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_unfreeze := $xInt0)
-} else {
-    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := $ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest) >> 
+  (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt := $ 	Л_validationEnd) >> 
+  (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorsElectedFor := $ Л_validatorsElectedFor ) >> 
+  ↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_elector ??:= ConfigParamsBase_Ф_getElector () ; 
+  (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase := $ Л_curValidatorHash) >> 
+declareLocal {( _ :>: _ , _ :>: _ , _ :>: _ , Л_stakeHeldFor :>: XInteger32 )} ?:= ConfigParamsBase_Ф_roundTimeParams () ; 
+  (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakeHeldFor := $ Л_stakeHeldFor) >> 
+  (↑↑17 U2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake := 
+      RoundsBase_Ф_stakeSum (! D1! (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_stakes) [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] !)) >> 
+  declareLocal Л_isValidatorStakeOk :>: XBool := (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_validatorStake) ?>= 
+                 (↑12 D2! DePoolContract_ι_m_validatorAssurance)	; 
+  (If ( !¬ $ Л_isValidatorStakeOk ) then { 
+    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingUnfreeze) >> 
+    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_completionReason := ξ$ RoundsBase_ι_CompletionReasonP_ι_ValidatorStakeIsTooSmall) >> 
+    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_unfreeze := $ xInt0) 
+  } else { 
+    (↑17 U1! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_WaitingValidatorRequest) >> 
     (->emit StakeSigningRequested (!! ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_supposedElectedAt , 
-                                    ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy   !!))
-}).
+                    ↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_proxy  !!)) 
+  }).
 
 Definition DePoolContract_Ф_updateRounds_tailer2 (Л_areElectionsStarted: XBool) 
                                                 (Л_curValidatorHash Л_prevValidatorHash: XInteger) 
                                                 (Л_validationStart Л_validationEnd Л_validatorsElectedFor: XInteger) 
-                                                (f: XInteger -> XInteger -> XInteger -> LedgerT (XErrorValue True XInteger))
+                                              
                                                       : LedgerT (XErrorValue (XValueValue True) XInteger) := 
-If! ($ Л_areElectionsStarted !&
-	 (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?!= $ Л_curValidatorHash) !&
-	 (↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_step ?= $ RoundsBase_ι_RoundStepP_ι_Completed)) then {
+If! ( $ Л_areElectionsStarted !& 
+	 (↑17 D2! LocalState_ι_updateRounds_Л_round1 ^^ RoundsBase_ι_Round_ι_vsetHashInElectionPhase ?!= $ Л_curValidatorHash) !& 
+	 (↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_step ?== ξ$ RoundsBase_ι_RoundStepP_ι_Completed)) then { 
 
+		(↑↑11 U2! delete RoundsBase_ι_m_rounds [[ ↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_id ]]) >> 
+		(↑17 U1! LocalState_ι_updateRounds_Л_round2 := D2! LocalState_ι_updateRounds_Л_round1) >> 
+		(↑17 U1! LocalState_ι_updateRounds_Л_round1 := D2! LocalState_ι_updateRounds_Л_round0) >> 
+    (↑17 U1! LocalState_ι_updateRounds_Л_round0 := D2! LocalState_ι_updateRounds_Л_roundPre0) >>  
+		(↑↑17 U2! LocalState_ι_updateRounds_Л_roundPre0 := DePoolContract_Ф_generateRound () ) >> 
 
-		(↑↑11 U2! delete RoundsBase_ι_m_rounds [[ ↑17 D2! LocalState_ι_updateRounds_Л_round2 ^^ RoundsBase_ι_Round_ι_id  ]]) >>
-		(↑17 U1! LocalState_ι_updateRounds_Л_round2 :=  D2! LocalState_ι_updateRounds_Л_round1) >>
-		(↑17 U1! LocalState_ι_updateRounds_Л_round1 :=  D2! LocalState_ι_updateRounds_Л_round0) >>
-        (↑17 U1! LocalState_ι_updateRounds_Л_round0 :=  D2! LocalState_ι_updateRounds_Л_roundPre0) >>
-		(↑↑17 U2! LocalState_ι_updateRounds_Л_roundPre0 := DePoolContract_Ф_generateRound () ) >>
-		(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 ,
+		(↑↑17 U2! LocalState_ι_updateRounds_Л_round2 := DePoolContract_Ф_updateRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 , 
 																				  $ Л_prevValidatorHash , 
 																				  $ Л_curValidatorHash , 
-                                          $ Л_validationStart  !) ) >> 
+                                          $ Л_validationStart !) ) >> 
     If! ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then { 
-        (f Л_validationEnd Л_validatorsElectedFor Л_curValidatorHash) 
-      };  
+      DePoolContract_Ф_updateRounds_tailer3 Л_validationEnd Л_validatorsElectedFor Л_curValidatorHash
+       }; 
 
-    (If ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then {
-        (↑17 U1! LocalState_ι_updateRounds_Л_round0 ^^ RoundsBase_ι_Round_ι_step := $ RoundsBase_ι_RoundStepP_ι_Pooling) }) 
-        }  ;             
-    
-    
-( RoundsBase_Ф_setRoundPre0 (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0  !) ) >>
-( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι_updateRounds_Л_round0  !) ) >>
-( RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_updateRounds_Л_round1  !) ) >>
-( RoundsBase_Ф_setRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2  !) )  >>
+      (If ( !¬ (↑12 D2! DePoolContract_ι_m_poolClosed) ) then { 
+        (↑17 U1! LocalState_ι_updateRounds_Л_round0 ^^ RoundsBase_ι_Round_ι_step := ξ$ RoundsBase_ι_RoundStepP_ι_Pooling) 
+      })  
+      
+      } ;        
+      ( RoundsBase_Ф_setRoundPre0 (! ↑17 D2! LocalState_ι_updateRounds_Л_roundPre0 !) ) >> 
+      ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι_updateRounds_Л_round0 !) ) >> 
+      ( RoundsBase_Ф_setRound1 (! ↑17 D2! LocalState_ι_updateRounds_Л_round1 !) ) >> 
+      ( RoundsBase_Ф_setRound2 (! ↑17 D2! LocalState_ι_updateRounds_Л_round2 !) ) >> 
 return! (xValue I) .
 
 
@@ -380,9 +362,11 @@ return! (xValue I) .
 
 (* Transparent RoundsBase_Ф_setRound0. *)
 
+Opaque DePoolContract_Ф_updateRounds_tailer3.
+
 Lemma  DePoolContract_Ф_updateRounds_tailer2_exec  (areElectionsStarted: XBool) 
                                                   (curValidatorHash prevValidatorHash: XInteger) 
-                                                  (validationStart validationEnd validatorsElectedFor:  XInteger) f (l: Ledger):
+                                                  (validationStart validationEnd validatorsElectedFor:  XInteger)  (l: Ledger):
 let _roundPre0 := eval_state ( ↑17 ε LocalState_ι_updateRounds_Л_roundPre0 ) l in
 let _round0 := eval_state (  ↑17 ε LocalState_ι_updateRounds_Л_round0 ) l in
 let _round1 := eval_state (  ↑17 ε LocalState_ι_updateRounds_Л_round1) l in
@@ -412,7 +396,7 @@ let l2 := newl in
 
 let if4  : bool := negb ( eval_state (↑12 ε DePoolContract_ι_m_poolClosed) newl )  in 
 
-let (r, newl) := if if4 then run (f validationEnd validatorsElectedFor curValidatorHash) newl else (Value I, newl) in
+let (r, newl) := if if4 then run (DePoolContract_Ф_updateRounds_tailer3 validationEnd validatorsElectedFor curValidatorHash) newl else (Value I, newl) in
 let ml := newl in
 
 let roundPre0 := eval_state ( ↑17 ε LocalState_ι_updateRounds_Л_roundPre0 ) ml in
@@ -436,7 +420,7 @@ let lset1' := exec_state ( ↓ RoundsBase_Ф_setRound1 _round1 ) lset0' in
 let lset2' := exec_state ( ↓ RoundsBase_Ф_setRound2 _round2 ) lset1' in 
 
 exec_state ( DePoolContract_Ф_updateRounds_tailer2 areElectionsStarted curValidatorHash prevValidatorHash
-                              validationStart validationEnd validatorsElectedFor f ) l = 
+                              validationStart validationEnd validatorsElectedFor ) l = 
 (* if ret1 then
   if ret2 then 
     if ret3 then  *)
@@ -456,18 +440,21 @@ Proof.
   all: repeat destructIf_solve2. idtac.
   all: try destructFunction4 DePoolContract_Ф_updateRound2; auto. idtac.
   all: repeat destructIf_solve2. idtac.
-  all: try destructFunction3 f; auto. idtac.
+  all: try destructFunction3 DePoolContract_Ф_updateRounds_tailer3; auto. idtac.
   case_eq x0; intros; auto. idtac.
   all: repeat destructIf_solve2. idtac.
 
+  Require Import depoolContract.Lib.CommonStateProofs.
   apply ledgerEq; auto. idtac.
   simpl. idtac.
   destructLedger l0; auto. 
 Qed. 
 
+
+
 Lemma  DePoolContract_Ф_updateRounds_tailer2_eval  (areElectionsStarted: XBool) 
                                                   (curValidatorHash prevValidatorHash: XInteger) 
-                                                  (validationStart validationEnd validatorsElectedFor:  XInteger) f (l: Ledger):
+                                                  (validationStart validationEnd validatorsElectedFor:  XInteger) (l: Ledger):
 let _roundPre0 := eval_state ( ↑17 ε LocalState_ι_updateRounds_Л_roundPre0 ) l in
 let _round0 := eval_state (  ↑17 ε LocalState_ι_updateRounds_Л_round0 ) l in
 let _round1 := eval_state (  ↑17 ε LocalState_ι_updateRounds_Л_round1) l in
@@ -475,7 +462,7 @@ let _round2 := eval_state (  ↑17 ε LocalState_ι_updateRounds_Л_round2 ) l i
 
 let if3 : bool :=  (areElectionsStarted && 
          (( negb ( ( _round1 ->> RoundsBase_ι_Round_ι_vsetHashInElectionPhase ) =? curValidatorHash ) ) && 
-         ( negb ( eqb ( _round2 ->> RoundsBase_ι_Round_ι_step ) RoundsBase_ι_RoundStepP_ι_Completed ) )) )%bool in
+         (  ( eqb ( _round2 ->> RoundsBase_ι_Round_ι_step ) RoundsBase_ι_RoundStepP_ι_Completed ) )) )%bool in
         
 let newl :=   {$ l With RoundsBase_ι_m_rounds := 
                ( eval_state ( ↑11 ε RoundsBase_ι_m_rounds ) l ) ->delete ( _round2 ->> RoundsBase_ι_Round_ι_id ) $}
@@ -497,7 +484,7 @@ let l2 := newl in
 
 let if4  : bool := negb ( eval_state (↑12 ε DePoolContract_ι_m_poolClosed) newl )  in 
 
-let (r, newl) := if if4 then run (f validationEnd validatorsElectedFor curValidatorHash) newl else (Value I, newl) in
+let (r, newl) := if if4 then run (DePoolContract_Ф_updateRounds_tailer3 validationEnd validatorsElectedFor curValidatorHash) newl else (Value I, newl) in
 let ml := newl in
 
 let roundPre0 := eval_state ( ↑17 ε LocalState_ι_updateRounds_Л_roundPre0 ) ml in
@@ -521,7 +508,7 @@ let lset1' := exec_state ( ↓ RoundsBase_Ф_setRound1 _round1 ) lset0' in
 let lset2' := exec_state ( ↓ RoundsBase_Ф_setRound2 _round2 ) lset1' in 
 
 eval_state ( DePoolContract_Ф_updateRounds_tailer2 areElectionsStarted curValidatorHash prevValidatorHash
-                              validationStart validationEnd validatorsElectedFor f ) l = 
+                              validationStart validationEnd validatorsElectedFor ) l = 
 (* if ret1 then
   if ret2 then 
     if ret3 then  *)
@@ -541,13 +528,13 @@ Proof.
   all: repeat destructIf_solve2. idtac.
   all: try destructFunction4 DePoolContract_Ф_updateRound2; auto. idtac.
   all: repeat destructIf_solve2. idtac.
-  all: try destructFunction3 f; auto. idtac.
+  all: try destructFunction3 DePoolContract_Ф_updateRounds_tailer3; auto. idtac.
   case_eq x0; intros; auto. idtac.
   all: repeat destructIf_solve2. 
 Qed.
 
 
-
+Transparent DePoolContract_Ф_updateRounds_tailer3.
 
 Lemma DePoolContract_Ф_updateRounds_tailer3_exec : forall (validationEnd validatorsElectedFor curValidatorHash: XInteger) (l: Ledger) ,                            
 
@@ -618,5 +605,11 @@ Proof.
   repeat destructIf_solve2. 
   
 Qed.  
+
+Lemma DePoolContract_Ф_updateRounds_tailer_eq: DePoolContract_Ф_updateRounds_tailer = DePoolContract_Ф_updateRounds_tailer2.
+Proof.
+  auto.
+Qed.
+
 
 End DePoolContract_Ф_updateRounds.

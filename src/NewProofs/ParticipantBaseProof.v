@@ -180,6 +180,20 @@ Proof.
  auto.
 Qed.
 
+Lemma ParticipantBase_Ф_fetchParticipant_exec : forall (Л_address: XAddress) (l: Ledger) ,
+exec_state (↓ ParticipantBase_Ф_fetchParticipant Л_address ) l = l.
+Proof.
+intros. destruct l. compute; destructIf; auto.
+Qed.
+
+
+Lemma ParticipantBase_Ф_fetchParticipant_eval : forall (Л_address: XAddress) (l: Ledger) ,
+let m_participants := eval_state (↑5 ε ParticipantBase_ι_m_participants) l in
+eval_state (↓ ParticipantBase_Ф_fetchParticipant Л_address ) l = m_participants [Л_address]?.
+Proof.
+  intros. destruct l. compute; destructIf; auto.
+Qed.
+
 
 
 End ParticipantBaseProofs.

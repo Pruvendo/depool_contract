@@ -60,36 +60,6 @@ Import LedgerClass.
 
 Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.gtb Z.modulo deleteListPair.
 
-(* function cutWithdrawalValue(InvestParams p, bool doPunish, uint32 punishInterval)
-        private
-        returns (optional(InvestParams), uint64, uint64)
-    {
-        uint64 withdrawalTons = 0;
-        uint64 tonsForOwner = 0;
-        if (doPunish) {
-            p.lastWithdrawalTime += punishInterval;
-            tonsForOwner = math.muldiv(punishInterval, p.withdrawalValue, p.withdrawalPeriod);
-            tonsForOwner = math.min(tonsForOwner, p.remainingAmount);
-            p.remainingAmount -= tonsForOwner;
-        }
-
-        if (uint64(now) > p.lastWithdrawalTime) {
-            uint64 periodQty = (uint64(now) - p.lastWithdrawalTime) / p.withdrawalPeriod;
-            if (periodQty > 0) {
-                withdrawalTons = math.min(periodQty * p.withdrawalValue, p.remainingAmount);
-                p.remainingAmount -= withdrawalTons;
-                p.lastWithdrawalTime += periodQty * p.withdrawalPeriod;
-            }
-        }
-
-        if (p.remainingAmount < m_minStake) {
-            withdrawalTons += p.remainingAmount;
-            p.remainingAmount = 0;
-        }
-
-        optional(InvestParams) opt;
-        opt.set(p);
-        return (opt, withdrawalTons, tonsForOwner); } *) 
 
 Lemma DePoolContract_Ф_cutWithdrawalValue_exec : forall ( Л_p : RoundsBase_ι_InvestParams ) 
                                                ( Л_doPunish : XBool) 

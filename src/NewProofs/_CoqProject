@@ -50,7 +50,6 @@
 ./DePoolContract_terminator.v
 
 
-# ./DePoolContract_constructor6.v
 ./DePoolContract_completeRound.v
 ./DePoolContract_updateRounds.v
 

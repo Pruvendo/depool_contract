@@ -65,24 +65,30 @@ Opaque DePoolFuncs.DePoolContract_Ф_updateRounds
        DePoolFuncs.DePoolContract_Ф_checkPureDePoolBalance 
        DePoolFuncs.DePoolContract_Ф__returnChange.       
 
-Definition DePoolContract_Ф_ticktock' :  LedgerT ( XErrorValue True XInteger ) :=
+(* Definition DePoolContract_Ф_ticktock' :  LedgerT ( XErrorValue True XInteger ) :=
  Require2 {{ msg_sender () ?!= $xInt0, $ Errors_ι_IS_EXT_MSG }} ;  
  If! (DePoolContract_Ф_checkPureDePoolBalance () ) then 
  { U0! _ ?:= DePoolContract_Ф_updateRounds () ; $I } ;
  (If (msg_sender () ?!= tvm_address () ) then {
     DePoolContract_Ф__returnChange ()
- }).       
+ }).    *)    
 
-Definition DePoolContract_Ф_ticktock_header {X} (f: LedgerT (XErrorValue X XInteger)) 
-                                            (g: LedgerT True):  LedgerT ( XErrorValue True XInteger ) :=
+
+ Definition DePoolContract_Ф_ticktock_tailer: LedgerT True :=
+  If (msg_sender () ?!= tvm_address () ) then {
+     DePoolContract_Ф__returnChange ()
+  }.  
+
+Definition DePoolContract_Ф_ticktock_header :  LedgerT ( XErrorValue True XInteger ) :=
  Require2 {{ msg_sender () ?!= $ xInt0, $ Errors_ι_IS_EXT_MSG }} ;  
  If! (DePoolContract_Ф_checkPureDePoolBalance () ) then 
- { U0! _ ?:= f () ; $I } ; g.
+ { U0! _ ?:= DePoolContract_Ф_updateRounds () ; $I } ; DePoolContract_Ф_ticktock_tailer.
  
-Definition DePoolContract_Ф_ticktock_tailer: LedgerT True :=
- If (msg_sender () ?!= tvm_address () ) then {
-    DePoolContract_Ф__returnChange ()
- }.       
+ Lemma DePoolContract_Ф_ticktock_header_eq: 
+  DePoolContract_Ф_ticktock = DePoolContract_Ф_ticktock_header .
+ Proof.
+   intros. auto.
+ Qed.      
 
 
 Lemma DePoolContract_Ф_ticktock_tailer_exec : forall (l: Ledger),
@@ -99,15 +105,18 @@ intros.
   repeat destructIf_solve. 
 Qed.
 
-Lemma DePoolContract_Ф_ticktock_header_exec : forall X (l: Ledger) (f: LedgerT (XErrorValue X XInteger)) g, 
+
+Opaque DePoolContract_Ф_ticktock_tailer.
+
+Lemma DePoolContract_Ф_ticktock_header_exec : forall  (l: Ledger) , 
 let req : bool := negb (eval_state msg_sender l =? 0)  in
 let (if1, l_checkPureDePoolBalance) := run ( ↓ DePoolContract_Ф_checkPureDePoolBalance ) l in
-let (r, l_updateRounds) := run ( ↓ f ) l_checkPureDePoolBalance in
+let (r, l_updateRounds) := run ( ↓ DePoolContract_Ф_updateRounds ) l_checkPureDePoolBalance in
 let l' := if if1 then l_updateRounds else l_checkPureDePoolBalance in
-exec_state (DePoolContract_Ф_ticktock_header f g ) l = 
+exec_state DePoolContract_Ф_ticktock_header l = 
 if req then 
-if if1 then errorMapDefaultF (fun _ =>  exec_state g l') r (fun _ => l')
-       else exec_state g l_checkPureDePoolBalance
+if if1 then errorMapDefaultF (fun _ =>  exec_state DePoolContract_Ф_ticktock_tailer l') r (fun _ => l')
+       else exec_state DePoolContract_Ф_ticktock_tailer l_checkPureDePoolBalance
 else l .
 Proof. 
 
@@ -117,25 +126,25 @@ Proof.
   compute. idtac.
 
   destructFunction0 DePoolContract_Ф_checkPureDePoolBalance; auto. idtac.
-  destructFunction0 f; auto. idtac.
+  destructFunction0 DePoolContract_Ф_updateRounds; auto. idtac.
   repeat destructIf_solve. idtac.
   all: try rewrite <- Heqr; auto. idtac.
   all: try rewrite H0; auto. idtac.
   all: try rewrite <- Heqr0; auto. idtac.
   all: try rewrite H1; auto. idtac.
-  all: try destructFunction0 g; auto. 
+  all: try destructFunction0 DePoolContract_Ф_ticktock_tailer; auto. 
  Qed.
 
 
-Lemma DePoolContract_Ф_ticktock_header_eval : forall X (l: Ledger) (f: LedgerT (XErrorValue X XInteger)) (g: LedgerT True), 
+Lemma DePoolContract_Ф_ticktock_header_eval : forall  (l: Ledger) , 
 let req : bool := negb (eval_state msg_sender l =? 0)  in
 let (if1, l_checkPureDePoolBalance) := run ( ↓ DePoolContract_Ф_checkPureDePoolBalance ) l in
-let (r, l_updateRounds) := run ( ↓ f ) l_checkPureDePoolBalance in
+let (r, l_updateRounds) := run ( ↓ DePoolContract_Ф_updateRounds ) l_checkPureDePoolBalance in
 let l' := if if1 then l_updateRounds else l_checkPureDePoolBalance in
-eval_state (DePoolContract_Ф_ticktock_header f g ) l = 
+eval_state DePoolContract_Ф_ticktock_header  l = 
 if req then 
-if if1 then errorMapDefaultF (fun _ =>  Value (eval_state g l')) r (fun e => Error e)
-       else Value (eval_state g l_checkPureDePoolBalance)
+if if1 then errorMapDefaultF (fun _ =>  Value (eval_state DePoolContract_Ф_ticktock_tailer l')) r (fun e => Error e)
+       else Value (eval_state DePoolContract_Ф_ticktock_tailer l_checkPureDePoolBalance)
 else Error Errors_ι_IS_EXT_MSG .
 Proof.
   intros.
@@ -144,19 +153,20 @@ Proof.
   compute. idtac.
 
   destructFunction0 DePoolContract_Ф_checkPureDePoolBalance; auto. idtac.
-  destructFunction0 f; auto. idtac.
+  destructFunction0 DePoolContract_Ф_updateRounds; auto. idtac.
 
   repeat destructIf_solve. idtac.
   all: try rewrite <- Heqr; auto. idtac.
   all: try rewrite H0; auto. idtac.
   all: try rewrite <- Heqr0; auto. idtac.
-  all: try destructFunction0 g; auto. 
+  all: try destructFunction0 DePoolContract_Ф_ticktock_tailer; auto. 
 
   destruct x0; auto. idtac.
   rewrite <- Heqr1.
   auto.
 Qed.  
 
+Transparent  DePoolContract_Ф_ticktock_tailer.
 Lemma DePoolContract_Ф_ticktock_tailer_eval : forall (l: Ledger),
 let if1 : bool := negb ( eval_state msg_sender l =? eval_state tvm_address l) in
 
@@ -168,36 +178,7 @@ intros.
   repeat destructIf_solve. 
 Qed.
 
-
-Lemma DePoolContract_Ф_ticktock'_run_eq: forall (l: Ledger),
-run DePoolContract_Ф_ticktock' l = 
-run (DePoolContract_Ф_ticktock_header DePoolContract_Ф_updateRounds DePoolContract_Ф_ticktock_tailer) l.
-Proof.
-  intros.
-  compute; auto.
-Qed.
-
-Lemma DePoolContract_Ф_ticktock'_eval_eq: forall (l: Ledger),
-eval_state DePoolContract_Ф_ticktock' l = 
-eval_state (DePoolContract_Ф_ticktock_header DePoolContract_Ф_updateRounds DePoolContract_Ф_ticktock_tailer) l.
-Proof.
-  intros.
-  unfold eval_state.
-  rewrite DePoolContract_Ф_ticktock'_run_eq.
-  auto.
-Qed.
-
-Lemma DePoolContract_Ф_ticktock'_exec_eq: forall (l: Ledger),
-exec_state DePoolContract_Ф_ticktock' l = 
-exec_state (DePoolContract_Ф_ticktock_header DePoolContract_Ф_updateRounds DePoolContract_Ф_ticktock_tailer) l.
-Proof.
-  intros.
-  unfold exec_state.
-  rewrite DePoolContract_Ф_ticktock'_run_eq.
-  auto.
-Qed.
-
-
+(*good sample how to transform partial proofs to full one*)
 Opaque exec_state eval_state run.
 Opaque DePoolContract_Ф_ticktock_header DePoolContract_Ф_ticktock_tailer.
 
@@ -213,7 +194,7 @@ let l'' := if if2' then exec_state (↓ DePoolContract_Ф__returnChange) l' else
 let if2'' : bool := negb ( eval_state msg_sender l_checkPureDePoolBalance =? eval_state tvm_address l_checkPureDePoolBalance) in
 let l''' := if if2'' then exec_state (↓ DePoolContract_Ф__returnChange) l_checkPureDePoolBalance else l_checkPureDePoolBalance in
 
-exec_state DePoolContract_Ф_ticktock' l = 
+exec_state DePoolContract_Ф_ticktock l = 
 if req then 
 if if1 then errorMapDefaultF (fun _ => l'') r (fun _ => l')
        else l'''
@@ -221,14 +202,14 @@ else l .
 
 Proof.
   intros.
-  rewrite DePoolContract_Ф_ticktock'_exec_eq.
+  rewrite DePoolContract_Ф_ticktock_header_eq.
   remember (run (↓ DePoolContract_Ф_checkPureDePoolBalance) l).
   destruct p.
   remember (run (↓ DePoolContract_Ф_updateRounds) l0).
   destruct p.
   intros.
 
-  remember (DePoolContract_Ф_ticktock_header_exec (XValueValue True) l DePoolContract_Ф_updateRounds DePoolContract_Ф_ticktock_tailer).
+  remember (DePoolContract_Ф_ticktock_header_exec l).
   clear Heqy.
   rewrite <- Heqp in y.
   compute in y. compute in Heqp0. 
@@ -245,35 +226,23 @@ let (if1, l_checkPureDePoolBalance) := run ( ↓ DePoolContract_Ф_checkPureDePo
 let (r, l_updateRounds) := run ( ↓ DePoolContract_Ф_updateRounds ) l_checkPureDePoolBalance in
 let l' := if if1 then l_updateRounds else l_checkPureDePoolBalance in
 
-(* let if2' : bool := negb ( eval_state msg_sender l' =? eval_state tvm_address l') in
-let l'' := if if2' then exec_state (↓ DePoolContract_Ф__returnChange) l' else l' in
-
-let if2'' : bool := negb ( eval_state msg_sender l_checkPureDePoolBalance =? eval_state tvm_address l_checkPureDePoolBalance) in
-let l''' := if if2'' then exec_state (↓ DePoolContract_Ф__returnChange) l_checkPureDePoolBalance else l_checkPureDePoolBalance in *)
-
-eval_state DePoolContract_Ф_ticktock' l = 
+eval_state DePoolContract_Ф_ticktock l = 
 
 if req then 
 if if1 then errorMapDefaultF (fun _ =>  Value I) r (fun e => Error e)
        else Value I
 else Error Errors_ι_IS_EXT_MSG .
 
-
-(* if req then 
-if if1 then errorMapDefaultF (fun _ => l'') r (fun _ => l')
-       else l'''
-else l .
- *)
 Proof.
   intros.
-  rewrite DePoolContract_Ф_ticktock'_eval_eq.
+  rewrite DePoolContract_Ф_ticktock_header_eq.
   remember (run (↓ DePoolContract_Ф_checkPureDePoolBalance) l).
   destruct p.
   remember (run (↓ DePoolContract_Ф_updateRounds) l0).
   destruct p.
   intros.
 
-  remember (DePoolContract_Ф_ticktock_header_eval (XValueValue True) l DePoolContract_Ф_updateRounds DePoolContract_Ф_ticktock_tailer).
+  remember (DePoolContract_Ф_ticktock_header_eval l).
   clear Heqy.
   rewrite <- Heqp in y.
   compute in y. compute in Heqp0. 

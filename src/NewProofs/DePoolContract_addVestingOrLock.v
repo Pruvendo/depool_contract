@@ -59,48 +59,124 @@ Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.g
 Opaque DePoolContract_Ф_sendAcceptAndReturnChange128 RoundsBase_Ф__addStakes.
 
 
-Definition DePoolContract_Ф_addVestingOrLock'_tailer1 (Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary: XInteger) 
+Definition DePoolContract_Ф_addVestingOrLock'_tailer (Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary: XInteger) 
                                                      (Л_isVesting: XBool)
                                                      (Л_participant: DePoolLib_ι_Participant)
                                                      (Л_fee: XInteger) : LedgerT True :=
-( ↑17 U1! LocalState_ι_addVestingOrLock_Л_participant := $ Л_participant ) >>
-
+( ↑17 U1! LocalState_ι_addVestingOrLock_Л_participant := $ Л_participant ) >> 
 ( 
 ForIndexed (xListCons xInt0 (xListCons xInt1 xListNil)) do (fun (i: XInteger) => 
-U0! Л_isFirstPart := ( $ i ?== $ xInt0 ) ;
-U0! Л_vestingOrLock := {|| 
-    RoundsBase_ι_InvestParams_ι_remainingAmount ::= $ Л_isFirstPart ? $ Л_halfStake ::: $Л_stake !- $Л_halfStake,
-    RoundsBase_ι_InvestParams_ι_lastWithdrawalTime ::= tvm_now () ,
-    RoundsBase_ι_InvestParams_ι_withdrawalPeriod ::= $ Л_withdrawalPeriod ,
-    RoundsBase_ι_InvestParams_ι_withdrawalValue ::= $ Л_withdrawalValue ,
-    RoundsBase_ι_InvestParams_ι_owner ::= msg_sender () ||} ;
+declareLocal Л_isFirstPart :>: XBool := ( $ i ?== $ xInt0 ) ; 
+declareLocal Л_vestingOrLock :>: RoundsBase_ι_InvestParams := {|| 
+  RoundsBase_ι_InvestParams_ι_remainingAmount ::= $ Л_isFirstPart ? $ Л_halfStake ::: $Л_stake !- $Л_halfStake, 
+  RoundsBase_ι_InvestParams_ι_lastWithdrawalTime ::= tvm_now () , 
+  RoundsBase_ι_InvestParams_ι_withdrawalPeriod ::= $ Л_withdrawalPeriod , 
+  RoundsBase_ι_InvestParams_ι_withdrawalValue ::= $ Л_withdrawalValue , 
+  RoundsBase_ι_InvestParams_ι_owner ::= msg_sender () ||} ; 
 
-( ↑17 U1! LocalState_ι_addVestingOrLock_Л_v := $ default ) >>
-( ↑17 U1! LocalState_ι_addVestingOrLock_Л_l := $ default ) >>
-If ( $ Л_isVesting )
-then
-{
-  ↑17 U1! LocalState_ι_addVestingOrLock_Л_v ->set ( $ Л_vestingOrLock )
-}
-else
-{
- ↑17 U1! LocalState_ι_addVestingOrLock_Л_l ->set ( $ Л_vestingOrLock )
+declareGlobal LocalState_ι_addVestingOrLock_Л_v :>: ( XMaybe RoundsBase_ι_InvestParams ) ; 
+declareGlobal LocalState_ι_addVestingOrLock_Л_l  :>: ( XMaybe RoundsBase_ι_InvestParams ) ; 
+If ( $ Л_isVesting ) 
+then 
+{ 
+ ↑17 U1! LocalState_ι_addVestingOrLock_Л_v ->set ( $ Л_vestingOrLock ) 
+} 
+else 
+{ 
+ ↑17 U1! LocalState_ι_addVestingOrLock_Л_l ->set ( $ Л_vestingOrLock ) 
 } >> 
-U0! Л_round := $ Л_isFirstPart ? RoundsBase_Ф_getRoundPre0 () ::: RoundsBase_Ф_getRound0 ; 
-U0! Л_participant := ↑17 D2! LocalState_ι_addVestingOrLock_Л_participant ;
-U0!  {( Л_round , Л_participant )} := RoundsBase_Ф__addStakes (! ( $ Л_round) , ( $ Л_participant ) ,
-                                                            ( $ Л_beneficiary ) ,
-                                                            ( $ xInt0 ) , 
-                                                            ( ↑17 D2! LocalState_ι_addVestingOrLock_Л_v ),
-                                                            ( ↑17 D2! LocalState_ι_addVestingOrLock_Л_l )  !) ;
-( ↑17 U1! LocalState_ι_addVestingOrLock_Л_participant := $ Л_participant ) >>                                                            
-$ Л_isFirstPart ? RoundsBase_Ф_setRoundPre0 (! $ Л_round !) ::: RoundsBase_Ф_setRound0 (! $ Л_round !) 
+declareLocal Л_round :>: RoundsBase_ι_Round := $ Л_isFirstPart ? RoundsBase_Ф_getRoundPre0 () ::: RoundsBase_Ф_getRound0 () ; 
+ς U0! Л_participant := ↑17 D2! LocalState_ι_addVestingOrLock_Л_participant ;
+U0! {( Л_round , Л_participant )} := RoundsBase_Ф__addStakes (! ( $ Л_round) , ( $ Л_participant ) , 
+                              ( $ Л_beneficiary ) , 
+                              ( $ xInt0 ) , 
+                              ( ↑17 D2! LocalState_ι_addVestingOrLock_Л_v ), 
+                              ( ↑17 D2! LocalState_ι_addVestingOrLock_Л_l ) !) ; 
+( ↑17 U1! LocalState_ι_addVestingOrLock_Л_participant := $ Л_participant ) >>
+ $ Л_isFirstPart ? RoundsBase_Ф_setRoundPre0 (! $ Л_round !) ::: RoundsBase_Ф_setRound0 (! $ Л_round !) 
 ) ) >> 
-ParticipantBase_Ф__setOrDeleteParticipant (! ($ Л_beneficiary) ,  ↑17 D2! LocalState_ι_addVestingOrLock_Л_participant  !) >>
+ParticipantBase_Ф__setOrDeleteParticipant (! ( $ Л_beneficiary) , ↑17 D2! LocalState_ι_addVestingOrLock_Л_participant !) >> 
 DePoolContract_Ф_sendAcceptAndReturnChange128 (! $ Л_fee !) .		
 
 
+Definition DePoolContract_Ф_addVestingOrLock'_header ( Л_stake : XInteger64 )
+                                                      ( Л_beneficiary : XAddress )
+                                                      ( Л_withdrawalPeriod : XInteger32 )
+                                                      ( Л_totalPeriod : XInteger32 )
+                                                      ( Л_isVesting : XBool ) 
+                                                      
+                                                      : LedgerT (XValueValue True) :=  
+If!! ( ↑ε12 DePoolContract_ι_m_poolClosed ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) 
+ } ; 
+If!! ( ( !¬ ( ( $ Л_beneficiary ) ->isStdAddrWithoutAnyCast() ) ) !| ( $ Л_beneficiary ?== $ xInt0 ) ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_ADDRESS , $ xInt0 !) ) 
+ } ; 
+
+If!! ( ( msg_sender () ) ?== $ Л_beneficiary ) 
+then { 
+ return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_BENEFICIARY , $ xInt0 !) ) 
+ } ; 
+declareLocal Л_msgValue :>: XInteger64 := msg_value () ;
  
+If!! ( $ Л_msgValue ?< ( $ Л_stake !+ ( $ DePool_ι_STAKE_FEE ) ) ) 
+then 
+{ 
+ return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_FEE_TOO_SMALL , 
+                      $ DePool_ι_STAKE_FEE !) ) 
+} ; 
+declareLocal Л_fee :>: XInteger64 := $ Л_msgValue !- $ Л_stake ; 
+declareLocal Л_halfStake :>: XInteger64 := $ Л_stake !/ $ xInt2 ; 
+
+If!! ( $ Л_halfStake ?< ↑12 D2! DePoolContract_ι_m_minStake ) 
+then 
+{ 
+return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_STAKE_TOO_SMALL , $ xInt2 !* ( ↑12 D2! DePoolContract_ι_m_minStake ) !) ) 
+} ; 
+
+If!! ( $ Л_withdrawalPeriod ?> $ Л_totalPeriod ) 
+then 
+{ 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD , $ xInt0 !) ) 
+} ; 
+
+If!! ( $ Л_totalPeriod ?>= ( $ xInt18 !* $ xInt365 !* $ x1_day ) ) 
+then 
+{ 
+return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TOTAL_PERIOD_MORE_18YEARS , $ xInt0 !) ) 
+} ; 
+
+If!! ( $ Л_withdrawalPeriod ?== $ xInt0 ) 
+then 
+{ 
+return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_WITHDRAWAL_PERIOD_IS_ZERO , $ xInt0 !) ) 
+} ; 
+
+If!! ( ( $ Л_totalPeriod !% $ Л_withdrawalPeriod ) ?!= $ xInt0 ) 
+then 
+{ 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD , $ xInt0 !) ) 
+} ; 
+declareLocal Л_participant :>: DePoolLib_ι_Participant := ParticipantBase_Ф_getOrCreateParticipant (! $ Л_beneficiary !) ; 
+If! ( $ Л_isVesting ) 
+then { 
+If! ( $ Л_participant ->> DePoolLib_ι_Participant_ι_haveVesting ) 
+then { 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_VESTING , $ xInt0 !) ) 
+} ; $ I 
+} 
+else 
+{ 
+If! ( $ Л_participant ->> DePoolLib_ι_Participant_ι_haveLock ) 
+then { 
+return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_LOCK , $ xInt0 !) ) 
+} ; $ I 
+} ; 
+declareLocal Л_withdrawalValue :>: XInteger64 := math->muldiv (! $ Л_halfStake , $ Л_withdrawalPeriod , $ Л_totalPeriod !) ; 
+DePoolContract_Ф_addVestingOrLock'_tailer Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary 
+                                          Л_isVesting Л_participant Л_fee  .                                                      
 
 Lemma DePoolContract_Ф_addVestingOrLock'_tailer_exec : forall (Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary: XInteger) 
                                                      (Л_isVesting: XBool)
@@ -143,7 +219,7 @@ let l_setRound0 := exec_state ( ↓ ( RoundsBase_Ф_setRound0 round0' ) ) l_addS
 let l_setOrDeleteParticipant := exec_state ( ↓ ( ParticipantBase_Ф__setOrDeleteParticipant beneficiary participant'' ) ) l_setRound0 in 
 let l_send := exec_state ( ↓ ( DePoolContract_Ф_sendAcceptAndReturnChange128 Л_fee ) ) l_setOrDeleteParticipant in 
 
-exec_state (DePoolContract_Ф_addVestingOrLock'_tailer1 Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary Л_isVesting Л_participant Л_fee) l =                                                     
+exec_state (DePoolContract_Ф_addVestingOrLock'_tailer Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary Л_isVesting Л_participant Л_fee) l =                                                     
 l_send. 
 Proof.
 
@@ -252,96 +328,20 @@ Proof.
             all: pr_numgoals.
 Qed.           
 
+Lemma DePoolContract_Ф_addVestingOrLock'_header_eq: DePoolContract_Ф_addVestingOrLock'_header = DePoolContract_Ф_addVestingOrLock'.
+Proof.
+        auto.
+Qed.        
+
 Opaque Z.eqb.
 
-Definition DePoolContract_Ф_addVestingOrLock'_header ( Л_stake : XInteger64 )
-                                                      ( Л_beneficiary : XAddress )
-                                                      ( Л_withdrawalPeriod : XInteger32 )
-                                                      ( Л_totalPeriod : XInteger32 )
-                                                      ( Л_isVesting : XBool ) 
-                                                      ( f : XInteger -> XInteger -> XInteger -> XInteger -> XInteger -> XBool -> DePoolLib_ι_Participant -> XInteger -> LedgerT True):  
-                                                      LedgerT (XValueValue True) := 
-If!! ( ↑ε12 DePoolContract_ι_m_poolClosed ) 
-then { 
-  return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0  !) )
- } ; 
-If!! ( ( !¬ ( ( $ Л_beneficiary ) ->isStdAddrWithoutAnyCast() ) ) !| ( $ Л_beneficiary ?== $ xInt0 ) ) 
-then {  
-  return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_ADDRESS , $ xInt0  !) )
- } ; 
+Opaque ParticipantBase_Ф_getOrCreateParticipant DePoolContract_Ф_addVestingOrLock'_tailer.
 
-If!! ( ( msg_sender () ) ?== $ Л_beneficiary ) 
-then { 
-  return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_INVALID_BENEFICIARY , $ xInt0  !) )
- } ; 
-     
-U0! Л_msgValue := msg_value () ; 
-If!! ( $ Л_msgValue ?< ( $ Л_stake !+ ( $ DePool_ι_STAKE_FEE ) ) ) 
-then
-{
- return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_FEE_TOO_SMALL , $ DePool_ι_STAKE_FEE !) )
-} ; 
-
-U0! Л_fee := $ Л_msgValue !- $ Л_stake ;
-U0! Л_halfStake := $ Л_stake !/ $ xInt2 ; 
-
-If!! ( $ Л_halfStake ?< ↑12 D2! DePoolContract_ι_m_minStake )
-then
-{
-return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_STAKE_TOO_SMALL , $ xInt2 !* ( ↑12 D2! DePoolContract_ι_m_minStake ) !) )
-} ;  
-
-If!! ( $ Л_withdrawalPeriod ?> $ Л_totalPeriod )
-then
-{
-return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_WITHDRAWAL_PERIOD_GREATER_TOTAL_PERIOD , $ xInt0 !) )
-} ;
-
-If!! ( $ Л_totalPeriod ?>= ( $ xInt18 !* $ xInt365 !* $ x1_day ) )
-then
-{
-return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TOTAL_PERIOD_MORE_18YEARS , $ xInt0 !) )
-} ; 
-
-If!! ( $ Л_withdrawalPeriod ?== $ xInt0 )
-then
-{
-return!!! (DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_WITHDRAWAL_PERIOD_IS_ZERO , $ xInt0 !) )
-} ; 
-
-If!! ( ( $ Л_totalPeriod !% $ Л_withdrawalPeriod ) ?!= $ xInt0 )
-then
-{ 
-return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_TOTAL_PERIOD_IS_NOT_DIVISIBLE_BY_WITHDRAWAL_PERIOD , $ xInt0 !)  )
-} ; 
-
-U0! Л_participant := ParticipantBase_Ф_getOrCreateParticipant (! $ Л_beneficiary !) ;
-If! ( $ Л_isVesting )
-then {
-If! ( $ Л_participant ->> DePoolLib_ι_Participant_ι_haveVesting )
-then {
-return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_VESTING , $ xInt0 !)  )
-} ; $ I
-}
-else
-{
-If! ( $ Л_participant ->> DePoolLib_ι_Participant_ι_haveLock )
-then {
-return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_LOCK , $ xInt0 !) )
-} ; $ I
-} ;
-
-U0! Л_withdrawalValue := math->muldiv (! $ Л_halfStake , $ Л_withdrawalPeriod , $ Л_totalPeriod !) ; 
-   
-f Л_stake Л_halfStake Л_withdrawalPeriod Л_withdrawalValue Л_beneficiary Л_isVesting Л_participant Л_fee.
-
-Opaque ParticipantBase_Ф_getOrCreateParticipant.
 Lemma DePoolContract_Ф_addVestingOrLock'_header_exec : forall ( Л_stake : XInteger64 )
                                                 ( Л_beneficiary : XAddress )
                                                 ( Л_withdrawalPeriod : XInteger32 )
                                                 ( Л_totalPeriod : XInteger32 )
-                                                ( Л_isVesting : XBool )
-                                                ( f : XInteger -> XInteger -> XInteger -> XInteger -> XInteger -> XBool -> DePoolLib_ι_Participant -> XInteger -> LedgerT True )
+                                                ( Л_isVesting : XBool )                                        
                                                 ( l: Ledger ) , 
 
 let if1 : bool := eval_state ( ↑12 ε DePoolContract_ι_m_poolClosed ) l in 
@@ -367,7 +367,7 @@ let if12 : bool := participant ->> DePoolLib_ι_Participant_ι_haveLock  in
 let withdrawalValue :=  halfStake * Л_withdrawalPeriod / Л_totalPeriod  in
 (* let if13 : bool := withdrawalValue =? 0  in *)
 
-exec_state (DePoolContract_Ф_addVestingOrLock'_header Л_stake Л_beneficiary Л_withdrawalPeriod Л_totalPeriod Л_isVesting f) l =
+exec_state (DePoolContract_Ф_addVestingOrLock'_header Л_stake Л_beneficiary Л_withdrawalPeriod Л_totalPeriod Л_isVesting ) l =
 
 if if1 then exec_state ( ↓ ( DePoolContract_Ф__sendError DePool_ι_STATUS_DEPOOL_CLOSED  0 ) ) l else 
         if if2 then exec_state ( ↓ ( DePoolContract_Ф__sendError DePool_ι_STATUS_INVALID_ADDRESS 0 ) ) l else 
@@ -388,7 +388,7 @@ if if1 then exec_state ( ↓ ( DePoolContract_Ф__sendError DePool_ι_STATUS_DEP
                                     DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_VESTING  0 ) ) l_getcreate else
                                         if ((negb if10) && if12)%bool then exec_state ( ↓ ( DePoolContract_Ф__sendError 
                                         DePool_ι_STATUS_PARTICIPANT_ALREADY_HAS_LOCK  0 ) ) l_getcreate else 
-         exec_state (f Л_stake halfStake Л_withdrawalPeriod withdrawalValue Л_beneficiary Л_isVesting participant fee) l_getcreate .
+         exec_state (DePoolContract_Ф_addVestingOrLock'_tailer Л_stake halfStake Л_withdrawalPeriod withdrawalValue Л_beneficiary Л_isVesting participant fee) l_getcreate .
 
 Proof.
         intros.
@@ -399,10 +399,9 @@ Proof.
 
         all: try destructFunction1 ParticipantBase_Ф_getOrCreateParticipant; auto. idtac. 
         all: time repeat destructIf_solve. idtac.
-        all: try destructFunction8 f; auto. 
+        all: try destructFunction8 DePoolContract_Ф_addVestingOrLock'_tailer; auto. 
 Qed.  
  
-
 
 
 Lemma DePoolContract_Ф_addVestingOrLock'_eval : forall ( Л_stake : XInteger64 )

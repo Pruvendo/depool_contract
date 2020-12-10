@@ -21,10 +21,6 @@ Require Import depoolContract.SolidityNotations.
 
 Require Import depoolContract.NewProofs.ProofHelpers.
 Require Import depoolContract.DePoolFunc.
-Module DePoolFuncs := DePoolFuncs XTypesSig StateMonadSig.
-Import DePoolFuncs.
-Import DePoolSpec.
-Import LedgerClass.
 
 (* Set Typeclasses Iterative Deepening.
 Set Typeclasses Depth 100. *)
@@ -35,153 +31,106 @@ Import CommonModelProofs.
 Require Import depoolContract.Lib.Tactics.
 Require Import depoolContract.Lib.ErrorValueProofs.
 Require Import depoolContract.Lib.CommonCommon.
-Require Import depoolContract.Lib.CommonStateProofs.
 
 (* Require Import MultiSigWallet.Proofs.tvmFunctionsProofs. *)
 
 Import DePoolSpec.LedgerClass.SolidityNotations. 
 
-Local Open Scope solidity_scope.
 Local Open Scope struct_scope.
 Local Open Scope Z_scope.
+Local Open Scope solidity_scope.
 Require Import Lists.List.
 Import ListNotations.
 Local Open Scope list_scope.
 
+Require Import depoolContract.DePoolConsts.
+Module DePoolContract_Ф__returnOrReinvest (dc : DePoolConstsTypesSig XTypesSig StateMonadSig).
+Module DePoolFuncs := DePoolFuncs XTypesSig StateMonadSig dc.
+Module ProofHelpers := ProofHelpers dc.
+
+Import dc.
+Import ProofHelpers.
+Import DePoolFuncs.
+Import DePoolSpec.
+Import LedgerClass.
+
 Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.gtb Z.modulo deleteListPair.
 
-Definition DePoolContract_Ф__returnOrReinvest' ( Л_round2 : RoundsBase_ι_Round )
-                                              ( Л_chunkSize : XInteger8 ) 
-                                              : LedgerT ( XErrorValue RoundsBase_ι_Round XInteger ) 
-											  :=    
-( ↑17 U1! LocalState_ι__returnOrReinvest_Л_round2     := $ Л_round2 ) >> 
-tvm_accept ()  >>  
-( ↑↑17 U2!  LocalState_ι__returnOrReinvest_Л_round0     := RoundsBase_Ф_getRound0 () ) >>
- U0! Л_round := ( RoundsBase_Ф_getRound1 () ) ;
- U0! Л_round1ValidatorsElectedFor :=  $ Л_round ->> RoundsBase_ι_Round_ι_validatorsElectedFor ;
-(↑↑17 U2! LocalState_ι__returnOrReinvest_Л_startIndex := $ xInt0 ) >>
-If!! ( !¬ ( ↑17 D1! ( D2! LocalState_ι__returnOrReinvest_Л_round2 ) ^^ 
-                       RoundsBase_ι_Round_ι_isValidatorStakeCompleted ) )
-then 
-{ 
-    ( ↑17 U1!  LocalState_ι__returnOrReinvest_Л_round2 ^^ 
-               RoundsBase_ι_Round_ι_isValidatorStakeCompleted := $ xBoolTrue ) >>
-    U0! Л_optStake := (D1! (↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes)  ->fetch  ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) ; 
-     If! ( ( $ Л_optStake ) ->hasValue ) 
-     then   
-     {
-       U0! Л_stake := ( $ Л_optStake ) ->get ; 
-       ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_startIndex := $ xInt1 ) >>
-       ( ↑↑17 U2!  delete LocalState_ι__returnOrReinvest_Л_round2 ^^ 
-                          RoundsBase_ι_Round_ι_stakes [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] ) >>
- U0! Л_rounds ?:=
-               DePoolContract_Ф__returnOrReinvestForParticipant (!  
-                 ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ,
-                 ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
-                 ↑2 D2! ValidatorBase_ι_m_validatorWallet ,
-                 $ Л_stake ,
-                 $ xBoolTrue ,
-                 $ Л_round1ValidatorsElectedFor !) ;
-( ↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ Л_rounds )
-     } ; $ I  
-} ; 
- 
-do _ ← ( WhileE ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_startIndex ?< $ Л_chunkSize ) !& 
-     ( !¬ ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2  ^^ RoundsBase_ι_Round_ι_stakes) ->empty ) ) )
-do 
-( 
- U0! {( Л_addr , Л_stake)} :=  ↑17 U1! delMin LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes ;
-
-DePoolContract_Ф__returnOrReinvestForParticipant (!  
-                 ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ,
-                 ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
-                 $ Л_addr ,
-                 $ Л_stake ,
-                 $ xBoolFalse , 
-                 $ Л_round1ValidatorsElectedFor !) >>=
-fun ea => xErrorMapDefaultF (fun a => (↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ a ) >> continue! (xValue I)) 
-                    ea (fun er => break! (xError er)))) >>= 
-        fun r => return! (xProdSnd r) ?; 
-
- ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 !) ) >>
-
- ( If ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2  ^^ RoundsBase_ι_Round_ι_stakes ) ->empty )
- then
-{
-	(↑17 U1! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_step := 
-                                             $ RoundsBase_ι_RoundStepP_ι_Completed )  >>
-
-          ->sendMessage {|| 
-               contractFunction := $ DePoolContract_Ф_ticktockF  ,
-			   contractMessage := {||  messageValue := $ DePool_ι_VALUE_FOR_SELF_CALL , 
-			   						   messageBounce := $ xBoolFalse||} ||}  
-        } ) >> 
-return!! ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ) . 
-
-
 Definition DePoolContract_Ф__returnOrReinvest_while (Л_chunkSize Л_round1ValidatorsElectedFor: XInteger) : LedgerT (ErrorValue True XInteger) := 
-( WhileE ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_startIndex ?< $ Л_chunkSize ) !& 
-           ( !¬ ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2  ^^ RoundsBase_ι_Round_ι_stakes) ->empty ) ) )
-do 
-( 
- U0! {( Л_addr , Л_stake)} :=  ↑17 U1! delMin LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes ;
+    ( WhileE ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_startIndex ?< $ Л_chunkSize ) !& 
+    ( !¬ ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes) ->empty ) ) ) 
+ do 
+ ( 
+ declareLocal {( Л_addr :>: XAddress , Л_stake :>: RoundsBase_ι_StakeValue )} := ( ↑17 U1! delMin LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes ) (* ->get *) ; 
+ 
  DePoolContract_Ф__returnOrReinvestForParticipant (!  
-                 ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ,
-                 ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
-                 $ Л_addr ,
-                 $ Л_stake ,
-                 $ xBoolFalse , 
-                 $ Л_round1ValidatorsElectedFor !) >>=
-   fun ea => xErrorMapDefaultF (fun a => (↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ a ) >> continue! (xValue I)) 
-                    ea (fun er => break! (xError er)))) >>= 
-        fun r => return! (xProdSnd r).
+          ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 , 
+          ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
+          $ Л_addr , 
+          $ Л_stake , 
+          $ xBoolFalse , 
+          $ Л_round1ValidatorsElectedFor !) >>= 
+ fun ea => xErrorMapDefaultF (fun a => (↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ a ) >> continue! (xValue I)) 
+           ea (fun er => break! (xError er)))) >>= 
+     fun r => return! (xProdSnd r).
+ 
 
 Definition DePoolContract_Ф__returnOrReinvest_tailer ( Л_chunkSize Л_round1ValidatorsElectedFor: XInteger) : LedgerT (XErrorValue RoundsBase_ι_Round XInteger ) :=
     do _ ← DePoolContract_Ф__returnOrReinvest_while Л_chunkSize Л_round1ValidatorsElectedFor ?; 
     ( RoundsBase_Ф_setRound0 (! ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 !) ) >> 
-    ( If ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2  ^^ RoundsBase_ι_Round_ι_stakes ) ->empty ) then {
-	(↑17 U1! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_step := $ RoundsBase_ι_RoundStepP_ι_Completed )  >>
-          ->sendMessage {|| 
-               contractFunction := $ DePoolContract_Ф_ticktockF  ,
-			   contractMessage := {||  messageValue := $ DePool_ι_VALUE_FOR_SELF_CALL , 
-			   						   messageBounce := $ xBoolFalse||} ||}  
-        } ) >> 
-return!! ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ).
+( If ( ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes ) ->empty ) 
+then 
+{ 
+   (↑17 U1! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_step := 
+                      ξ$ RoundsBase_ι_RoundStepP_ι_Completed ) >> 
+
+    this->sendMessage ( $ DePoolContract_Ф_ticktockF ) with {|| messageValue ::= $ DePool_ι_VALUE_FOR_SELF_CALL , 
+                                       messageBounce ::= $ xBoolFalse||}  
+   } ) >> 
+return!! ( ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ) .
 
 
 
 Definition DePoolContract_Ф__returnOrReinvest_header ( Л_round2 : RoundsBase_ι_Round ) ( Л_chunkSize : XInteger8 ) : LedgerT ( XErrorValue RoundsBase_ι_Round XInteger ) :=    
-( ↑17 U1! LocalState_ι__returnOrReinvest_Л_round2  := $ Л_round2 ) >> 
-(* ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_chunkSize := $ Л_chunkSize ) >>  *)
-tvm_accept ()  >>  
-( ↑↑17 U2!  LocalState_ι__returnOrReinvest_Л_round0     := RoundsBase_Ф_getRound0 () ) >>
- U0! Л_round := ( RoundsBase_Ф_getRound1 () ) ;
- U0! Л_round1ValidatorsElectedFor :=  $ Л_round ->> RoundsBase_ι_Round_ι_validatorsElectedFor ;
 
-(↑↑17 U2! LocalState_ι__returnOrReinvest_Л_startIndex := $ xInt0 ) >>       
-If!! ( !¬ ( ↑17 D1! ( D2! LocalState_ι__returnOrReinvest_Л_round2 ) ^^ RoundsBase_ι_Round_ι_isValidatorStakeCompleted ) )
+( declareInit LocalState_ι__returnOrReinvest_Л_round2   := $ Л_round2 ) >> 
+tvm_accept () >> 
+( declareGlobal! LocalState_ι__returnOrReinvest_Л_round0 :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ) >> 
+ U0! Л_round := ( RoundsBase_Ф_getRound1 () ) ; 
+ declareLocal Л_round1ValidatorsElectedFor :>: XInteger32 :=  $ Л_round ->> RoundsBase_ι_Round_ι_validatorsElectedFor ; 
+( declareGlobal! LocalState_ι__returnOrReinvest_Л_startIndex :>: XInteger := $ xInt0 ) >> 
+If!! ( !¬ ( ↑17 D1! ( D2! LocalState_ι__returnOrReinvest_Л_round2 ) ^^ 
+            RoundsBase_ι_Round_ι_isValidatorStakeCompleted ) ) 
 then 
 { 
-    ( ↑17 U1!  LocalState_ι__returnOrReinvest_Л_round2 ^^  RoundsBase_ι_Round_ι_isValidatorStakeCompleted := $ xBoolTrue ) >>
-    U0! Л_optStake := (D1! (↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes) ->fetch  ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) ;    
-    If! ( ( $ Л_optStake ) ->hasValue )  then  {       
-       U0! Л_stake := ( $ Л_optStake ) ->get ; 
-       ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_startIndex := $ xInt1 ) >>
-       ( ↑↑17 U2!  delete LocalState_ι__returnOrReinvest_Л_round2 ^^ RoundsBase_ι_Round_ι_stakes [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] ) >>       
-       U0! Л_rounds ?:= DePoolContract_Ф__returnOrReinvestForParticipant (!  ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 , 
-                                                                             ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
-                                                                             ↑2 D2! ValidatorBase_ι_m_validatorWallet ,
-                                                                             $ Л_stake ,
-                                                                             $ xBoolTrue ,
-                                                                             $ Л_round1ValidatorsElectedFor !) ;
-      ( ↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ Л_rounds )
-      } ; $ I  
-} ; DePoolContract_Ф__returnOrReinvest_tailer Л_chunkSize Л_round1ValidatorsElectedFor .
+  ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_round2 ^^ 
+        RoundsBase_ι_Round_ι_isValidatorStakeCompleted := $ xBoolTrue ) >> 
+  declareLocal Л_optStake :>: (XMaybe RoundsBase_ι_StakeValue) := (D1! (↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 ^^ 
+                                                                           RoundsBase_ι_Round_ι_stakes) 
+         ->fetch ( ↑2 D2! ValidatorBase_ι_m_validatorWallet ) ) ; 
+   If! ( ( $ Л_optStake ) ->hasValue ) 
+   then  
+   { 
+    declareLocal Л_stake :>: RoundsBase_ι_StakeValue := ( $ Л_optStake ) ->get ; 
+    ( ↑17 U1! LocalState_ι__returnOrReinvest_Л_startIndex := $ xInt1 ) >> 
+    ( ↑↑17 U2! delete LocalState_ι__returnOrReinvest_Л_round2 ^^ 
+             RoundsBase_ι_Round_ι_stakes [[ ↑2 D2! ValidatorBase_ι_m_validatorWallet ]] ) >> 
+    U0! Л_rounds ?:= 
+        DePoolContract_Ф__returnOrReinvestForParticipant (! 
+         ↑17 D2! LocalState_ι__returnOrReinvest_Л_round2 , 
+         ↑17 D2! LocalState_ι__returnOrReinvest_Л_round0 , 
+         ↑2 D2! ValidatorBase_ι_m_validatorWallet , 
+         $ Л_stake , 
+         $ xBoolTrue , 
+         $ Л_round1ValidatorsElectedFor !) ; 
+( ↑17 U1! {( LocalState_ι__returnOrReinvest_Л_round0 , LocalState_ι__returnOrReinvest_Л_round2 )} := $ Л_rounds ) 
+   } ; $ I 
+} ;  DePoolContract_Ф__returnOrReinvest_tailer Л_chunkSize Л_round1ValidatorsElectedFor .
 
 Lemma DePoolContract_Ф__returnOrReinvest_eq: 
-DePoolContract_Ф__returnOrReinvest' = DePoolContract_Ф__returnOrReinvest_header.
+DePoolContract_Ф__returnOrReinvest = DePoolContract_Ф__returnOrReinvest_header.
 Proof.
-    unfold DePoolContract_Ф__returnOrReinvest'.
+    unfold DePoolContract_Ф__returnOrReinvest.
     unfold DePoolContract_Ф__returnOrReinvest_header.
     unfold DePoolContract_Ф__returnOrReinvest_while.
     auto.
@@ -334,7 +283,7 @@ let round2 := if if3 then {$ round2 with (RoundsBase_ι_Round_ι_step, RoundsBas
 let oldMessages := VMState_ι_messages ( Ledger_ι_VMState newl ) in
 let newMessage  := {| contractAddress :=  0 ;
                       contractFunction := DePoolContract_Ф_ticktockF  ;
-                      contractMessage := {| messageValue := DePool_ι_VALUE_FOR_SELF_CALL ;
+                      contractMessage := {| messageValue :=  DePool_ι_VALUE_FOR_SELF_CALL ;
                                             messageFlag  := 0 ; 
                                             messageBounce := false
                                             |} |} in  
@@ -372,7 +321,7 @@ let round2 := if if3 then {$ round2 with (RoundsBase_ι_Round_ι_step, RoundsBas
 let oldMessages := VMState_ι_messages ( Ledger_ι_VMState newl ) in
 let newMessage  := {| contractAddress :=  0 ;
                       contractFunction := DePoolContract_Ф_ticktockF  ;
-                      contractMessage := {| messageValue := $ DePool_ι_VALUE_FOR_SELF_CALL ;
+                      contractMessage := {| messageValue :=  DePool_ι_VALUE_FOR_SELF_CALL ;
                                             messageFlag  := 0 ; 
                                             messageBounce := false
                                             |} |} in  
@@ -393,3 +342,6 @@ Proof.
     Time repeat destructIf_solve2. 
    
 Qed.    
+
+
+End DePoolContract_Ф__returnOrReinvest.

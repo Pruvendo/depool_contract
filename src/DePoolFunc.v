@@ -59,6 +59,7 @@ Notation "'math->muldiv' '(!' a , b , c '!)'" := (do a' ← a; do b' ← b; do c
 Definition intMax (a b: XInteger) := xBoolIfElse (xIntLeb a b) b a. 
 Notation "'math->max' '(!' a , b '!)'" := (do a' ← a; do b' ← b; return! (intMax a' b')) (at level 30, right associativity). 
 
+Notation "'->selfdestruct' a" := (do a' ← a; ↓ selfdestruct a') (at level 20).
 
 Unset Typeclasses Iterative Deepening. 
 Set Typeclasses Depth 10. 
@@ -238,8 +239,13 @@ function roundTimeParams() virtual internal returns (
 *) 
 Definition ConfigParamsBase_Ф_roundTimeParams : LedgerT ( XErrorValue ( XInteger32 # XInteger32 # XInteger32 # XInteger32 ) XInteger ) := 
 returns ( Л_validatorsElectedFor :>: XInteger32 , Л_electionsStartBefore :>: XInteger32 , Л_electionsEndBefore :>: XInteger32 , Л_stakeHeldFor :>: XInteger32 ) >>
+<<<<<<< HEAD
+declareLocal Л_ok :>: XBool ; 
+U0! {( Л_validatorsElectedFor , Л_electionsStartBefore , Л_electionsEndBefore , Л_stakeHeldFor , Л_ok )} := tvm_configParam_15; 
+=======
 declareLocal Л_ok :>: XBool ;
   U0! {( Л_validatorsElectedFor , Л_electionsStartBefore , Л_electionsEndBefore , Л_stakeHeldFor , Л_ok )} := tvm_configParam_15; 
+>>>>>>> 5c5e0757fc6242a2de005162d5c9b0c126a3de1c
   Require {{ $ Л_ok , ξ$ InternalErrors_ι_ERROR509 }} ; 
 ς return# ( $ Л_validatorsElectedFor, $ Л_electionsStartBefore, $ Л_electionsEndBefore, $ Л_stakeHeldFor ). 
  
@@ -1161,8 +1167,8 @@ constructor(
 
 *) 
 
-Notation " 'initial' x " := ( x )(at level 71, left associativity, only parsing ) : solidity_scope.
-Notation " 'New' x " := ( x )(at level 71, left associativity, only parsing ) : solidity_scope. 
+Notation " 'initial' x " := ( x ) (at level 71, left associativity, only parsing ) : solidity_scope.
+Notation " 'New' x " := ( x ) (at level 71, left associativity, only parsing ) : solidity_scope. 
 
 (* address proxy = 
       new DePoolProxyContract{ 
@@ -1171,19 +1177,19 @@ Notation " 'New' x " := ( x )(at level 71, left associativity, only parsing ) : 
         stateInit: stateInit 
       }();  *)
 
-Notation " 'address' 'LocalState_ι_constructor6_Л_proxy' '=' 'new' 'DePoolProxyContract' '{' 'wid' ':' wid ',' 'value' ':' value ',' 'stateInit' ':' stateInit " :=
+(* Notation "  zhopa var '=' 'new DePoolProxyContract' '{' 'wid' ':' wid ',' 'value' ':' value ',' 'stateInit' ':' stateInit '}' " :=
 ( ↓ tvm_newE DePoolProxyContractD ( {|| cmessage_wid ::= wid , 
                    cmessage_value ::= value , 
                    cmessage_stateInit ::= stateInit ||} ) 
                    DePoolProxyContract_Ф_constructor5 >>= 
-      fun ea => xErrorMapDefaultF (fun a => (↑17 U1! LocalState_ι_constructor6_Л_proxy := $ a) >> continue! (xValue I)) 
+      fun ea => xErrorMapDefaultF (fun a => (↑17 U1! var := $ a) >> continue! (xValue I)) 
           ea (fun er => break! (xError er)) ?>>                       
-  ( (↑↑3 U2! ProxyBase_ι_m_proxies push (↑17 D2! LocalState_ι_constructor6_Л_proxy) ) >> continue! (xValue I) ) )
-(at level 71, left associativity, only parsing ) : solidity_scope.
+  ( (↑↑3 U2! ProxyBase_ι_m_proxies push (↑17 D2! var) ) >> continue! (xValue I) ) )
+(at level 71, left associativity, only parsing ) : solidity_scope. *)
 
 Definition DePoolContract_Ф_Constructor6 ( Л_minStake : XInteger64 ) ( Л_validatorAssurance : XInteger64 ) ( Л_proxyCode : TvmCell ) ( Л_validatorWallet : XAddress ) ( Л_participantRewardFraction : XInteger8 ) : LedgerT ( XErrorValue True XInteger ) := 
     (* ValidatorBase(validatorWallet)  *)
-   New ValidatorBase_Ф_Constructor2 (! $ Л_validatorWallet !) >> 
+  New ValidatorBase_Ф_Constructor2 (! $ Л_validatorWallet !) >> 
 
   initial ( ↑11 U1! RoundsBase_ι_m_roundQty := $ xInt0 ) >>
   (* require(address(this).wid == 0, Errors.NOT_WORKCHAIN0); *) 
@@ -1248,10 +1254,9 @@ Definition DePoolContract_Ф_Constructor6 ( Л_minStake : XInteger64 ) ( Л_vali
 
   declareGlobal LocalState_ι_constructor6_Л_proxy :>: XAddress ; 
 
-address LocalState_ι_constructor6_Л_proxy = new DePoolProxyContract { wid : $ xInt0 !- $ xInt1 , value : ξ$ DePoolLib_ι_MIN_PROXY_BALANCE !+ 
-                     ξ$ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE , stateInit : $ Л_stateInit
+ (* LocalState_ι_constructor6_Л_proxy = new DePoolProxyContract { wid : $ xInt0 !- $ xInt1 , value : ξ$ DePoolLib_ι_MIN_PROXY_BALANCE !+ ξ$ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE , stateInit : $ Л_stateInit } *)
 
-(**  tvm_newE DePoolProxyContractD ( {|| cmessage_wid ::= $ xInt0 !- $ xInt1 , 
+  tvm_newE DePoolProxyContractD ( {|| cmessage_wid ::= $ xInt0 !- $ xInt1 , 
                    cmessage_value ::= ξ$ DePoolLib_ι_MIN_PROXY_BALANCE !+ 
                      ξ$ DePoolLib_ι_PROXY_CONSTRUCTOR_FEE , 
                    cmessage_stateInit ::= $ Л_stateInit ||} ) DePoolProxyContract_Ф_constructor5 >>= 
@@ -1260,7 +1265,7 @@ address LocalState_ι_constructor6_Л_proxy = new DePoolProxyContract { wid : $ 
                           (fun er => break! (xError er)) ?>>                       
   (  (↑↑3 U2! ProxyBase_ι_m_proxies push (↑17 D2! LocalState_ι_constructor6_Л_proxy)) >> 
     continue! (xValue I))                 
- *)  ) >>= fun r => return! (xProdSnd r) ) ??; 
+   ) >>= fun r => return! (xProdSnd r) ) ??; 
 
 (*m_poolClosed = false;*) 
 (↑12 U1! DePoolContract_ι_m_poolClosed := $ xBoolFalse) >> 
@@ -2469,6 +2474,7 @@ else
 } >> 
          (* Round round = isFirstPart ? getRoundPre0() : getRound0(); *) 
 declareLocal Л_round :>: RoundsBase_ι_Round := $ Л_isFirstPart ? RoundsBase_Ф_getRoundPre0 () ::: RoundsBase_Ф_getRound0 () ; 
+ς U0! Л_participant := ↑17 D2! LocalState_ι_addVestingOrLock_Л_participant ;
          (* (round, participant) = _addStakes(round, participant, beneficiary, 0, v, l); *)
 U0! {( Л_round , Л_participant )} := RoundsBase_Ф__addStakes (! ( $ Л_round) , ( $ Л_participant ) , 
                               ( $ Л_beneficiary ) , 

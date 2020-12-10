@@ -87,5 +87,35 @@ eval_state ( ↓ DePoolContract_Ф_addVestingOrLock Л_stake Л_beneficiary Л_w
   destructFunction5 DePoolContract_Ф_addVestingOrLock; auto. 
 Qed. 
  
+Lemma DePoolContract_Ф_addVestingStake_exec : forall ( Л_stake : XInteger64 )
+                                                   (Л_beneficiary: XAddress)
+										                               (Л_withdrawalPeriod: XInteger32)
+										                               (Л_totalPeriod: XInteger32)
+                                                   (l: Ledger) , 
+exec_state ( ↓ DePoolContract_Ф_addVestingStake Л_stake Л_beneficiary Л_withdrawalPeriod Л_totalPeriod ) l = 
+exec_state ( ↓ DePoolContract_Ф_addVestingOrLock Л_stake Л_beneficiary Л_withdrawalPeriod Л_totalPeriod xBoolTrue ) l .  
+ Proof. 
+  intros.
+  destructLedger l. 
+  compute.
+
+  destructFunction5 DePoolContract_Ф_addVestingOrLock; auto. 
+ Qed. 
+ 
+ Lemma DePoolContract_Ф_addVesingStake_eval : forall ( Л_stake : XInteger64 )
+                                                   (Л_beneficiary: XAddress)
+										                               (Л_withdrawalPeriod: XInteger32)
+										                               (Л_totalPeriod: XInteger32)
+                                                   (l: Ledger) ,
+eval_state ( ↓ DePoolContract_Ф_addVestingStake Л_stake Л_beneficiary Л_withdrawalPeriod Л_totalPeriod )  l = 
+eval_state ( ↓ DePoolContract_Ф_addVestingOrLock Л_stake Л_beneficiary Л_withdrawalPeriod Л_totalPeriod xBoolTrue )  l .  
+ Proof. 
+  intros.
+  destructLedger l. 
+  compute.
+
+  destructFunction5 DePoolContract_Ф_addVestingOrLock; auto. 
+Qed. 
+
 
 End DePoolContract_Ф_addLockStake.
