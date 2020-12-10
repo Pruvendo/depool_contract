@@ -1,0 +1,3 @@
+[submodule "coq-finproof-base"]
+	path = coq-finproof-base
+	url = https://github.com/Pruvendo/coq-finproof-base
