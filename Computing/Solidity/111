@@ -1,0 +1,786 @@
+Definition AcceptBase_Ф_Constructor1 : AcceptBase True := { 
+ 	 ; 
+ 	 tvm_accept ( ) ; 
+ 	 } 
+ 	 
+
+Definition OwnerBase_Ф_Constructor2 ( Л_poolOwnerAddr : XAddress ) : OwnerBase True := { 
+ 	 OwnerBase_ι_m_owner = OwnerBase_ι_Owner ( Л_poolOwnerAddr , xInt0 ) ; 
+ 	 } 
+ 	 
+
+Definition OwnerBase_Ф_withdrawOwnerReward ( Л_amount : XInteger64 ) : OwnerBase True := { 
+ 	 require ( msg.sender == t0 , xInt106 ) ; 
+ 	 require ( Л_amount <= t1 , xInt105 ) ; 
+ 	 t2 -= Л_amount ; 
+ 	 t3 . transfer ( Л_amount , true , xInt3 ) ; 
+ 	 } 
+ 	 
+
+Definition OwnerBase_Ф__increaseOwnerReward ( Л_ownerReward : XInteger64 ) : OwnerBase True := { 
+ 	 t4 += Л_ownerReward ; 
+ 	 } 
+ 	 
+
+Definition ElectorBase_Ф_Constructor3 ( Л_electorAddr : XAddress ) : ElectorBase True := { 
+ 	 ElectorBase_ι_m_elector = Л_electorAddr ; 
+ 	 } 
+ 	 
+
+Definition ElectorBase_Ф__recoverStakes : ElectorBase True := { 
+ 	 t5 . t6 ( xInt0 ) ; 
+ 	 } 
+ 	 
+
+Definition ElectorBase_Ф__recoverStakeRewards : ElectorBase True := { 
+ 	 t7 . t8 ( xInt1 ) ; 
+ 	 } 
+ 	 
+
+Definition ElectorBase_Ф__recoverPendingRoundStakes ( Л_pendingId : XInteger32 ) : ElectorBase True := { 
+ 	 t9 . t10 ( Л_pendingId ) ; 
+ 	 } 
+ 	 
+
+Definition ElectorBase_Ф__runForElection ( Л_req : ι_Request )( Л_nodeStake : XInteger64 ) : ElectorBase True := { 
+ 	 t11 . t12 ( Л_nodeStake + 1e9 + 2*1e7 ) ( t13 , t14 , t15 , t16 , t17 , t18 ) ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__getFreezingPeriod : ElectionParams XInteger32 := { 
+ 	 return ElectionParams_ι_m_electedFor + ElectionParams_ι_m_heldFor ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__getNextElectionId : ElectionParams XInteger32 := { 
+ 	 ( , , Л_utime_until , , , , , Л_ok ) = t19 ; 
+ 	 if ( ! Л_ok ) { 
+ 	 Л_offset = ( ( t20 - ( ElectionParams_ι_m_electAt - ElectionParams_ι_m_beginBefore ) ) / ElectionParams_ι_m_electedFor + xInt1 ) * ElectionParams_ι_m_electedFor ; 
+ 	 Л_utime_until = ElectionParams_ι_m_electAt + Л_offset ; 
+ 	 } 
+ 	 return Л_utime_until ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__getElectionsStart : ElectionParams XInteger32 := { 
+ 	 return ElectionParams_ι_m_electAt - ElectionParams_ι_m_beginBefore ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__getElectAt : ElectionParams XInteger32 := { 
+ 	 return ElectionParams_ι_m_electAt ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__isElectionOver ( Л_currentElectAt : XInteger32 ) : ElectionParams XBool := { 
+ 	 return now > ( Л_currentElectAt - ElectionParams_ι_m_endBefore ) ; 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__stakeholderExists ( Л_addr : XAddress ) : StakeholderBase XBool := { 
+ 	 return t21 ; 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__getStakeholder ( Л_addr : XAddress ) : StakeholderBase ι_Stakeholder := { 
+ 	 return t22 ; 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__stakeholderUpdateStake ( Л_addr : XAddress )( Л_totalStake : XInteger64 )( Л_reinvest : XBool ) : StakeholderBase True := { 
+ 	 Л_user = t23 ; 
+ 	 t24 = Л_reinvest ; 
+ 	 t25 += Л_totalStake ; 
+ 	 t26 = Л_user ; 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__stakeholderRemoveStake ( Л_addr : XAddress )( Л_removedStake : XInteger64 )( Л_unusedStake : XInteger64 ) : StakeholderBase True := { 
+ 	 Л_stakeholder = t27 ; 
+ 	 t28 -= Л_removedStake ; 
+ 	 t29 -= Л_unusedStake ; 
+ 	 if ( t30 == xInt0 ) { 
+ 	 ( ↑ <! StakeholderBase_ι_m_stakeholders --> ( delete! Л_addr ) !> ) >> 
+ 	 } 
+ 	 else { 
+ 	 t31 = Л_stakeholder ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__stakeholderSetReivest ( Л_addr : XAddress )( Л_flag : XBool ) : StakeholderBase True := { 
+ 	 t32 = Л_flag ; 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__stakeholderUpdateReward ( Л_addr : XAddress )( Л_reward : XInteger64 )( Л_fee : XInteger64 ) : StakeholderBase True := { 
+ 	 Л_stakeholder = t33 ; 
+ 	 t34 += Л_reward - Л_fee ; 
+ 	 t35 += Л_reward ; 
+ 	 t36 = Л_stakeholder ; 
+ 	 } 
+ 	 
+
+Definition StakeholderBase_Ф__stakeholderUpdateUnusedStake ( Л_addr : XAddress )( Л_add : XInteger64 )( Л_remove : XInteger64 ) : StakeholderBase True := { 
+ 	 Л_stake = t37 ; 
+ 	 Л_stake += Л_add ; 
+ 	 Л_stake -= Л_remove ; 
+ 	 t38 = Л_stake ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__getRoundsInfo : RoundsBase ι_М_RoundInfo := { 
+ 	 ( Л_index , Л_round , Л_ok ) = t39 ( ) ; 
+ 	 while ( Л_ok ) { 
+ 	 t40 ( RoundsBase_ι_RoundInfo ( t41 , t42 , t43 , t44 , t45 , t46 , t47 , t48 ) ) ; 
+ 	 ( Л_index , Л_round , Л_ok ) = t49 ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__getLastRoundIdx : RoundsBase XInteger64 := { 
+ 	 return RoundsBase_ι_m_startIdx + RoundsBase_ι_m_roundsCount - xInt1 ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__addNewPoolingRound ( Л_validationStart : XInteger32 )( Л_validationPeriod : XInteger32 ) : RoundsBase True := { 
+ 	 RoundsBase_ι_m_rounds [ RoundsBase_ι_m_startIdx + RoundsBase_ι_m_roundsCount ] = RoundsBase_ι_Round ( { 
+ 	 RoundsBase_ι_Round_ι_id : Л_validationStart , RoundsBase_ι_Round_ι_step : RoundsBase_ι_STEP_POOLING , RoundsBase_ι_Round_ι_count : xInt0 , StakeholderBase_ι_Stakeholder_ι_totalStake : xInt0 , RoundsBase_ι_Round_ι_rewards : xInt0 , RoundsBase_ι_Round_ι_unused : xInt0 , RoundsBase_ι_Round_ι_completionStatus : RoundsBase_ι_ROUND_UNDEFINED , RoundsBase_ι_Round_ι_start : t50 , RoundsBase_ι_Round_ι_end : Л_validationStart + Л_validationPeriod } 
+ 	 ) ; 
+ 	 RoundsBase_ι_m_roundsCount ++ ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__getRoundsCount : RoundsBase XInteger8 := { 
+ 	 return RoundsBase_ι_m_roundsCount ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__removeOldestRound : RoundsBase ι_Round := { 
+ 	 rounds = RoundsBase_ι_m_rounds ; 
+ 	 Л_offset = RoundsBase_ι_m_startIdx ; 
+ 	 Л_removingRound = t51 ; 
+ 	 ( ↑ <! rounds --> ( delete! Л_offset ) !> ) >> 
+ 	 RoundsBase_ι_m_rounds = rounds ; 
+ 	 RoundsBase_ι_m_startIdx ++ ; 
+ 	 RoundsBase_ι_m_roundsCount -- ; 
+ 	 return Л_removingRound ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__getOldestRound : RoundsBase ι_Round := { 
+ 	 return t52 ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__setOldestRound ( Л_round : ι_Round ) : RoundsBase True := { 
+ 	 t53 = Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__roundAddStake ( Л_round : ι_Round )( Л_addr : XAddress )( Л_stake : XInteger64 ) : RoundsBase ι_Round := { 
+ 	 if ( ! t54 . t55 ) { 
+ 	 t56 ++ ; 
+ 	 } 
+ 	 t57 += Л_stake ; 
+ 	 t58 [ Л_addr ] += Л_stake ; 
+ 	 return Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__roundSetStake ( Л_round : ι_Round )( Л_addr : XAddress )( Л_endStake : XInteger64 ) : RoundsBase ι_Round := { 
+ 	 if ( Л_endStake == xInt0 ) { 
+ 	 t59 -- ; 
+ 	 ( ↑ <! Л_round ^^ RoundsBase_ι_Round_ι_stakes --> ( delete! Л_addr ) !> ) >> 
+ 	 } 
+ 	 else { 
+ 	 t60 [ Л_addr ] = Л_endStake ; 
+ 	 } 
+ 	 return Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__cleanupPendingRounds : RoundsBase True := { 
+ 	 pendings = RoundsBase_ι_m_pendingRounds ; 
+ 	 ( Л_id , Л_round , Л_ok ) = t61 ( ) ; 
+ 	 while ( Л_ok ) { 
+ 	 if ( ( t62 > Л_id ) && ( t63 - Л_id > xInt86400 * xInt7 ) ) { 
+ 	 ( ↑ <! RoundsBase_ι_m_pendingRounds --> ( delete! Л_id ) !> ) >> 
+ 	 Л_ok = false ; 
+ 	 } 
+ 	 else { 
+ 	 ( Л_id , Л_round , Л_ok ) = t64 ; 
+ 	 } 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__addPendingRound ( Л_round : ι_Round ) : RoundsBase True := { 
+ 	 RoundsBase_ι_m_pendingRounds [ t65 ] = Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__removePendingRound ( Л_pendingId : XInteger32 ) : RoundsBase XBool # ι_Round := { 
+ 	 ( exists , round ) = t66 ; 
+ 	 if ( exists ) { 
+ 	 ( ↑ <! RoundsBase_ι_m_pendingRounds --> ( delete! Л_pendingId ) !> ) >> 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__updatePendingRound ( Л_round : ι_Round ) : RoundsBase True := { 
+ 	 if ( t67 == RoundsBase_ι_STEP_COMPLETED ) { 
+ 	 ( <-^l Л_round ^^ RoundsBase_ι_Round_ι_id ) >>= ->l i in 
+ 	 
+ ( ↑ <! RoundsBase_ι_m_pendingRounds --> ( delete! i ) !> ) >> 
+ 	 } 
+ 	 else { 
+ 	 RoundsBase_ι_m_pendingRounds [ t68 ] = Л_round ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__deletePendingRound ( Л_round : ι_Round ) : RoundsBase True := { 
+ 	 ( <-^l Л_round ^^ RoundsBase_ι_Round_ι_id ) >>= ->l i in 
+ 	 
+ ( ↑ <! RoundsBase_ι_m_pendingRounds --> ( delete! i ) !> ) >> 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__returnGrams : StakingContract True := { 
+ 	 msg.sender.transfer ( xInt0 , true , xInt64 ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__calcLastRoundInterest ( Л_totalStake : XInteger64 )( Л_rewards : XInteger64 ) : StakingContract XInteger64 := { 
+ 	 return ( Л_totalStake != xInt0 ) ? uint64 ( ( Л_rewards * xInt100 * 1e9 ) / Л_totalStake ) : xInt0 ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__addRequest ( Л_stakeAt : XInteger32 )( Л_request : ι_Request ) : StakingContract True := { 
+ 	 require ( ! t69 , xInt112 ) ; 
+ 	 t70 = Л_request ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__recalcStakeAndFees ( Л_stake : XInteger64 )( Л_reward : XInteger64 )( Л_roundStake : XInteger64 )( Л_roundRewards : XInteger64 ) : StakingContract XInteger64 # XInteger64 := { 
+ 	 if ( StakingContract_ι_NOTIFY_FEE < Л_stake + Л_reward ) { 
+ 	 if ( Л_reward != xInt0 && StakingContract_ι_NOTIFY_FEE > Л_reward ) { 
+ 	 StakingContract_ι_m_minStake = uint64 ( ( Л_roundStake * StakingContract_ι_NOTIFY_FEE ) / Л_roundRewards ) ; 
+ 	 } 
+ 	 return ( Л_stake + Л_reward - StakingContract_ι_NOTIFY_FEE , StakingContract_ι_NOTIFY_FEE ) ; 
+ 	 } 
+ 	 else { 
+ 	 return ( xInt0 , Л_stake + Л_reward ) ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_Constructor5 ( Л_electorAddr : XAddress )( Л_poolOwnerAddr : XAddress )( Л_electionId : XInteger32 )( Л_nodeWallet : XAddress )( Л_beginBefore : XInteger32 )( Л_endBefore : XInteger32 )( Л_heldFor : XInteger32 )( Л_electedFor : XInteger32 )( Л_minStake : XInteger64 )( Л_minRoundStake : XInteger64 )( Л_maxRoundStake : XInteger64 ) : StakingContract True := { 
+ 	 StakingContract_ι_m_minStake = Л_minStake ; 
+ 	 StakingContract_ι_m_minRoundStake = Л_minRoundStake ; 
+ 	 StakingContract_ι_m_maxRoundStake = Л_maxRoundStake ; 
+ 	 StakingContract_ι_m_poolClosed = false ; 
+ 	 = StakingContract_ι_Node ( Л_nodeWallet , xInt3 * xInt65536 , xInt0 ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_receiveConfirmation ( Л_queryId : XInteger64 )( Л_comment : XInteger32 ) : StakingContract True := { 
+ 	 require ( msg.sender == ElectorBase_ι_m_elector , xInt107 ) ; 
+ 	 require ( Л_comment == xInt0 , xInt110 ) ; 
+ 	 require ( Л_queryId >= xInt0 , xInt110 ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_getOwnerReward : StakingContract XInteger64 := { 
+ 	 OwnerBase_ι_Owner_ι_reward = t71 ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_getMinStake : StakingContract XInteger64 := { 
+ 	 minStake = StakingContract_ι_m_minStake ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__getStakingPeriod : ElectionParams XInteger32 := { 
+ 	 return ElectionParams_ι_m_electedFor + ElectionParams_ι_m_beginBefore + ElectionParams_Ф__getFreezingPeriod ( ) ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__isRoundUnfrozen ( Л_oldestRoundId : XInteger32 ) : ElectionParams XBool := { 
+ 	 return now > ( Л_oldestRoundId + t72 ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф__getNextElectAt : ElectionParams XInteger32 := { 
+ 	 Л_nextElectAt = ElectionParams_Ф__getNextElectionId ( ) ; 
+ 	 if ( now >= Л_nextElectAt - ElectionParams_ι_m_beginBefore ) { 
+ 	 Л_nextElectAt += ElectionParams_ι_m_electedFor ; 
+ 	 } 
+ 	 ElectionParams_ι_m_electAt = Л_nextElectAt ; 
+ 	 return Л_nextElectAt ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__getLastRound : RoundsBase ι_Round := { 
+ 	 ( Л_exists , Л_round ) = t73 ( t74 ; 
+ 	 require ( Л_exists , xInt200 ) ; 
+ 	 return Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__setLastRound ( Л_round : ι_Round ) : RoundsBase True := { 
+ 	 RoundsBase_ι_m_rounds [ RoundsBase_Ф__getLastRoundIdx ( ) ] = Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__getPenultimateRound : RoundsBase ι_Round := { 
+ 	 return RoundsBase_ι_m_rounds [ RoundsBase_Ф__getLastRoundIdx ( ) - xInt1 ] ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__setPenultimateRound ( Л_round : ι_Round ) : RoundsBase True := { 
+ 	 RoundsBase_ι_m_rounds [ RoundsBase_Ф__getLastRoundIdx ( ) - xInt1 ] = Л_round ; 
+ 	 } 
+ 	 
+
+Definition RoundsBase_Ф__roundInvestStake ( Л_addr : XAddress )( Л_stake : XInteger64 ) : RoundsBase ι_Round := { 
+ 	 RoundsBase_Ф__setLastRound ( RoundsBase_Ф__roundAddStake ( RoundsBase_Ф__getLastRound ( ) , Л_addr , Л_stake ) ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__addNewRound : StakingContract True := { 
+ 	 RoundsBase_Ф__addNewPoolingRound ( ElectionParams_Ф__getNextElectAt ( ) , t75 ; 
+ 	 if ( RoundsBase_Ф__getRoundsCount ( ) > xInt4 ) { 
+ 	 Л_removingRound = RoundsBase_Ф__removeOldestRound ( ) ; 
+ 	 ( <-^l Л_removingRound ^^ RoundsBase_ι_Round_ι_id ) >>= ->l i in 
+ 	 
+ ( ↑ <! StakingContract_ι_m_requests --> ( delete! i ) !> ) >> 
+ 	 if ( t76 == RoundsBase_ι_STEP_WAITING_ELECTION_RESULTS ) { 
+ 	 t77 ; 
+ 	 ElectorBase_Ф__recoverPendingRoundStakes ( t78 ) ; 
+ 	 } 
+ 	 } 
+ 	 if ( RoundsBase_Ф__getRoundsCount ( ) > xInt1 ) { 
+ 	 RoundsBase_Ф__setPenultimateRound ( StakingContract_Ф__requestStakesSigning ( t79 ) ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__checkPenultimateRound : StakingContract XBool := { 
+ 	 Л_lb1Round = RoundsBase_Ф__getPenultimateRound ( ) ; 
+ 	 if ( now > t80 ) { 
+ 	 if ( t81 < RoundsBase_ι_STEP_ELECTIONS ) { 
+ 	 RoundsBase_Ф__setPenultimateRound ( StakingContract_Ф__completeRound2 ( Л_lb1Round , RoundsBase_ι_ROUND_MISSED_ELECTIONS ) ) ; 
+ 	 return true ; 
+ 	 } 
+ 	 if ( t82 < RoundsBase_ι_STEP_WAITING_ELECTION_RESULTS ) { 
+ 	 ElectorBase_Ф__recoverStakes ( ) ; 
+ 	 t83 = RoundsBase_ι_STEP_WAITING_ELECTION_RESULTS ; 
+ 	 t84 ; 
+ 	 return true ; 
+ 	 } 
+ 	 } 
+ 	 return false ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__checkOldestRound : StakingContract XBool := { 
+ 	 Л_oldestRound = RoundsBase_Ф__getOldestRound ( ) ; 
+ 	 if ( ElectionParams_Ф__isRoundUnfrozen ( t85 ) ) { 
+ 	 if ( t86 == RoundsBase_ι_STEP_WAITING_ELECTION_RESULTS ) { 
+ 	 ElectorBase_Ф__recoverStakeRewards ( ) ; 
+ 	 t87 = RoundsBase_ι_STEP_WAITING_UNFREEZE ; 
+ 	 t88 ; 
+ 	 return true ; 
+ 	 } 
+ 	 } 
+ 	 return false ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__returnError ( Л_errcode : XInteger32 )( Л_amount : XInteger64 )( Л_comment : XInteger64 ) : StakingContract True := { 
+ 	 t89 . t90 . flag ( Л_amount == xInt0 ? xInt64 : xInt3 ) ( Л_errcode , Л_comment ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__returnConfirmation ( Л_fee : XInteger64 ) : StakingContract True := { 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_SUCCESS , StakingContract_ι_ANSWER_MSG_FEE , Л_fee ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__investStake ( Л_addr : XAddress )( Л_fromUnused : XBool )( Л_unusedStake : XInteger64 )( Л_newStake : XInteger64 )( Л_reinvest : XBool ) : StakingContract XBool := { 
+ 	 Л_stakeholder = t91 ; 
+ 	 if ( Л_unusedStake == xInt0 || Л_unusedStake > t92 ) { 
+ 	 Л_unusedStake = t93 ; 
+ 	 } 
+ 	 Л_investStake = Л_fromUnused ? Л_unusedStake + Л_newStake : Л_newStake ; 
+ 	 Л_round = RoundsBase_Ф__getLastRound ( ) ; 
+ 	 if ( t94 + Л_investStake > StakingContract_ι_m_maxRoundStake ) { 
+ 	 return false ; 
+ 	 } 
+ 	 RoundsBase_Ф__roundInvestStake ( Л_addr , Л_investStake ) ; 
+ 	 StakeholderBase_Ф__stakeholderUpdateUnusedStake ( Л_addr , xInt0 , Л_unusedStake ) ; 
+ 	 if ( Л_newStake > xInt0 ) { 
+ 	 StakeholderBase_Ф__stakeholderUpdateStake ( Л_addr , Л_newStake , Л_reinvest ) ; 
+ 	 } 
+ 	 else { 
+ 	 StakeholderBase_Ф__stakeholderSetReivest ( Л_addr , Л_reinvest ) ; 
+ 	 } 
+ 	 return true ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__requestStakesSigning ( Л_round : ι_Round ) : StakingContract ι_Round := { 
+ 	 Л_roundStake = t95 ; 
+ 	 Л_currentElectAt = t96 ; 
+ 	 Л_roundStakeCheck = Л_roundStake >= StakingContract_ι_m_minRoundStake ; 
+ 	 Л_nodeStakeCheck = t97 [ t98 ] >= ( StakingContract_ι_m_minRoundStake * StakingContract_ι_NODE_WALLET_MIN_STAKE ) / xInt100 ; 
+ 	 Л_canParticipate = ! t99 && Л_roundStakeCheck && Л_nodeStakeCheck ; 
+ 	 if ( Л_canParticipate ) { 
+ 	 t100 = Л_roundStake ; 
+ 	 emit t101 ; 
+ 	 ( Л_exists , Л_request ) = t102 ; 
+ 	 if ( Л_exists ) { 
+ 	 t103 = RoundsBase_ι_STEP_ELECTIONS ; 
+ 	 ElectorBase_Ф__runForElection ( Л_request , Л_roundStake ) ; 
+ 	 } 
+ 	 else { 
+ 	 t104 = RoundsBase_ι_STEP_WAITING_REQUESTS ; 
+ 	 } 
+ 	 } 
+ 	 else { 
+ 	 Л_completionStatus = ! Л_roundStakeCheck ? RoundsBase_ι_ROUND_NOT_ENOUGH_TOTAL_STAKE : RoundsBase_ι_ROUND_NODE_STAKE_TOO_SMALL ; 
+ 	 Л_round = StakingContract_Ф__completeRound2 ( Л_round , Л_completionStatus ) ; 
+ 	 } 
+ 	 return Л_round ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__acceptPendingRoundStake ( Л_pendingId : XInteger32 ) : StakingContract True := { 
+ 	 ( Л_exists , Л_round ) = t105 ; 
+ 	 if ( Л_exists ) { 
+ 	 StakingContract_Ф__completeRound2 ( Л_round , RoundsBase_ι_ROUND_RECEIVED_REWARD ) ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__acceptUnusedStake : StakingContract True := { 
+ 	 Л_lb1round = RoundsBase_Ф__getPenultimateRound ( ) ; 
+ 	 if ( msg.value >= t106 ) { 
+ 	 Л_lb1round = StakingContract_Ф__completeRound2 ( Л_lb1round , RoundsBase_ι_ROUND_LOST_ELECTIONS ) ; 
+ 	 StakingContract_ι_m_minRoundStake += StakingContract_ι_m_minRoundStake / xInt4 ; 
+ 	 } 
+ 	 else { 
+ 	 t107 = t108 ; 
+ 	 StakingContract_ι_m_minRoundStake = t109 - t110 + StakingContract_ι_ROUND_UP_VALUE ; 
+ 	 } 
+ 	 t111 ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__acceptRewardStake : StakingContract True := { 
+ 	 Л_oldestRound = RoundsBase_Ф__getOldestRound ( ) ; 
+ 	 Л_roundStake = t112 - t113 ; 
+ 	 Л_totalReward = xInt0 ; 
+ 	 if ( t114 >= Л_roundStake ) { 
+ 	 Л_totalReward = t115 - Л_roundStake ; 
+ 	 } 
+ 	 Л_roundReward = uint64 ( ( Л_totalReward * StakingContract_ι_NOM_FRACTION ) / xInt100 ) ; 
+ 	 Л_ownerReward = uint64 ( ( Л_totalReward * StakingContract_ι_NODE_FRACTION ) / xInt100 ) ; 
+ 	 t116 ; 
+ 	 t117 = Л_roundReward ; 
+ 	 StakingContract_ι_m_lastRoundInterest = StakingContract_Ф__calcLastRoundInterest ( Л_roundStake , Л_roundReward ) ; 
+ 	 RoundsBase_Ф__setOldestRound ( StakingContract_Ф__completeRound2 ( Л_oldestRound , RoundsBase_ι_ROUND_RECEIVED_REWARD ) ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__completeRound ( Л_completedRound : ι_Round )( Л_forcePending : XBool ) : StakingContract ι_Round := { 
+ 	 t118 = RoundsBase_ι_STEP_COMPLETING ; 
+ 	 t119 = t120 ; 
+ 	 t121 ; 
+ 	 tvm_commit ( ) ; 
+ 	 tvm_accept ( ) ; 
+ 	 if ( Л_forcePending || ( t122 > StakingContract_ι_MAX_MSGS_PER_TR ) ) { 
+ 	 for ( Л_i = xInt0 ; 
+ 	 Л_i < t123 ; 
+ 	 Л_i += StakingContract_ι_MAX_MSGS_PER_TR ) { 
+ 	 t124 . t125 ( t126 ) ; 
+ 	 } 
+ 	 <! Л_completedRound ^^ RoundsBase_ι_Round_ι_stakes --> delete! !> ) >> 
+ 	 } 
+ 	 else { 
+ 	 t127 ; 
+ 	 Л_completedRound = t128 ; 
+ 	 } 
+ 	 return Л_completedRound ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__completeRound2 ( Л_round : ι_Round )( Л_completionStatus : XInteger8 ) : StakingContract ι_Round := { 
+ 	 t129 = Л_completionStatus ; 
+ 	 return StakingContract_Ф__completeRound ( Л_round , false ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__returnOrReinvest2 ( Л_completedRound : ι_Round )( Л_lastRound : ι_Round )( Л_addr : XAddress )( Л_stake : XInteger64 ) : StakingContract ι_Round := { 
+ 	 Л_roundRewards = t130 ; 
+ 	 Л_roundStake = t131 ; 
+ 	 Л_roundId = t132 ; 
+ 	 Л_status = t133 ; 
+ 	 Л_reward = ( Л_roundStake != xInt0 ) ? uint64 ( Л_roundRewards * Л_stake / Л_roundStake ) : xInt0 ; 
+ 	 Л_stakeholder = t134 ; 
+ 	 Л_reinvest = t135 ; 
+ 	 ( Л_realStake , Л_fee ) = StakingContract_Ф__recalcStakeAndFees ( Л_stake , Л_reward , Л_roundStake , Л_roundRewards ) ; 
+ 	 Л_attachValue = StakingContract_ι_m_poolClosed ? Л_realStake : xInt1 ; 
+ 	 if ( StakingContract_ι_m_poolClosed || Л_realStake == xInt0 ) { 
+ 	 Л_stake += t136 ; 
+ 	 StakeholderBase_Ф__stakeholderRemoveStake ( Л_addr , Л_stake , t137 ) ; 
+ 	 } 
+ 	 else { 
+ 	 StakeholderBase_Ф__stakeholderUpdateReward ( Л_addr , Л_reward , Л_fee ) ; 
+ 	 if ( Л_reinvest ) { 
+ 	 Л_lastRound = RoundsBase_Ф__roundAddStake ( Л_lastRound , Л_addr , Л_realStake ) ; 
+ 	 } 
+ 	 else { 
+ 	 StakeholderBase_Ф__stakeholderUpdateUnusedStake ( Л_addr , Л_realStake , xInt0 ) ; 
+ 	 } 
+ 	 } 
+ 	 t138 . t139 ( Л_roundId , Л_reward , Л_realStake , Л_reinvest , Л_fee , Л_status ) ; 
+ 	 return Л_lastRound ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф__returnOrReinvest ( Л_completedRound : ι_Round ) : StakingContract ι_Round := { 
+ 	 RoundsBase_ι_Round_ι_stakes = t140 ; 
+ 	 Л_lastRound = RoundsBase_Ф__getLastRound ( ) ; 
+ 	 Л_sentMsgs = xInt0 ; 
+ 	 ( Л_addr , Л_stake , Л_ok ) = t141 ( ) ; 
+ 	 while ( Л_ok && Л_sentMsgs < StakingContract_ι_MAX_MSGS_PER_TR ) { 
+ 	 Л_sentMsgs ++ ; 
+ 	 ( ↑ <! RoundsBase_ι_Round_ι_stakes --> ( delete! Л_addr ) !> ) >> 
+ 	 Л_lastRound = StakingContract_Ф__returnOrReinvest2 ( Л_completedRound , Л_lastRound , Л_addr , Л_stake ) ; 
+ 	 ( Л_addr , Л_stake , Л_ok ) = t142 ; 
+ 	 } 
+ 	 t143 ; 
+ 	 t144 = Л_ok ? RoundsBase_ι_STEP_COMPLETING : RoundsBase_ι_STEP_COMPLETED ; 
+ 	 t145 = RoundsBase_ι_Round_ι_stakes ; 
+ 	 return Л_completedRound ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_addStake ( Л_reinvest : XBool ) : StakingContract True := { 
+ 	 Л_sender = msg.sender ; 
+ 	 require ( Л_sender != address(0) , xInt108 ) ; 
+ 	 Л_msgValue = t146 ; 
+ 	 Л_minRequiredValue = StakingContract_ι_m_minStake + StakingContract_ι_ADD_STAKE_FEE ; 
+ 	 if ( Л_msgValue < Л_minRequiredValue ) { 
+ 	 Л_returnValue = ( Л_msgValue <= StakingContract_ι_ADD_STAKE_FEE ) ? xInt1 : ( Л_msgValue - StakingContract_ι_ADD_STAKE_FEE ) ; 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_STAKE_TOO_SMALL , Л_returnValue , Л_minRequiredValue ) ; 
+ 	 return ; 
+ 	 } 
+ 	 Л_stake = Л_msgValue - StakingContract_ι_ADD_STAKE_FEE ; 
+ 	 if ( StakingContract_ι_m_poolClosed ) { 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_POOL_CLOSED , Л_stake , xInt0 ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( RoundsBase_Ф__getRoundsCount ( ) == xInt0 ) { 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_NO_ACTIVE_ROUNDS , Л_stake , xInt0 ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( ! StakingContract_Ф__investStake ( Л_sender , Л_reinvest , xInt0 , Л_stake , Л_reinvest ) ) { 
+ 	 Л_round = RoundsBase_Ф__getLastRound ( ) ; 
+ 	 return StakingContract_Ф__returnError ( StakingContract_ι_STATUS_ROUND_STAKE_LIMIT , Л_stake , StakingContract_ι_m_maxRoundStake - t147 ) ; 
+ 	 } 
+ 	 t148 ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_removeStake ( Л_stake : XInteger64 ) : StakingContract True := { 
+ 	 require ( msg.sender != address(0) , xInt108 ) ; 
+ 	 if ( msg.value < StakingContract_ι_REMOVE_STAKE_FEE ) { 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_MSG_VAL_TOO_SMALL , xInt1 , StakingContract_ι_REMOVE_STAKE_FEE ) ; 
+ 	 return ; 
+ 	 } 
+ 	 Л_member = t149 ; 
+ 	 Л_unusedStake = t150 ; 
+ 	 Л_removedStake = ( Л_stake < Л_unusedStake ) ? Л_stake : Л_unusedStake ; 
+ 	 StakeholderBase_Ф__stakeholderRemoveStake ( msg.sender , Л_removedStake , Л_removedStake ) ; 
+ 	 msg.sender.transfer ( Л_removedStake , true , xInt3 ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_continueStake ( Л_amount : XInteger64 )( Л_reinvest : XBool ) : StakingContract True := { 
+ 	 require ( msg.sender != address(0) , xInt108 ) ; 
+ 	 if ( msg.value < StakingContract_ι_CONTINUE_STAKE_FEE ) { 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_MSG_VAL_TOO_SMALL , xInt1 , StakingContract_ι_CONTINUE_STAKE_FEE ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( ! t151 ) { 
+ 	 StakingContract_Ф__returnError ( StakingContract_ι_STATUS_NO_STAKE , xInt0 , xInt0 ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( ! StakingContract_Ф__investStake ( msg.sender , true , Л_amount , xInt0 , Л_reinvest ) ) { 
+ 	 Л_round = RoundsBase_Ф__getLastRound ( ) ; 
+ 	 return StakingContract_Ф__returnError ( StakingContract_ι_STATUS_ROUND_STAKE_LIMIT , xInt0 , StakingContract_ι_m_maxRoundStake - t152 ) ; 
+ 	 } 
+ 	 t153 ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_setReinvest ( Л_flag : XBool ) : StakingContract True := { 
+ 	 Л_sender = msg.sender ; 
+ 	 require ( Л_sender != address(0) , xInt108 ) ; 
+ 	 require ( t154 , xInt101 ) ; 
+ 	 StakeholderBase_Ф__stakeholderSetReivest ( Л_sender , Л_flag ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_processNewStake ( Л_queryId : XInteger64 )( Л_validatorKey : XInteger256 )( Л_stakeAt : XInteger32 )( Л_maxFactor : XInteger32 )( Л_adnlAddr : XInteger256 )( Л_signature : XInteger8 ) : StakingContract True := { 
+ 	 require ( t155 == msg.sender , xInt113 ) ; 
+ 	 Л_request = ElectorBase_ι_Request ( Л_queryId , Л_validatorKey , Л_stakeAt , Л_maxFactor , Л_adnlAddr , Л_signature ) ; 
+ 	 StakingContract_Ф__addRequest ( Л_stakeAt , Л_request ) ; 
+ 	 if ( Л_stakeAt == t156 { 
+ 	 } 
+ 	 else { 
+ 	 require ( RoundsBase_Ф__getRoundsCount ( ) >= xInt2 , xInt111 ) ; 
+ 	 Л_round = RoundsBase_Ф__getPenultimateRound ( ) ; 
+ 	 require ( t157 == RoundsBase_ι_STEP_WAITING_REQUESTS , xInt118 ) ; 
+ 	 require ( Л_stakeAt == t158 , xInt111 ) ; 
+ 	 ElectorBase_Ф__runForElection ( Л_request , t159 ) ; 
+ 	 t160 = RoundsBase_ι_STEP_ELECTIONS ; 
+ 	 t161 ; 
+ 	 } 
+ 	 StakingContract_Ф__returnGrams ( ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_ticktock : StakingContract True := { 
+ 	 require ( msg.sender != address(0) , xInt108 ) ; 
+ 	 Л_electionsStarted = now >= ElectionParams_Ф__getElectionsStart ( ) ; 
+ 	 if ( Л_electionsStarted ) { 
+ 	 StakingContract_Ф__addNewRound ( ) ; 
+ 	 StakingContract_Ф__returnGrams ( ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( RoundsBase_Ф__getRoundsCount ( ) < xInt2 ) { 
+ 	 if ( RoundsBase_Ф__getRoundsCount ( ) == xInt0 ) StakingContract_Ф__addNewRound ( ) ; 
+ 	 StakingContract_Ф__returnGrams ( ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( t162 { 
+ 	 StakingContract_Ф__returnGrams ( ) ; 
+ 	 return ; 
+ 	 } 
+ 	 if ( t163 { 
+ 	 StakingContract_Ф__returnGrams ( ) ; 
+ 	 return ; 
+ 	 } 
+ 	 RoundsBase_Ф__cleanupPendingRounds ( ) ; 
+ 	 StakingContract_Ф__returnGrams ( ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_completePendingRound ( Л_roundId : XInteger32 ) : StakingContract True := { 
+ 	 require ( msg.sender == address(this) , xInt120 ) ; 
+ 	 tvm_accept ( ) ; 
+ 	 ( Л_exists , Л_round ) = t164 ; 
+ 	 if ( Л_exists ) { 
+ 	 RoundsBase_Ф__updatePendingRound ( t165 ) ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_receiveReturnedStake ( Л_queryId : XInteger64 )( Л_comment : XInteger32 ) : StakingContract XInteger64 # XInteger32 := { 
+ 	 Л_round = RoundsBase_Ф__getPenultimateRound ( ) ; 
+ 	 t166 = RoundsBase_ι_ROUND_STAKE_REJECTED ; 
+ 	 RoundsBase_Ф__setPenultimateRound ( StakingContract_Ф__completeRound ( RoundsBase_Ф__getPenultimateRound ( ) , false ) ) ; 
+ 	 return ( Л_queryId , Л_comment ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_acceptRecoveredStake ( Л_queryId : XInteger64 ) : StakingContract True := { 
+ 	 require ( msg.sender == ElectorBase_ι_m_elector , xInt107 ) ; 
+ 	 if ( Л_queryId == xInt0 ) { 
+ 	 StakingContract_Ф__acceptUnusedStake ( ) ; 
+ 	 } 
+ 	 else if ( Л_queryId == xInt1 ) { 
+ 	 StakingContract_Ф__acceptRewardStake ( ) ; 
+ 	 } 
+ 	 else { 
+ 	 StakingContract_Ф__acceptPendingRoundStake ( t167 ) ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_terminator : StakingContract True := { 
+ 	 ; 
+ 	 require ( ! StakingContract_ι_m_poolClosed , xInt114 ) ; 
+ 	 tvm_accept ( ) ; 
+ 	 StakingContract_ι_m_poolClosed = true ; 
+ 	 RoundsBase_Ф__setLastRound ( StakingContract_Ф__completeRound2 ( RoundsBase_Ф__getLastRound ( ) , RoundsBase_ι_ROUND_POOL_CLOSED ) ) ; 
+ 	 emit Л_stakingPoolClosed ( ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_getRounds : StakingContract XInteger32 # XInteger32 # ι_М_RoundInfo := { 
+ 	 infos = RoundsBase_Ф__getRoundsInfo ( ) ; 
+ 	 RoundsBase_ι_Round_ι_count = RoundsBase_Ф__getRoundsCount ( ) ; 
+ 	 lastRound = ElectionParams_Ф__getElectAt ( ) ; 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_getStakeholderInfo ( Л_addr : XAddress ) : StakingContract XInteger64 # XInteger64 # XInteger64 # XBool # XInteger64 # ι_М_StakeInfo := { 
+ 	 require ( t168 , xInt116 ) ; 
+ 	 Л_stakeholder = t169 ; 
+ 	 StakeholderBase_ι_Stakeholder_ι_reinvest = t170 ; 
+ 	 total = t171 ; 
+ 	 OwnerBase_ι_Owner_ι_reward = t172 ; 
+ 	 available = t173 ; 
+ 	 invested = total - available ; 
+ 	 ( Л_index , Л_round , Л_ok ) = t174 ( ) ; 
+ 	 while ( Л_ok ) { 
+ 	 if ( t175 < RoundsBase_ι_STEP_COMPLETED ) { 
+ 	 ( Л_presents , Л_value ) = t176 . t177 ; 
+ 	 if ( Л_presents ) { 
+ 	 t178 ( StakingContract_ι_StakeInfo ( t179 , Л_value ) ) ; 
+ 	 } 
+ 	 } 
+ 	 ( Л_index , Л_round , Л_ok ) = t180 ; 
+ 	 } 
+ 	 } 
+ 	 
+
+Definition StakingContract_Ф_getStakingInfo : StakingContract XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger32 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 # XInteger64 := { 
+ 	 minStake = StakingContract_ι_m_minStake ; 
+ 	 minRoundStake = StakingContract_ι_m_minRoundStake ; 
+ 	 maxRoundStake = StakingContract_ι_m_maxRoundStake ; 
+ 	 stakingPeriod = ElectionParams_Ф__getStakingPeriod ( ) ; 
+ 	 interest = StakingContract_ι_m_lastRoundInterest ; 
+ 	 notifyFee = StakingContract_ι_NOTIFY_FEE ; 
+ 	 addFee = StakingContract_ι_ADD_STAKE_FEE ; 
+ 	 removeFee = StakingContract_ι_REMOVE_STAKE_FEE ; 
+ 	 pauseFee = StakingContract_ι_PAUSE_STAKE_FEE ; 
+ 	 continueFee = StakingContract_ι_CONTINUE_STAKE_FEE ; 
+ 	 setReinvestFee = StakingContract_ι_SET_REINVEST_FEE ; 
+ 	 minNodeStake = ( StakingContract_ι_m_minRoundStake * StakingContract_ι_NODE_WALLET_MIN_STAKE ) / xInt100 ; 
+ 	 } 
+ 	 
+
+Definition ElectionParams_Ф_Constructor4 ( Л_electionId : XInteger32 )( Л_beginBefore : XInteger32 )( Л_endBefore : XInteger32 )( Л_heldFor : XInteger32 )( Л_electedFor : XInteger32 ) : ElectionParams True := { 
+ 	 if ( Л_electionId != xInt0 ) { 
+ 	 ElectionParams_ι_m_electAt = Л_electionId ; 
+ 	 } 
+ 	 else { 
+ 	 ElectionParams_ι_m_electAt = ElectionParams_Ф__getNextElectionId ( ) ; 
+ 	 } 
+ 	 ( ElectionParams_ι_m_electedFor , ElectionParams_ι_m_beginBefore , ElectionParams_ι_m_endBefore , ElectionParams_ι_m_heldFor , Л_ok ) = t181 ; 
+ 	 if ( ! Л_ok ) { 
+ 	 ElectionParams_ι_m_beginBefore = Л_beginBefore ; 
+ 	 ElectionParams_ι_m_endBefore = Л_endBefore ; 
+ 	 ElectionParams_ι_m_electedFor = Л_electedFor ; 
+ 	 ElectionParams_ι_m_heldFor = Л_heldFor ; 
+ 	 } 
+ 	 } 
+ 	 
+

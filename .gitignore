@@ -1,0 +1,15 @@
+\#*#
+*~
+*.crashcoqide
+.\#*
+CoqMakefile
+.CoqMakefile.d
+CoqMakefile.conf
+.coqdeps.d
+*.glob
+*.v.d
+.*.aux
+*.vos
+*.vok
+.deps
+_build/*

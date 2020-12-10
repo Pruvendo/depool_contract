@@ -1,0 +1,48 @@
+# Initial version generated with
+# { echo "-R . FinProof " ; find . -name "*.v" -print } > _CoqProject
+
+-Q src depoolContract
+
+-R modules/coq-finproof-base FinProof
+
+#general files with contracts definitions ans proof environment
+#src/SolidityNotations.v
+src/ProofEnvironment.v
+src/DePoolClass.v
+
+#library more or less general for all contract functions
+src/Lib/CPDT.v
+src/Lib/Tactics.v
+src/Lib/CommonModelProofs.v
+src/Lib/ErrorValueProofs.v
+src/Lib/CommonCommon.v
+src/Lib/UniqueArrays.v
+src/Lib/UniqueArrays2.v
+src/Lib/TVMModel.v
+src/Lib/CommonStateProofs.v
+
+#files of functions
+src/DePoolSpec.v
+src/Lib/HexNotations.v
+src/DePoolConsts.v
+src/DePoolFunc.v
+
+#specifications for individual functions
+#src/Specifications/
+#src/Specifications/
+#src/Specifications/
+
+src/Scenarios/ScenarioCommon.v
+src/Scenarios/Scenario1.v
+src/Scenarios/Scenario2.v
+src/Scenarios/Scenario3.v
+src/Scenarios/Scenario4.v
+src/Scenarios/Scenario5.v
+src/Scenarios/Scenario6.v
+src/Scenarios/Scenario7.v
+src/Scenarios/Scenario8.v
+src/Scenarios/Scenario9.v
+
+
+
+

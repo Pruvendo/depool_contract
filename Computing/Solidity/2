@@ -1,0 +1,27 @@
+  
+Record  StakingProxyContractP { I64 A }  := StakingProxyContractC  { 
+ 	StakingProxyContract·PROXY_FEE : I64  ;   ( *constant := 1e7* ) 
+ 
+ 	StakingProxyContract·m_elector : A  ; 
+ 
+ }   . 
+ Arguments StakingProxyContractC  [  I64 A  ]   . 
+Module StakingProxyContractClass (xt: XTypesSig) (sm: StateMonadSig) . 
+Definition  StakingProxyContract  := @StakingProxyContractP  XInteger64 XAddress  . 
+Global Instance Struct_StakingProxyContract : Struct StakingProxyContract :=  { 
+ 	fields :=  [ 
+ 		@existT _ _ _ StakingProxyContract·PROXY_FEE , 
+ 
+ 		@existT _ _ _ StakingProxyContract·m_elector , 
+ 
+ 	 ]   ;  
+ 	ctor := @StakingProxyContractC I64 A
+ }   . 
+Global Instance Acc_StakingProxyContract·PROXY_FEE : Accessor StakingProxyContract·PROXY_FEE :=  {  acc := ·0  }   . 
+Global Instance Acc_StakingProxyContract·m_elector : Accessor StakingProxyContract·m_elector :=  {  acc := ·1  }   . 
+Instance StakingProxyContract_default : XDefault StakingProxyContract :=  {  
+ 	 default := StakingProxyContractC default default  
+  }   . 
+End StakingProxyContractClass .
+
+

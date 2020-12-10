@@ -1,0 +1,19 @@
+Л_ -> 
+XHMap ([a-zA-Z0-9ι_]*) ([a-zA-Z0-9ι_]*) -> mapping ($1 => $2)
+XList XInteger8 -> bytes
+\(\s*([_a-zA-Z0-9]*)\s*:\s*([a-zA-Z0-9ι_]*)\s*\) -> $2 $1 ,
+XInteger -> uint
+Definition ([_a-zA-Z0-9Ф]*)  -> function $1 (
+,\s*: -> :
+:\s*LedgerT -> ( returns
+\(\s*XErrorValue(.*)uint\s*\)  -> ( $1 )
+# -> ,
+XAddress -> address
+function(.*)returns(.*):= -> function $1 returns $2 {
+True -> ()
+$ ->
+U0! ->
+xInt([a-z0-9_]*) -> $1
+↑ε[0-9]* -> 
+tvm_pubkey ->tvm.pubkey
+[a-zA-Z0-9_]*Ф_([a-zA-Z0-9]*) -> $1

@@ -1,0 +1,15 @@
+# Initial version generated with
+# { echo "-R . FinProof " ; find . -name "*.v" -print } > _CoqProject
+
+-Q src depoolContract
+
+-R ../coq-finproof-base FinProof
+
+src/tools/CommonHelpers.v
+src/tools/StringHelpers.v
+
+src/tools/Class/ClassGeneratorTogetherSolOrderRightLedger.v
+src/tools/Spec/specFileGenerator.v
+src/tools/CommonProofs/CommonStateProofsGenerator.v
+src/tools/Proofs/Translator.v
+src/tools/Funcs/functionsFileGenerator46.v
