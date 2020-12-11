@@ -239,13 +239,8 @@ function roundTimeParams() virtual internal returns (
 *) 
 Definition ConfigParamsBase_Ф_roundTimeParams : LedgerT ( XErrorValue ( XInteger32 # XInteger32 # XInteger32 # XInteger32 ) XInteger ) := 
 returns ( Л_validatorsElectedFor :>: XInteger32 , Л_electionsStartBefore :>: XInteger32 , Л_electionsEndBefore :>: XInteger32 , Л_stakeHeldFor :>: XInteger32 ) >>
-<<<<<<< HEAD
 declareLocal Л_ok :>: XBool ; 
 U0! {( Л_validatorsElectedFor , Л_electionsStartBefore , Л_electionsEndBefore , Л_stakeHeldFor , Л_ok )} := tvm_configParam_15; 
-=======
-declareLocal Л_ok :>: XBool ;
-  U0! {( Л_validatorsElectedFor , Л_electionsStartBefore , Л_electionsEndBefore , Л_stakeHeldFor , Л_ok )} := tvm_configParam_15; 
->>>>>>> 5c5e0757fc6242a2de005162d5c9b0c126a3de1c
   Require {{ $ Л_ok , ξ$ InternalErrors_ι_ERROR509 }} ; 
 ς return# ( $ Л_validatorsElectedFor, $ Л_electionsStartBefore, $ Л_electionsEndBefore, $ Л_stakeHeldFor ). 
  

@@ -57,23 +57,6 @@ Import LedgerClass.
 
 Opaque Z.eqb Z.add Z.sub Z.div Z.mul hmapLookup hmapInsert Z.ltb Z.geb Z.leb Z.gtb Z.modulo deleteListPair.
 
-<<<<<<< HEAD
-=======
-
-Definition DePoolContract_Ф_addOrdinaryStake'_header ( Л_stake : XInteger64 ) (f: XInteger64 -> XInteger64 -> LedgerT True) : 
-           LedgerT ( XErrorValue (XValueValue True) XInteger ) := 
- Require {{ msg_sender () ?!= $ xInt0 , $ Errors_ι_IS_EXT_MSG }} ;
-  If!! ( ↑12 D2! DePoolContract_ι_m_poolClosed ) then {  
-   return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_DEPOOL_CLOSED , $ xInt0 !) ) } ; 
-  U0! Л_msgValue :=  msg_value () ; 
-  If!! ( $ Л_msgValue ?< $ Л_stake !+ $ DePool_ι_STAKE_FEE ) then { 
-   return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_FEE_TOO_SMALL , $ DePool_ι_STAKE_FEE !) ) } ; 
- U0! Л_fee := $ Л_msgValue !- $ Л_stake ;
-  If! ( $ Л_stake ?< ↑12 D2! DePoolContract_ι_m_minStake ) then { 
-   return!!! ( DePoolContract_Ф__sendError (! $ DePool_ι_STATUS_STAKE_TOO_SMALL , ↑ε12  DePoolContract_ι_m_minStake !) )  } ;
-        f Л_stake Л_fee.
-
->>>>>>> 5c5e0757fc6242a2de005162d5c9b0c126a3de1c
 Definition DePoolContract_Ф_addOrdinaryStake'_tailer (Л_stake Л_fee: XInteger64) : LedgerT True :=    
 declareLocal Л_participant :>: ξ DePoolLib_ι_Participant := ParticipantBase_Ф_getOrCreateParticipant (! msg_sender () !) ; 
 declareLocal Л_round :>: RoundsBase_ι_Round := RoundsBase_Ф_getRound0 () ; 
